@@ -1660,20 +1660,11 @@ namespace ApplicationData
             {
                 string creation = "";
 
-                if (generatorContext.singleStateGenFile)
-                {
-                    creation = string.Format("{0}State* {0}StateInst = new {0}State(string(\"{0}\"), {2}, this, m_activeRobotId)",
-                    name,
-                    generatorContext.theMechanismInstance.name,
-                    index);
-                }
-                else
-                {
-                    creation = string.Format("{0}State* {0}StateInst = new {0}State(string(\"{0}\"), {2}, new {1}{0}StateGen(string(\"{0}\"), {2}, this), this)",
-                    name,
-                    generatorContext.theMechanismInstance.name,
-                    index);
-                }
+                creation = string.Format("{0}State* {0}StateInst = new {0}State(string(\"{0}\"), {2}, this, m_activeRobotId)",
+                name,
+                generatorContext.theMechanismInstance.name,
+                index);
+
 
                 List<string> code = new List<string>() { creation };
 

@@ -130,6 +130,8 @@ namespace CoreCodeGenerator
 
         internal void copyrightAndGenNoticeAndSave(string outputFilePathName, string contents, bool doNotWriteIfExists)
         {
+            doNotWriteIfExists = false;
+
             string copyright = theToolConfiguration.CopyrightNotice.Trim();
             copyright = copyright.Replace(Environment.NewLine, "\n").Replace("\n", Environment.NewLine);
 
@@ -186,7 +188,7 @@ namespace CoreCodeGenerator
                     addProgress("\tWrote " + outputFullFilePathName);
                 }
                 else
-                    addProgress("\tFile content has not changed or is a decoratorMod " + outputFullFilePathName);
+                    addProgress("\tFile content has not changed " + outputFullFilePathName);
             }
         }
 
