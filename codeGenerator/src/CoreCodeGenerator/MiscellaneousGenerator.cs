@@ -1,15 +1,11 @@
 ﻿using applicationConfiguration;
 using ApplicationData;
 using Configuration;
-using DataConfiguration;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace CoreCodeGenerator
 {
@@ -94,12 +90,12 @@ namespace CoreCodeGenerator
                         int index = thestates[i].IndexOf("::");
                         if (index > 0)
                         {
-                            thestates[i] = thestates[i].Substring(0,index);
+                            thestates[i] = thestates[i].Substring(0, index);
                         }
                     }
 
                     List<string> mechStateEnumNames = thestates.Distinct().ToList();
-                    foreach(string stateEnumName in mechStateEnumNames)
+                    foreach (string stateEnumName in mechStateEnumNames)
                     {
                         sb.AppendLine(string.Format("enum {0}_USAGE", stateEnumName.ToUpper()));
                         sb.AppendLine("{");

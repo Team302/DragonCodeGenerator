@@ -3,15 +3,11 @@ using ApplicationData;
 using Configuration;
 using DataConfiguration;
 using System;
-using System.CodeDom.Compiler;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 //using ApplicationData.motorControlData;
 
 namespace CoreCodeGenerator
@@ -29,9 +25,8 @@ namespace CoreCodeGenerator
         internal void generate()
         {
             addProgress((cleanMode ? "Erasing" : "Writing") + " mechanism instance files...");
+
             List<string> mechMainFiles = new List<string>();
-            //List<string> mechStateFiles = new List<string>();
-            //List<string> mechStateMgrFiles = new List<string>();
             List<string> mechInstanceNames = new List<string>();
             foreach (applicationData robot in theRobotConfiguration.theRobotVariants.Robots)
             {
@@ -67,7 +62,7 @@ namespace CoreCodeGenerator
                             createMechanismFolder(mechanismName, false);
 
                         #region Generate Cpp File
-                        cdf = theToolConfiguration.getTemplateInfo("MechanismInstance_gen_cpp");
+                        cdf = theToolConfiguration.getTemplateInfo("MechanismInstance_cpp");
                         template = loadTemplate(cdf.templateFilePathName);
 
                         resultString = template;
@@ -182,7 +177,7 @@ namespace CoreCodeGenerator
                         #region Generate H File
                         generatorContext.generationStage = generatorContext.GenerationStage.MechInstanceGenH;
 
-                        cdf = theToolConfiguration.getTemplateInfo("MechanismInstance_gen_h");
+                        cdf = theToolConfiguration.getTemplateInfo("MechanismInstance_h");
                         template = loadTemplate(cdf.templateFilePathName);
 
                         resultString = template;
@@ -234,8 +229,6 @@ namespace CoreCodeGenerator
 
                         if (index < robot.mechanismInstances.Count)
                         {
-                            string stateName = "AllStates";
-
                             StringBuilder setTargetFunctionDeclerations = new StringBuilder();
 
                             generatorContext.generationStage = generatorContext.GenerationStage.MechInstanceDecorator;
@@ -246,8 +239,8 @@ namespace CoreCodeGenerator
                             #region Generate H StateGen_Decorator Files
                             foreach (state s in mi.mechanism.states)
                             {
-                                cdf = theToolConfiguration.getTemplateInfo("stateGen_Decorator_h");
-                                template = loadTemplate(cdf.templateFilePathName.Replace(".h", "_singleStateGenFile.h"));
+                                cdf = theToolConfiguration.getTemplateInfo("state_h");
+                                template = loadTemplate(cdf.templateFilePathName);
 
                                 resultString = template;
 
@@ -277,8 +270,8 @@ namespace CoreCodeGenerator
                             #region Generate CPP StateGen_Decorator Files
                             foreach (state s in mi.mechanism.states)
                             {
-                                cdf = theToolConfiguration.getTemplateInfo("stateGen_Decorator_cpp");
-                                template = loadTemplate(cdf.templateFilePathName.Replace(".cpp", "_singleStateGenFile.cpp"));
+                                cdf = theToolConfiguration.getTemplateInfo("state_cpp");
+                                template = loadTemplate(cdf.templateFilePathName);
 
                                 resultString = template;
 
@@ -387,17 +380,25 @@ namespace CoreCodeGenerator
 
                         if (cleanMode)
                         {
-                            Directory.Delete(getMechanismOutputPath(mechanismName, true));
+                            DeleteDirectory(getMechanismOutputPath(mechanismName, true));
                             if (cleanDecoratorModFolders)
                             {
-                                Directory.Delete(getMechanismOutputPath(mechanismName, false));
-                                Directory.Delete(Path.Combine(getMechanismOutputPath(mechanismName, true), ".."));
+                                DeleteDirectory(getMechanismOutputPath(mechanismName, false));
                             }
                         }
                     }
 
                     index++;
                 }
+            }
+        }
+
+        void DeleteDirectory(string path)
+        {
+            if (path.Contains(@"cpp\mechanisms")) // this is just for safety... we do not want to erase the whole drive
+            {
+                if (Directory.Exists(path))
+                    Directory.Delete(path, true);
             }
         }
 

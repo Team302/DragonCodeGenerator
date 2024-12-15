@@ -4,14 +4,11 @@ using Configuration;
 using DataConfiguration;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CoreCodeGenerator
 {

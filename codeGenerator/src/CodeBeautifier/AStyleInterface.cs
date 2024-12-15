@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 /// AStyleInterface contains methods to call the Artistic Style formatter.
 public class AStyleInterface
 {   // Dll name
-// Windows will NOT attach an extension to a filename containing dots (.).
+    // Windows will NOT attach an extension to a filename containing dots (.).
 #if (DEBUG)
     private const string dllName = "astyle32d.dll";
 #else

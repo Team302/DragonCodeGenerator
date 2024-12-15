@@ -7,20 +7,8 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Channels;
-using System.Security.AccessControl;
-using System.Security.Authentication.ExtendedProtection;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
-using System.Xml.Linq;
 using System.Xml.Serialization;
-using static ApplicationData.generatorContext;
-using static ApplicationData.motorControlData;
-using static ApplicationData.TalonFX;
-using static ApplicationData.TalonSRX;
-using static System.Net.Mime.MediaTypeNames;
 
 //todo handle optional elements such as followID in a motorcontroller
 //todo the range of pdpID for ctre is 0-15, for REV it is 0-19. How to adjust the range allowed in the GUI. If initially REV is used and an id > 15 is used, then user chooses CTRE, what to do?
@@ -1161,7 +1149,7 @@ namespace ApplicationData
         }
     }
 
-    
+
     [Serializable()]
     public class roborio : baseRobotElementClass
     {
@@ -1446,14 +1434,14 @@ namespace ApplicationData
         public enum CONTROL_TYPE
         {
             PERCENT_OUTPUT,            /// Open Loop Control - values are between -1.0 and 1.0
-            
+
             POSITION_INCH,             /// Closed Loop Control - values are displacements measured in inches
             POSITION_DEGREES,          /// Closed Loop Control - values are angles measured in degrees
-            
+
             VELOCITY_FEET_PER_SEC,             /// Closed Loop Control - values are linear velocity measured in feet per second
             VELOCITY_DEGREES_PER_SEC,          /// Closed Loop Control - values are angular velocity measured in degrees per second
             VELOCITY_REV_PER_SEC,              /// Closed Loop Control - values are in revolutions per second
-            
+
             //VOLTAGE,                   /// Closed Loop Control - values are in volts
             //CURRENT,                   /// Closed Loop Control - values in amps
             //TRAPEZOID_ANGULAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
@@ -1645,7 +1633,7 @@ namespace ApplicationData
         public override List<string> generateIncludes()
         {
             List<string> sb = new List<string>();
-            if( (generatorContext.theMechanismInstance != null) && (generatorContext.generationStage != generatorContext.GenerationStage.MechInstanceGenH) )
+            if ((generatorContext.theMechanismInstance != null) && (generatorContext.generationStage != generatorContext.GenerationStage.MechInstanceGenH))
             {
                 sb.Add(string.Format("#include \"mechanisms/{1}/{0}State.h\"",
                     name,

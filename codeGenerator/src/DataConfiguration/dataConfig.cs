@@ -1,19 +1,13 @@
-﻿using System;
+﻿using Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
-using System.Xml.Serialization;
-using System.IO;
-using System.Reflection;
-using System.Collections;
-using System.Runtime.Serialization.Formatters.Binary;
-using Configuration;
 
 namespace DataConfiguration
 {
     public class baseDataConfiguration : baseReportingClass
     {
-        public List<string> collectionBaseTypes = new List<string>(); 
+        public List<string> collectionBaseTypes = new List<string>();
         public List<physicalUnit> physicalUnits = new List<physicalUnit>();
 
         static public bool isACollection(object obj)

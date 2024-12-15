@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Configuration;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Xml.Serialization;
-using Configuration;
 
 namespace DataConfiguration
 {

@@ -47,7 +47,6 @@
     <Compile Include="ChassisGenerator.cs" />
     <Compile Include="codeGenerator_302Robotics.cs" />
     <Compile Include="MechanismInstanceGenerator.cs" />
-    <Compile Include="MechanismGenerator.cs" />
     <Compile Include="MiscellaneousGenerator.cs" />
     <Compile Include="MotorControlData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

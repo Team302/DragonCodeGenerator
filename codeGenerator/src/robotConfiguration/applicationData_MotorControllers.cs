@@ -1,27 +1,14 @@
 using Configuration;
 using DataConfiguration;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Channels;
-using System.Security.AccessControl;
-using System.Security.Authentication.ExtendedProtection;
-using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
-using System.Xml.Linq;
 using System.Xml.Serialization;
-using static ApplicationData.motorControlData;
 using static ApplicationData.MotorController;
-using static ApplicationData.TalonFX;
-using static ApplicationData.TalonSRX;
-using static System.Net.Mime.MediaTypeNames;
 
 //todo handle optional elements such as followID in a motorcontroller
 //todo the range of pdpID for ctre is 0-15, for REV it is 0-19. How to adjust the range allowed in the GUI. If initially REV is used and an id > 15 is used, then user chooses CTRE, what to do?

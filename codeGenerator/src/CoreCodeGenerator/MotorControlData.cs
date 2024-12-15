@@ -1,15 +1,11 @@
 ﻿using applicationConfiguration;
 using ApplicationData;
 using Configuration;
-using DataConfiguration;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace CoreCodeGenerator
 {
@@ -64,8 +60,8 @@ namespace CoreCodeGenerator
 
                 string startingChars = enumName + "::";
                 foreach (string s in names.Where(t => t.StartsWith(startingChars)))
-                { 
-                    sb.AppendLine(string.Format("{0},", s.Substring(startingChars.Length).ToUpper())); 
+                {
+                    sb.AppendLine(string.Format("{0},", s.Substring(startingChars.Length).ToUpper()));
                 }
                 sb.AppendLine(string.Format("MAX_{0}", enumName.ToUpper()));
                 sb.AppendLine("};");

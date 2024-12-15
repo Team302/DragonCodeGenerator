@@ -1,12 +1,7 @@
-﻿using Configuration;
+﻿using applicationConfiguration;
+using Configuration;
 using DataConfiguration;
-using ApplicationData;
-using applicationConfiguration;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Linq;
-using System;
 
 namespace CoreCodeGenerator
 {
@@ -53,7 +48,6 @@ namespace CoreCodeGenerator
             new RobotConfigManagerGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
             new RobotConfigRobotSpecificGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
             //new ChassisGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
-
         }
     }
 }

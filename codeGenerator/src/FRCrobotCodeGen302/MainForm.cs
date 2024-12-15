@@ -5,18 +5,13 @@ using CoreCodeGenerator;
 using DataConfiguration;
 using NetworkTablesUtils;
 using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using static Configuration.physicalUnit;
 
@@ -519,7 +514,7 @@ namespace FRCrobotCodeGen302
             catch (Exception ex)
             {
                 string messageAddon = "";
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                 {
                     if (ex.InnerException.InnerException != null)
                         messageAddon = ex.InnerException.InnerException.ToString();
@@ -531,14 +526,17 @@ namespace FRCrobotCodeGen302
         {
             try
             {
-                DialogResult dr = MessageBox.Show("Do you also want to delete the user modifiable files within the decoratorMod folders?", "Delete warning", MessageBoxButtons.YesNoCancel);
-                if (dr == DialogResult.Yes)
-                    codeGenerator.cleanDecoratorModFolders = true;
-                else
-                    codeGenerator.cleanDecoratorModFolders = false;
+                //DialogResult dr = MessageBox.Show("Do you also want to delete the user modifiable files within the decoratorMod folders?", "Delete warning", MessageBoxButtons.YesNoCancel);
+                //if (dr == DialogResult.Yes)
+                //    codeGenerator.cleanDecoratorModFolders = true;
+                //else
+                //    codeGenerator.cleanDecoratorModFolders = false;
 
-                if (dr != DialogResult.Cancel)
-                    codeGenerator.clean(ProductVersion, theAppDataConfiguration, generatorConfig);
+                //if (dr != DialogResult.Cancel)
+                //    codeGenerator.clean(ProductVersion, theAppDataConfiguration, generatorConfig);
+
+                codeGenerator.cleanDecoratorModFolders = true;
+                codeGenerator.clean(ProductVersion, theAppDataConfiguration, generatorConfig);
             }
             catch (Exception ex)
             {
@@ -680,7 +678,7 @@ namespace FRCrobotCodeGen302
                 foreach (Type type in subTypes)
                 {
                     addRobotElementType(type, types);
-                    
+
                     //todo handle more than one level of inheritance in a nicer way
                     List<Type> subTypesExt = Assembly.GetAssembly(elementType).GetTypes().Where(t => t.BaseType == type).ToList();
                     foreach (Type type_ in subTypesExt)
@@ -1677,7 +1675,7 @@ namespace FRCrobotCodeGen302
                     if (addedItems)
                     {
                         robotTreeView.BeginUpdate();
-                        
+
                         string nodeName = lastSelectedArrayNode.Text;
                         lastSelectedArrayNode.Remove();
                         AddNode((TreeNode)m.theTreeNode, states, nodeName, null);

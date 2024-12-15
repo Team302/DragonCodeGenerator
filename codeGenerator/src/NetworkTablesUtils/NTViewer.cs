@@ -1,13 +1,11 @@
-﻿using System;
+﻿using NetworkTables;
+using NetworkTables.Tables;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using NetworkTables;
-using NetworkTables.Tables;
 
 namespace NetworkTablesUtils
 {
@@ -130,7 +128,7 @@ namespace NetworkTablesUtils
             cleanedPath = cleanedPath.Replace('\\', '/');
 
             //after replacing slashes, finally need to remove value from name
-            if(cleanedPath.Contains('('))
+            if (cleanedPath.Contains('('))
                 cleanedPath = cleanedPath.Remove(cleanedPath.IndexOf('(') - 1); //- 1 is to get rid of space before parentheses
 
             return cleanedPath;

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace Configuration
@@ -21,11 +19,6 @@ namespace Configuration
         public List<string> collectionBaseTypes = new List<string>();
 
         public List<physicalUnit> physicalUnits = new List<physicalUnit>();
-
-        public string templateMechanismCppPath = "";
-        public string templateMechanismHPath = "";
-        public string templateRobotDefinitionsCppPath = "";
-        public string templateRobotDefinitionsHPath = "";
 
         public List<codeTemplateFile> codeTemplateFiles = new List<codeTemplateFile>();
 
@@ -87,7 +80,7 @@ namespace Configuration
         private void postDeSerialize(toolConfiguration tc)
         {
             int cnt = tc.physicalUnits.Count;
-            for(int i=0; i < cnt; i++)
+            for (int i = 0; i < cnt; i++)
             {
                 physicalUnit temp = new physicalUnit();
                 temp.family = physicalUnit.Family.all;
