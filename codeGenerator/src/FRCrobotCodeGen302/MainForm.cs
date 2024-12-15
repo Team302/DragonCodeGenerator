@@ -1620,17 +1620,18 @@ namespace FRCrobotCodeGen302
                             if (mcd != null)
                             {
                                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT) { mTarget.target.unitsFamily = Family.none; }
+
                                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH) { mTarget.target.unitsFamily = Family.length; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_ABS_TICKS) { mTarget.target.unitsFamily = Family.none; }
                                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES) { mTarget.target.unitsFamily = Family.angle; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES_ABSOLUTE) { mTarget.target.unitsFamily = Family.angle; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_INCH) { mTarget.target.unitsFamily = Family.velocity; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES) { mTarget.target.unitsFamily = Family.angularVelocity; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_RPS) { mTarget.target.unitsFamily = Family.angularVelocity; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE) { mTarget.target.unitsFamily = Family.angularVelocity; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.CURRENT) { mTarget.target.unitsFamily = Family.none; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.TRAPEZOID_LINEAR_POS) { mTarget.target.unitsFamily = Family.length; }
-                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) { mTarget.target.unitsFamily = Family.angle; }
+
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC) { mTarget.target.unitsFamily = Family.velocity; }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC) { mTarget.target.unitsFamily = Family.angularVelocity; }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC) { mTarget.target.unitsFamily = Family.angularVelocity; }
+
+                                //else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE) { mTarget.target.unitsFamily = Family.angularVelocity; }
+                                //else if (mcd.controlType == motorControlData.CONTROL_TYPE.CURRENT) { mTarget.target.unitsFamily = Family.none; }
+                                //else if (mcd.controlType == motorControlData.CONTROL_TYPE.TRAPEZOID_LINEAR_POS) { mTarget.target.unitsFamily = Family.length; }
+                                //else if (mcd.controlType == motorControlData.CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) { mTarget.target.unitsFamily = Family.angle; }
 
                                 if (mTarget.target.unitsFamily == Family.none)
                                 {

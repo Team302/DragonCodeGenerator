@@ -381,7 +381,7 @@ namespace ApplicationData
 
         public string getIncludePath()
         {
-            return String.Format("mechanisms/{0}/decoratormods/{0}.h", name);
+            return String.Format("mechanisms/{0}/{0}.h", name);
         }
     }
 
@@ -1392,7 +1392,7 @@ namespace ApplicationData
 
     public static class generatorContext
     {
-        public enum GenerationStage { Unknown, MechInstanceGen, MechInstanceDecorator }
+        public enum GenerationStage { Unknown, MechInstanceGenCpp, MechInstanceGenH, MechInstanceDecorator }
 
         public static GenerationStage generationStage { get; set; }
 
@@ -1446,17 +1446,18 @@ namespace ApplicationData
         public enum CONTROL_TYPE
         {
             PERCENT_OUTPUT,            /// Open Loop Control - values are between -1.0 and 1.0
+            
             POSITION_INCH,             /// Closed Loop Control - values are displacements measured in inches
-            POSITION_ABS_TICKS,        /// Closed Loop Control - values are measured in ticks
             POSITION_DEGREES,          /// Closed Loop Control - values are angles measured in degrees
-            POSITION_DEGREES_ABSOLUTE, /// Closed Loop Control - values are angles measured in degrees that don't need to be converted
-            VELOCITY_INCH,             /// Closed Loop Control - values are linear velocity measured in inches per second
-            VELOCITY_DEGREES,          /// Closed Loop Control - values are angular velocity measured in degrees per second
-            VELOCITY_RPS,              /// Closed Loop Control - values are in revolutions per second
-            VOLTAGE,                   /// Closed Loop Control - values are in volts
-            CURRENT,                   /// Closed Loop Control - values in amps
-            TRAPEZOID_ANGULAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
-            TRAPEZOID_LINEAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
+            
+            VELOCITY_FEET_PER_SEC,             /// Closed Loop Control - values are linear velocity measured in feet per second
+            VELOCITY_DEGREES_PER_SEC,          /// Closed Loop Control - values are angular velocity measured in degrees per second
+            VELOCITY_REV_PER_SEC,              /// Closed Loop Control - values are in revolutions per second
+            
+            //VOLTAGE,                   /// Closed Loop Control - values are in volts
+            //CURRENT,                   /// Closed Loop Control - values in amps
+            //TRAPEZOID_ANGULAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
+            //TRAPEZOID_LINEAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
             MAX_CONTROL_TYPES
         };
 
@@ -1522,8 +1523,8 @@ namespace ApplicationData
         {15}  // bool enableFOC"
              */
             string controlTypeStr = controlType.ToString();
-            if ((controlType == CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) || (controlType == CONTROL_TYPE.TRAPEZOID_LINEAR_POS))
-                controlTypeStr = "TRAPEZOID";
+            //if ((controlType == CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) || (controlType == CONTROL_TYPE.TRAPEZOID_LINEAR_POS))
+            //    controlTypeStr = "TRAPEZOID";
 
             string creation = string.Format(@"{0} = new {1}(
                                                             ControlModes::CONTROL_TYPE::{2}, // ControlModes::CONTROL_TYPE mode
@@ -1644,9 +1645,9 @@ namespace ApplicationData
         public override List<string> generateIncludes()
         {
             List<string> sb = new List<string>();
-            if ((generatorContext.theMechanismInstance != null) && (generatorContext.GenerationStage.MechInstanceDecorator == generatorContext.generationStage))
+            if( (generatorContext.theMechanismInstance != null) && (generatorContext.generationStage != generatorContext.GenerationStage.MechInstanceGenH) )
             {
-                sb.Add(string.Format("#include \"mechanisms/{1}/decoratormods/{0}State.h\"",
+                sb.Add(string.Format("#include \"mechanisms/{1}/{0}State.h\"",
                     name,
                     generatorContext.theMechanismInstance.name));
             }
@@ -1661,7 +1662,7 @@ namespace ApplicationData
 
                 if (generatorContext.singleStateGenFile)
                 {
-                    creation = string.Format("{0}State* {0}StateInst = new {0}State(string(\"{0}\"), {2}, new {1}AllStatesStateGen(m_activeRobotId, string(\"{0}\"), {2}, this), this)",
+                    creation = string.Format("{0}State* {0}StateInst = new {0}State(string(\"{0}\"), {2}, this, m_activeRobotId)",
                     name,
                     generatorContext.theMechanismInstance.name,
                     index);

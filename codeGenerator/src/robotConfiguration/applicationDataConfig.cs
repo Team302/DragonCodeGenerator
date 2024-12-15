@@ -98,6 +98,8 @@ namespace applicationConfiguration
                 {
                     string mechanismFullPath = Path.Combine(Path.GetDirectoryName(fullPathName), file);
 
+                    addProgress("Loading mechanism configuration " + mechanismFullPath);
+
                     string tempFile = File.ReadAllText(mechanismFullPath);
 
                     mechanism tempMech;

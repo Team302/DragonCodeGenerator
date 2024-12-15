@@ -316,14 +316,14 @@ namespace ApplicationData
 
         override public List<string> generateDefinition()
         {
-            return new List<string> { string.Format("{0}* {1}{0};", getImplementationName(), name) }; //todo add m_ in off season
+            return new List<string> { string.Format("{0}* {1};", getImplementationName(), name) }; //todo add m_ in off season
         }
 
         override public List<string> generateDefinitionGetter()
         {
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
             if (mcs.Count == 1)
-                return new List<string> { string.Format("IDragonMotorController* get{1}() const {{return {1}{0};}}", getImplementationName(), name) };
+                return new List<string> { string.Format("{0}* get{1}() const {{return {1};}}", getImplementationName(), name) };
             else
             {
                 StringBuilder sb = new StringBuilder();
@@ -359,15 +359,16 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    [ImplementationName("DragonTalonFX")]
-    [UserIncludeFile("hw/DragonTalonFX.h")]
+    [ImplementationName("ctre::phoenix6::hardware::TalonFX")]
+    [UserIncludeFile("ctre/phoenix6/TalonFX.hpp")]
+    [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
     [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
     [Using("ctre::phoenix6::signals::InvertedValue")]
     [Using("ctre::phoenix6::signals::NeutralModeValue")]
-    [Using("ctre::phoenix::motorcontrol::RemoteSensorSource")]
     public class TalonFX : MotorController
     {
         [Serializable]
@@ -515,7 +516,7 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>();
 
-            if (ControllerEnabled == Enabled.Yes)
+            if (false && (ControllerEnabled == Enabled.Yes))
             {
                 initCode.Add(string.Format(@"{0}->SetCurrentLimits({1},
                                             {2}({3}),
@@ -672,26 +673,23 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format("{0}{1} = new {1}(\"{0}\",RobotElementNames::{2},{3}, {4}, IDragonMotorController::MOTOR_TYPE::{5}, \"{6}\");",
+            string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
                 name,
                 getImplementationName(),
-                utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
                 canID.value.ToString(),
-                theDistanceAngleCalcInfo.getName(name),
-                motorType,
                 canBusName.ToString());
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine(conditionalsSb.ToString());
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("{");
-            sb.AppendLine(theDistanceAngleCalcInfo.getDefinition(name));
+            //sb.AppendLine(conditionalsSb.ToString());
+            //if (robotsToCreateFor.Count > 0)
+            //    sb.AppendLine("{");
+            //sb.AppendLine(theDistanceAngleCalcInfo.getDefinition(name));
             sb.AppendLine(creation);
-            sb.AppendLine();
-            sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("}");
+            //sb.AppendLine();
+            //sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
+            //if (robotsToCreateFor.Count > 0)
+            //    sb.AppendLine("}");
             sb.AppendLine();
 
             return new List<string>() { sb.ToString() };
