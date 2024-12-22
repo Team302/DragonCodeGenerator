@@ -230,7 +230,7 @@ namespace CoreCodeGenerator
                                 MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
                                 if (mcd != null)
                                 {
-                                    targetUpdateFunctions.Add(mc.GenerateTargetUpdateFunctions(mcd));
+                                    targetUpdateFunctions.AddRange(mc.GenerateTargetUpdateFunctions(mcd));
                                     targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
                                     if (string.IsNullOrEmpty(genericTargetVariable))
                                         genericTargetVariable = mc.GenerateGenericTargetMemberVariable();

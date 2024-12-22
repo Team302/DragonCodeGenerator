@@ -354,9 +354,9 @@ namespace ApplicationData
         {
             return "";
         }
-        virtual public string GenerateTargetUpdateFunctions(motorControlData mcd)
+        virtual public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
         {
-            return "";
+            return new List<string>();
         }
         virtual public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
@@ -752,28 +752,32 @@ namespace ApplicationData
             return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", this.name);
         }
 
-        override public string GenerateTargetUpdateFunctions(motorControlData mcd)
+        override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
         {
+            List<string> output = new List<string>();
+
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name);
+                output.Add( string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add( string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {0}{1}.Output = percentOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
-                return string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {0}{1}.Output = voltageOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name);
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {0}{1}.Output = voltageOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {0}{1}.Output = voltageOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
             }
 
-            return "";
+            return output;
         }
         override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}({2})", this.name, mcd.name, value);
+                return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value, mcd.enableFOC);
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}))", this.name, mcd.name, value);
+                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
             }
 
             return "";
