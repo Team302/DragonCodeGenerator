@@ -138,6 +138,12 @@ namespace CoreCodeGenerator
 
                         #endregion
 
+                        List<string> targetRefreshCalls = new List<string>();
+                        foreach(MotorController mc in mi.mechanism.MotorControllers)
+                        {
+                            targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                        }
+                        resultString = resultString.Replace("$$_CYCLIC_GENERIC_TARGET_REFRESH_$$", ListToString(targetRefreshCalls, ";"));
 
                         #region Generate fixed decorator Cpp File
 
@@ -215,7 +221,7 @@ namespace CoreCodeGenerator
 
                         List<string> targetVariables = new List<string>();
                         List<string> targetUpdateFunctions = new List<string>();
-
+                        string genericTargetVariable = "";
                         foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
                         {
                             foreach (motorTarget mt in s.motorTargets)
@@ -226,9 +232,14 @@ namespace CoreCodeGenerator
                                 {
                                     targetUpdateFunctions.Add(mc.GenerateTargetUpdateFunctions(mcd));
                                     targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
+                                    if (string.IsNullOrEmpty(genericTargetVariable))
+                                        genericTargetVariable = mc.GenerateGenericTargetMemberVariable();
                                 }
                             }
                         }
+
+                        if( targetVariables.Count > 0 )
+                            targetVariables.Add(genericTargetVariable);
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));

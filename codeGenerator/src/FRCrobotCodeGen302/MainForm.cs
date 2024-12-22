@@ -1618,6 +1618,7 @@ namespace FRCrobotCodeGen302
                             if (mcd != null)
                             {
                                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT) { mTarget.target.unitsFamily = Family.none; }
+                                if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT) { mTarget.target.unitsFamily = Family.voltage; }
 
                                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH) { mTarget.target.unitsFamily = Family.length; }
                                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES) { mTarget.target.unitsFamily = Family.angle; }

@@ -350,12 +350,19 @@ namespace ApplicationData
         {
             return "";
         }
-
+        virtual public string GenerateGenericTargetMemberVariable()
+        {
+            return "";
+        }
         virtual public string GenerateTargetUpdateFunctions(motorControlData mcd)
         {
             return "";
         }
         virtual public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
+        {
+            return "";
+        }
+        virtual public string GenerateCyclicGenericTargetRefresh()
         {
             return "";
         }
@@ -732,14 +739,28 @@ namespace ApplicationData
             {
                 return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{1}{{0.0}};", this.name, mcd.name);
             }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{1}{{units::voltage::volt_t(0.0)}};", this.name, mcd.name);
+            }
 
             return "";
         }
+
+        override public string GenerateGenericTargetMemberVariable()
+        {
+            return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", this.name);
+        }
+
         override public string GenerateTargetUpdateFunctions(motorControlData mcd)
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; }}", this.name, mcd.name);
+                return string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {0}{1}.Output = voltageOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name);
             }
 
             return "";
@@ -750,8 +771,17 @@ namespace ApplicationData
             {
                 return string.Format("UpdateTarget{0}{1}({2})", this.name, mcd.name, value);
             }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}))", this.name, mcd.name, value);
+            }
 
             return "";
+        }
+
+        override public string GenerateCyclicGenericTargetRefresh()
+        {
+            return string.Format("{0}->SetControl(*{0}ActiveTarget);", this.name);
         }
     }
 

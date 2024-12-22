@@ -140,6 +140,11 @@ namespace CoreCodeGenerator
             if (!doNotWriteIfExists)
                 contents = theToolConfiguration.EditorFormattingDisable.Trim() + Environment.NewLine + contents.TrimStart();
 
+            // remove multiple sequential ;
+            RegexOptions options = RegexOptions.None;
+            Regex regex = new Regex("[;]{2,}", options);
+            contents = regex.Replace(contents, ";");
+
             contents = astyle.AStyleCaller.beautify(contents, null);
 
             string outputFullFilePathName = getOutputFileFullPath(outputFilePathName);
