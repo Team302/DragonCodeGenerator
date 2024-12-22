@@ -83,8 +83,9 @@ namespace CoreCodeGenerator
 
                         string createFunctionDeclarations;
                         resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
-                        string initializationFunctionDeclarations;
-                        resultString = resultString.Replace("$$_INITIALZATION_FUNCTIONS_$$", GenerateInitializationFunctions(mi, out initializationFunctionDeclarations));
+                        string publicInitializationFunctionDeclarations;
+                        string privateInitializationFunctionDeclarations;
+                        resultString = resultString.Replace("$$_INITIALZATION_FUNCTIONS_$$", GenerateInitializationFunctions(mi, out publicInitializationFunctionDeclarations, out privateInitializationFunctionDeclarations));
 
                         resultString = resultString.Replace("$$_MECHANISM_TYPE_NAME_$$", ToUnderscoreCase(mi.name).ToUpper());
                         resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
@@ -199,7 +200,8 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(mi.mechanism, "generateIncludes").Distinct().ToList()));
 
                         resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", createFunctionDeclarations);
-                        resultString = resultString.Replace("$$_INITIALZATION_FUNCTIONS_$$", initializationFunctionDeclarations);
+                        resultString = resultString.Replace("$$_PUBLIC_INITIALZATION_FUNCTIONS_$$", publicInitializationFunctionDeclarations);
+                        resultString = resultString.Replace("$$_PRIVATE_INITIALZATION_FUNCTIONS_$$", privateInitializationFunctionDeclarations);
 
                         resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
@@ -210,6 +212,26 @@ namespace CoreCodeGenerator
 
                         List<string> mechElements = generateMethod(mi.mechanism, "generateDefinition").FindAll(me => !me.StartsWith("state* "));
                         resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_$$", ListToString(mechElements));
+
+                        List<string> targetVariables = new List<string>();
+                        List<string> targetUpdateFunctions = new List<string>();
+
+                        foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
+                        {
+                            foreach (motorTarget mt in s.motorTargets)
+                            {
+                                motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
+                                MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
+                                if (mcd != null)
+                                {
+                                    targetUpdateFunctions.Add(mc.GenerateTargetUpdateFunctions(mcd));
+                                    targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
+                                }
+                            }
+                        }
+
+                        resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
 
                         //closed loop parameters
                         string allParameters = "";
@@ -356,10 +378,17 @@ namespace CoreCodeGenerator
 
                                         setTargetFunctionDefinitions.AppendLine(String.Format("void {0}State::Init{1}()", s.name, r.getFullRobotName()));
                                         setTargetFunctionDefinitions.AppendLine("{");
-                                        setTargetFunctionDefinitions.AppendLine("// here set the targets ");
-                                        setTargetFunctionDefinitions.AppendLine("/*");
-                                        setTargetFunctionDefinitions.AppendLine(stateTargets.ToString().Trim());
-                                        setTargetFunctionDefinitions.AppendLine("*/");
+                                        foreach (motorTarget mT in s.motorTargets)
+                                        {
+                                            motorControlData mcd = theMi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
+                                            MotorController mc = theMi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
+                                            if (mc == null)
+                                                addProgress(string.Format("In mechanism {0}, cannot find a Motor controller called {1}, referenced in state {2}, target {3}", theMi.name, mT.motorName, s.name, mT.name));
+                                            else if (mcd == null)
+                                                addProgress(string.Format("In mechanism {0}, cannot find a Motor control data called {1}, referenced in state {2}", theMi.name, mT.controlDataName, s.name));
+                                            else
+                                                setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                        }
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();
 
@@ -502,7 +531,7 @@ namespace CoreCodeGenerator
             return ListToString(createCode, Environment.NewLine);
         }
 
-        private string GenerateInitializationFunctions(mechanismInstance mi, out string functionDeclarations)
+        private string GenerateInitializationFunctions(mechanismInstance mi, out string publicFunctionDeclarations, out string privateFunctionDeclarations)
         {
             string createFunctionTemplate =
                             @"void $$_MECHANISM_INSTANCE_NAME_$$::Initialize$$_ROBOT_ID_$$()
@@ -513,25 +542,38 @@ namespace CoreCodeGenerator
             string createFunctionDeclarationTemplate = "void Initialize$$_ROBOT_ID_$$()";
 
             List<string> createCode = new List<string>();
-            List<string> initDeclarationCode = new List<string>();
+            List<string> createCodeFunctions = new List<string>();
+            List<string> publicInitDeclarationCode = new List<string>();
+            List<string> privateInitDeclarationCode = new List<string>();
             foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
             {
                 mechanismInstance mis = r.mechanismInstances.Find(m => m.name == mi.name);
                 if (mis != null)
                 {
                     string temp = createFunctionTemplate;
-                    temp = temp.Replace("$$_ELEMENT_INITIALIZATION_$$", ListToString(generateMethod(mis, "generateInitialization")));
+
+                    List<string> initFunctions = generateMethod(mis, "generateInitialization");
+                    List<string> initFunctionCalls = initFunctions.FindAll(s => s.StartsWith("CALL:"));
+                    List<string> initFunctionDeclarations = initFunctions.FindAll(s => s.StartsWith("DECLARATION:"));
+
+                    temp = temp.Replace("$$_ELEMENT_INITIALIZATION_$$", ListToString(initFunctionCalls, ";").Replace("CALL:", ""));
                     temp = temp.Replace("$$_ROBOT_ID_$$", r.getFullRobotName());
                     createCode.Add(temp);
 
+                    string function = ListToString(initFunctions.FindAll(s => !s.StartsWith("CALL:") && !s.StartsWith("DECLARATION:"))).Replace("$$_ROBOT_ID_$$", r.getFullRobotName());
+                    createCodeFunctions.Add(function);
+
                     string tempDecl = createFunctionDeclarationTemplate;
-                    initDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()));
+                    publicInitDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()));
+                    foreach (string s in initFunctionDeclarations)
+                        privateInitDeclarationCode.Add(s.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()).Replace("DECLARATION:", ""));
                 }
             }
 
-            functionDeclarations = ListToString(initDeclarationCode, ";");
+            publicFunctionDeclarations = ListToString(publicInitDeclarationCode, ";");
+            privateFunctionDeclarations = ListToString(privateInitDeclarationCode, ";");
 
-            return ListToString(createCode, Environment.NewLine);
+            return ListToString(createCode, Environment.NewLine) + Environment.NewLine + ListToString(createCodeFunctions);
         }
 
 

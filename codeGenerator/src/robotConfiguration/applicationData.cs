@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using static ApplicationData.motorControlData;
 
 //todo handle optional elements such as followID in a motorcontroller
 //todo the range of pdpID for ctre is 0-15, for REV it is 0-19. How to adjust the range allowed in the GUI. If initially REV is used and an id > 15 is used, then user chooses CTRE, what to do?
@@ -1434,6 +1435,7 @@ namespace ApplicationData
         public enum CONTROL_TYPE
         {
             PERCENT_OUTPUT,            /// Open Loop Control - values are between -1.0 and 1.0
+            VOLTAGE_OUTPUT,            /// Open Loop Control - specify a fixed voltage. In reality will be capped by VBat
 
             POSITION_INCH,             /// Closed Loop Control - values are displacements measured in inches
             POSITION_DEGREES,          /// Closed Loop Control - values are angles measured in degrees
@@ -1446,14 +1448,14 @@ namespace ApplicationData
             //CURRENT,                   /// Closed Loop Control - values in amps
             //TRAPEZOID_ANGULAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
             //TRAPEZOID_LINEAR_POS,     /// Closed Loop Control - trapezoid profile (e.g. Motion Magic)
-            MAX_CONTROL_TYPES
+            //MAX_CONTROL_TYPES
         };
 
         public enum CONTROL_RUN_LOCS
         {
             MOTOR_CONTROLLER,
             ROBORIO,
-            MAX_CONTROL_RUN_LOCS
+            //MAX_CONTROL_RUN_LOCS
         };
 
         public enum FEEDFORWARD_TYPE
@@ -1561,7 +1563,7 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : ControlData does not have initialization needs", name)
+                string.Format("")
             };
 
             return initCode;
@@ -1669,7 +1671,7 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("//todo create initialization for {0}", name)
+                string.Format("")
             };
 
             return initCode;
