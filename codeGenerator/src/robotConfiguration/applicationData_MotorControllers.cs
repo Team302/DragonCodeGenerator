@@ -312,7 +312,7 @@ namespace ApplicationData
         {
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
             if (mcs.Count == 1)
-                return new List<string> { string.Format("{0}* Get{1}() const {{return m_{1};}}", getImplementationName(), name) };
+                return new List<string> { string.Format("{0}* Get{1}() const {{return {1};}}", getImplementationName(), AsMemberVariableName()) };
             else
             {
                 StringBuilder sb = new StringBuilder();
@@ -556,9 +556,9 @@ namespace ApplicationData
                                                 currconfigs.SupplyCurrentLimitEnable = {6};
                                                 currconfigs.SupplyCurrentThreshold = {7}({8}).to<double>();
                                                 currconfigs.SupplyTimeThreshold = {9}({10}).to<double>();
-                                                m_{0}->GetConfigurator().Apply(currconfigs);",
+                                                {0}->GetConfigurator().Apply(currconfigs);",
 
-                                                name,
+                                                AsMemberVariableName(),
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.statorCurrentLimit.__units__), theCurrentLimits.statorCurrentLimit.value,
                                                 theCurrentLimits.enableStatorCurrentLimit.value.ToString().ToLower(),
 
@@ -604,9 +604,9 @@ namespace ApplicationData
 	                                            hwswitch.ReverseLimitAutosetPositionValue = {12};
 	                                            hwswitch.ReverseLimitSource = {13}::{14};
 	                                            hwswitch.ReverseLimitType = {15}::{16};
-	                                            m_{0}->GetConfigurator().Apply(hwswitch);"
+	                                            {0}->GetConfigurator().Apply(hwswitch);"
                                                 ,
-                                                name,
+                                                AsMemberVariableName(),
                                                 theConfigHWLimitSW.enableForward.value.ToString().ToLower(),
                                                 theConfigHWLimitSW.remoteForwardSensorID.value,
                                                 theConfigHWLimitSW.forwardResetPosition.value.ToString().ToLower(),
@@ -636,9 +636,9 @@ namespace ApplicationData
                                                 motorconfig.PeakForwardDutyCycle = {5};
                                                 motorconfig.PeakReverseDutyCycle = {6};
                                                 motorconfig.DutyCycleNeutralDeadband = {7};
-                                                m_{0}->GetConfigurator().Apply(motorconfig);",
+                                                {0}->GetConfigurator().Apply(motorconfig);",
 
-                                                name,
+                                                AsMemberVariableName(),
                                                 theConfigMotorSettings.inverted.GetType().Name, theConfigMotorSettings.inverted,
                                                 theConfigMotorSettings.mode.GetType().Name, theConfigMotorSettings.mode,
                                                 theConfigMotorSettings.peakForwardDutyCycle.value,
@@ -720,8 +720,8 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format("m_{0} = new {1}({2}, \"{3}\");",
-                name,
+            string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
+                AsMemberVariableName(),
                 getImplementationName(),
                 canID.value.ToString(),
                 canBusName.ToString());
@@ -744,17 +744,19 @@ namespace ApplicationData
 
         override public string GenerateTargetMemberVariable(motorControlData mcd)
         {
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{1}{{0.0}};", this.name, mcd.name);
+                return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
-                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{1}{{units::voltage::volt_t(0.0)}};", this.name, mcd.name);
+                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
             {
-                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{1}{{units::angle::turn_t(0.0)}};", this.name, mcd.name);
+                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
             }
 
             return "";
@@ -762,27 +764,30 @@ namespace ApplicationData
 
         override public string GenerateGenericTargetMemberVariable()
         {
-            return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", this.name);
+            return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", AsMemberVariableName());
         }
 
         override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
         {
             List<string> output = new List<string>();
 
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+            string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
+
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
-                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {0}{1}.Output = percentOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {0}{1}.Output = voltageOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {0}{1}.Output = voltageOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {0}{1}.Position = position; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {0}{1}.Position = position; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
             }
 
             return output;
@@ -824,7 +829,7 @@ namespace ApplicationData
                 sb.AppendLine(string.Format("slot0Configs.kP = 2.4;"));
                 sb.AppendLine(string.Format("slot0Configs.kI = 0;"));
                 sb.AppendLine(string.Format("slot0Configs.kD = 0.1;"));
-                sb.AppendLine(string.Format("m_{0}->GetConfigurator().Apply(slot0Configs);",this.name));
+                sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);",AsMemberVariableName()));
                 sb.AppendLine("}");
 
                 return sb.ToString();
@@ -855,7 +860,7 @@ namespace ApplicationData
 
         override public string GenerateCyclicGenericTargetRefresh()
         {
-            return string.Format("m_{0}->SetControl(*{0}ActiveTarget);", this.name);
+            return string.Format("{0}->SetControl(*{0}ActiveTarget);", AsMemberVariableName());
         }
     }
 

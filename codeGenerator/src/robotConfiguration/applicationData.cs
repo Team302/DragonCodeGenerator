@@ -1221,9 +1221,14 @@ namespace ApplicationData
 
         virtual public string AsMemberVariableName()
         {
+            return string.Format("{0}", AsMemberVariableName(name));
+        }
+
+        virtual public string AsMemberVariableName(string n)
+        {
             string formattedName = "NameCannotBeAnEmptyString";
-            if (!string.IsNullOrEmpty(name))
-                formattedName = char.ToUpper(name[0]) + name.Substring(1);
+            if (!string.IsNullOrEmpty(n))
+                formattedName = char.ToUpper(n[0]) + n.Substring(1);
 
             return string.Format("m_{0}", formattedName);
         }
@@ -1286,12 +1291,12 @@ namespace ApplicationData
         }
         virtual public List<string> generateDefinition()
         {
-            return new List<string> { string.Format("{0}* m_{1};", getImplementationName(), name) }; //todo add m_ in off season
+            return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) }; //todo add m_ in off season
         }
 
         virtual public List<string> generateDefinitionGetter()
         {
-            return new List<string> { string.Format("{0}* Get{1}() const {{return m_{1};}}", getImplementationName(), name) };
+            return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), name, AsMemberVariableName()) };
         }
 
         virtual public List<string> generateInitialization()
@@ -1526,7 +1531,7 @@ namespace ApplicationData
             //if ((controlType == CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) || (controlType == CONTROL_TYPE.TRAPEZOID_LINEAR_POS))
             //    controlTypeStr = "TRAPEZOID";
 
-            string creation = string.Format(@"m_{0} = new {1}(
+            string creation = string.Format(@"{0} = new {1}(
                                                             ControlModes::CONTROL_TYPE::{2}, // ControlModes::CONTROL_TYPE mode
                                                             ControlModes::CONTROL_RUN_LOCS::{3}, // ControlModes::CONTROL_RUN_LOCS server
                                                             ""{0}"", // std::string indentifier
@@ -1542,7 +1547,7 @@ namespace ApplicationData
                                                             {13}, // double nominalValue
                                                             {14}  // bool enableFOC
                 );",
-            name,
+            AsMemberVariableName(),
                 getImplementationName(),
                 controlTypeStr,
                 controlLoopLocation,
@@ -1628,12 +1633,12 @@ namespace ApplicationData
 
         public string GenerateControlDataVariable(string stateName)
         {
-            return string.Format("ControlData* m_{0}{1}{2};", motorName, controlDataName, stateName);
+            return string.Format("ControlData* {0}{1}{2};", AsMemberVariableName(motorName), controlDataName, stateName);
         }
 
         public string GenerateControlDataVariableGetter(string stateName)
         {
-            return string.Format("ControlData* Get{0}{1}{2}() const {{return m_{0}{1}{2};}}", motorName, controlDataName, stateName);
+            return string.Format("ControlData* Get{0}{1}{2}() const {{return {3}{1}{2};}}", motorName, controlDataName, stateName, AsMemberVariableName(motorName));
         }
     }
 
