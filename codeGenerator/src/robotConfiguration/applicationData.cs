@@ -1219,6 +1219,15 @@ namespace ApplicationData
             name = GetType().Name;
         }
 
+        virtual public string AsMemberVariableName()
+        {
+            string formattedName = "NameCannotBeAnEmptyString";
+            if (!string.IsNullOrEmpty(name))
+                formattedName = char.ToUpper(name[0]) + name.Substring(1);
+
+            return string.Format("m_{0}", formattedName);
+        }
+
         virtual public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             refresh = helperFunctions.RefreshLevel.none;
@@ -1277,12 +1286,12 @@ namespace ApplicationData
         }
         virtual public List<string> generateDefinition()
         {
-            return new List<string> { string.Format("{0}* {1};", getImplementationName(), name) }; //todo add m_ in off season
+            return new List<string> { string.Format("{0}* m_{1};", getImplementationName(), name) }; //todo add m_ in off season
         }
 
         virtual public List<string> generateDefinitionGetter()
         {
-            return new List<string> { string.Format("{0}* get{1}() const {{return {1};}}", getImplementationName(), name) };
+            return new List<string> { string.Format("{0}* Get{1}() const {{return m_{1};}}", getImplementationName(), name) };
         }
 
         virtual public List<string> generateInitialization()
@@ -1389,6 +1398,7 @@ namespace ApplicationData
         public static mechanism theMechanism { get; set; }
         public static mechanismInstance theMechanismInstance { get; set; }
         public static int stateIndex { get; set; }
+        public static state theState { get; set; }
         public static applicationData theRobot { get; set; }
         public static topLevelAppDataElement theRobotVariants { get; set; }
         public static toolConfiguration theGeneratorConfig { get; set; }
@@ -1516,7 +1526,7 @@ namespace ApplicationData
             //if ((controlType == CONTROL_TYPE.TRAPEZOID_ANGULAR_POS) || (controlType == CONTROL_TYPE.TRAPEZOID_LINEAR_POS))
             //    controlTypeStr = "TRAPEZOID";
 
-            string creation = string.Format(@"{0} = new {1}(
+            string creation = string.Format(@"m_{0} = new {1}(
                                                             ControlModes::CONTROL_TYPE::{2}, // ControlModes::CONTROL_TYPE mode
                                                             ControlModes::CONTROL_RUN_LOCS::{3}, // ControlModes::CONTROL_RUN_LOCS server
                                                             ""{0}"", // std::string indentifier
@@ -1614,6 +1624,16 @@ namespace ApplicationData
             target.name = "Target";
             motorName = "theMotorName";
             controlDataName = "theControlData";
+        }
+
+        public string GenerateControlDataVariable(string stateName)
+        {
+            return string.Format("ControlData* m_{0}{1}{2};", motorName, controlDataName, stateName);
+        }
+
+        public string GenerateControlDataVariableGetter(string stateName)
+        {
+            return string.Format("ControlData* Get{0}{1}{2}() const {{return m_{0}{1}{2};}}", motorName, controlDataName, stateName);
         }
     }
 

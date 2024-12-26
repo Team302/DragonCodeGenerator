@@ -105,6 +105,24 @@ namespace CoreCodeGenerator
                         }
                         resultString = resultString.Replace("$$_STATE_MAP_$$", ListToString(enumMapList, ",").Trim());
 
+                        #region Create the functions which update the PIDs in the motor controllers 
+                        List<string> pidUpdateFunctions = new List<string>();
+                        List<string> pidUpdateFunctionDeclarations = new List<string>();
+                        foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
+                        {
+                            foreach (motorTarget mt in s.motorTargets)
+                            {
+                                motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
+                                MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
+                                if( (mcd != null) && (mc != null) )
+                                {
+                                    pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
+                                    pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
+                                }
+                            }
+                        }
+                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTION_$$", ListToString(pidUpdateFunctions.Distinct().ToList()));
+                        #endregion
 
                         #region Tunable Parameters
                         string allParameterReading = "";
@@ -125,8 +143,8 @@ namespace CoreCodeGenerator
                                     if (!skip)
                                     {
                                         string setItem = pi.Name == "iZone" ? "IZone" : pi.Name.Replace("Gain", "").ToUpper();
-                                        allParameterReading += string.Format("{0}->Set{4}( m_table.get()->GetNumber(\"{0}_{1}\", {2}));{3}", mcd.name, pi.Name, pi.GetValue(obj), Environment.NewLine, setItem);
-                                        allParameterWriting += string.Format(" m_table.get()->PutNumber(\"{0}_{1}\", {0}->Get{4}());{3}", mcd.name, pi.Name, pi.GetValue(obj), Environment.NewLine, setItem);
+                                        allParameterReading += string.Format("{0}->Set{4}( m_table.get()->GetNumber(\"{5}_{1}\", {2}));{3}", mcd.AsMemberVariableName(), pi.Name, pi.GetValue(obj), Environment.NewLine, setItem, mcd.name);
+                                        allParameterWriting += string.Format("m_table.get()->PutNumber(\"{5}_{1}\", {0}->Get{4}());{3}", mcd.AsMemberVariableName(), pi.Name, pi.GetValue(obj), Environment.NewLine, setItem, mcd.name);
                                     }
                                 }
 
@@ -139,7 +157,7 @@ namespace CoreCodeGenerator
                         #endregion
 
                         List<string> targetRefreshCalls = new List<string>();
-                        foreach(MotorController mc in mi.mechanism.MotorControllers)
+                        foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
                             targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
                         }
@@ -213,11 +231,15 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
 
-                        List<string> mechElementsGetters = generateMethod(mi.mechanism, "generateDefinitionGetter").FindAll(me => !me.StartsWith("state* "));
-                        resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_GETTERS_$$", ListToString(mechElementsGetters.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTIONS_$$", ListToString(pidUpdateFunctionDeclarations.Distinct().ToList(), ";"));
 
+                        //=============== generate the mechanism member variables
                         List<string> mechElements = generateMethod(mi.mechanism, "generateDefinition").FindAll(me => !me.StartsWith("state* "));
                         resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_$$", ListToString(mechElements));
+                        
+                        //=============== generate the get functions for the mechanism member variables
+                        List<string> mechElementsGetters = generateMethod(mi.mechanism, "generateDefinitionGetter").FindAll(me => !me.StartsWith("state* "));
+                        resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_GETTERS_$$", ListToString(mechElementsGetters.Distinct().ToList()));
 
                         List<string> targetVariables = new List<string>();
                         List<string> targetUpdateFunctions = new List<string>();
@@ -238,7 +260,7 @@ namespace CoreCodeGenerator
                             }
                         }
 
-                        if( targetVariables.Count > 0 )
+                        if (targetVariables.Count > 0)
                             targetVariables.Add(genericTargetVariable);
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));

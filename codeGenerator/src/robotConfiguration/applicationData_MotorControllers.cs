@@ -305,14 +305,14 @@ namespace ApplicationData
 
         override public List<string> generateDefinition()
         {
-            return new List<string> { string.Format("{0}* {1};", getImplementationName(), name) }; //todo add m_ in off season
+            return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) };
         }
 
         override public List<string> generateDefinitionGetter()
         {
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
             if (mcs.Count == 1)
-                return new List<string> { string.Format("{0}* get{1}() const {{return {1};}}", getImplementationName(), name) };
+                return new List<string> { string.Format("{0}* Get{1}() const {{return m_{1};}}", getImplementationName(), name) };
             else
             {
                 StringBuilder sb = new StringBuilder();
@@ -366,6 +366,14 @@ namespace ApplicationData
         {
             return "";
         }
+        virtual public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        {
+            return "";
+        }
+        virtual public string GeneratePIDSetFunctionDeclaration(motorControlData mcd, mechanismInstance mi)
+        {
+            return "";
+        }    
     }
 
     [Serializable()]
@@ -382,6 +390,7 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
     [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
     [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
+    [Using("ctre::phoenix6::configs::Slot0Configs")]
     public class TalonFX : MotorController
     {
         [Serializable]
@@ -547,7 +556,7 @@ namespace ApplicationData
                                                 currconfigs.SupplyCurrentLimitEnable = {6};
                                                 currconfigs.SupplyCurrentThreshold = {7}({8}).to<double>();
                                                 currconfigs.SupplyTimeThreshold = {9}({10}).to<double>();
-                                                {0}->GetConfigurator().Apply(currconfigs);",
+                                                m_{0}->GetConfigurator().Apply(currconfigs);",
 
                                                 name,
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.statorCurrentLimit.__units__), theCurrentLimits.statorCurrentLimit.value,
@@ -595,7 +604,7 @@ namespace ApplicationData
 	                                            hwswitch.ReverseLimitAutosetPositionValue = {12};
 	                                            hwswitch.ReverseLimitSource = {13}::{14};
 	                                            hwswitch.ReverseLimitType = {15}::{16};
-	                                            {0}->GetConfigurator().Apply(hwswitch);"
+	                                            m_{0}->GetConfigurator().Apply(hwswitch);"
                                                 ,
                                                 name,
                                                 theConfigHWLimitSW.enableForward.value.ToString().ToLower(),
@@ -627,7 +636,7 @@ namespace ApplicationData
                                                 motorconfig.PeakForwardDutyCycle = {5};
                                                 motorconfig.PeakReverseDutyCycle = {6};
                                                 motorconfig.DutyCycleNeutralDeadband = {7};
-                                                {0}->GetConfigurator().Apply(motorconfig);",
+                                                m_{0}->GetConfigurator().Apply(motorconfig);",
 
                                                 name,
                                                 theConfigMotorSettings.inverted.GetType().Name, theConfigMotorSettings.inverted,
@@ -711,7 +720,7 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
+            string creation = string.Format("m_{0} = new {1}({2}, \"{3}\");",
                 name,
                 getImplementationName(),
                 canID.value.ToString(),
@@ -743,6 +752,10 @@ namespace ApplicationData
             {
                 return string.Format("ctre::phoenix6::controls::VoltageOut {0}{1}{{units::voltage::volt_t(0.0)}};", this.name, mcd.name);
             }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{1}{{units::angle::turn_t(0.0)}};", this.name, mcd.name);
+            }
 
             return "";
         }
@@ -758,13 +771,18 @@ namespace ApplicationData
 
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                output.Add( string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
-                output.Add( string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {0}{1}.Output = percentOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {0}{1}.Output = percentOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {0}{1}.Output = percentOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
                 output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {0}{1}.Output = voltageOut; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
                 output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {0}{1}.Output = voltageOut; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {0}{1}.Position = position; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {0}{1}.Position = position; {0}{1}.EnableFOC = enableFOC; {0}ActiveTarget = &{0}{1};}}", this.name, mcd.name));
             }
 
             return output;
@@ -779,13 +797,65 @@ namespace ApplicationData
             {
                 return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
             }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }
 
             return "";
         }
 
+        override public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        {
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return ""; // not closed loop
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return ""; // not closed loop
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", this.name, mcd.name, mi.name));
+                sb.AppendLine("{");
+                sb.AppendLine("Slot0Configs slot0Configs{};");
+                sb.AppendLine(string.Format("slot0Configs.kP = 2.4;"));
+                sb.AppendLine(string.Format("slot0Configs.kI = 0;"));
+                sb.AppendLine(string.Format("slot0Configs.kD = 0.1;"));
+                sb.AppendLine(string.Format("m_{0}->GetConfigurator().Apply(slot0Configs);",this.name));
+                sb.AppendLine("}");
+
+                return sb.ToString();
+            }
+
+            return "";
+        }
+
+        override public string GeneratePIDSetFunctionDeclaration(motorControlData mcd, mechanismInstance mi)
+        {
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return ""; // not closed loop
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return ""; // not closed loop
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("void SetPID{0}{1}()", this.name, mcd.name, mi.name);
+            }
+
+            return "";
+        }
+
+        
+
         override public string GenerateCyclicGenericTargetRefresh()
         {
-            return string.Format("{0}->SetControl(*{0}ActiveTarget);", this.name);
+            return string.Format("m_{0}->SetControl(*{0}ActiveTarget);", this.name);
         }
     }
 
