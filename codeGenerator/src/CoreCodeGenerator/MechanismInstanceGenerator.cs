@@ -114,7 +114,7 @@ namespace CoreCodeGenerator
                             {
                                 motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
                                 MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
-                                if( (mcd != null) && (mc != null) )
+                                if ((mcd != null) && (mc != null))
                                 {
                                     pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
                                     pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
@@ -236,7 +236,7 @@ namespace CoreCodeGenerator
                         //=============== generate the mechanism member variables
                         List<string> mechElements = generateMethod(mi.mechanism, "generateDefinition").FindAll(me => !me.StartsWith("state* "));
                         resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_$$", ListToString(mechElements));
-                        
+
                         //=============== generate the get functions for the mechanism member variables
                         List<string> mechElementsGetters = generateMethod(mi.mechanism, "generateDefinitionGetter").FindAll(me => !me.StartsWith("state* "));
                         resultString = resultString.Replace("$$_MECHANISM_ELEMENTS_GETTERS_$$", ListToString(mechElementsGetters.Distinct().ToList()));
@@ -420,7 +420,12 @@ namespace CoreCodeGenerator
                                             else if (mcd == null)
                                                 addProgress(string.Format("In mechanism {0}, cannot find a Motor control data called {1}, referenced in state {2}", theMi.name, mT.controlDataName, s.name));
                                             else
+                                            {
+                                                string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
+                                                if (!string.IsNullOrEmpty(PidSetCall))
+                                                    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
                                                 setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                            }
                                         }
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();

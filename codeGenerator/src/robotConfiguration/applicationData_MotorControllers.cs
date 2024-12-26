@@ -373,7 +373,11 @@ namespace ApplicationData
         virtual public string GeneratePIDSetFunctionDeclaration(motorControlData mcd, mechanismInstance mi)
         {
             return "";
-        }    
+        }
+        virtual public string GeneratePIDSetFunctionCall(motorControlData mcd, mechanismInstance mi)
+        {
+            return "";
+        }
     }
 
     [Serializable()]
@@ -856,7 +860,14 @@ namespace ApplicationData
             return "";
         }
 
-        
+        override public string GeneratePIDSetFunctionCall(motorControlData mcd, mechanismInstance mi)
+        {
+            string call = GeneratePIDSetFunctionDeclaration(mcd, mi);
+            if (string.IsNullOrEmpty(call))
+                return "";
+
+            return string.Format("{0};",call.Replace("void ", ""));
+        }
 
         override public string GenerateCyclicGenericTargetRefresh()
         {
