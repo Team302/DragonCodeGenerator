@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Serialization;
 //using ApplicationData.motorControlData;
 
 namespace CoreCodeGenerator
@@ -150,6 +151,8 @@ namespace CoreCodeGenerator
 
                             }
                         }
+
+                        mi.SerializeToXml(Path.Combine(getDeployOutputPath(), "mechanisms"));
 
                         resultString = resultString.Replace("$$_READ_TUNABLE_PARAMETERS_$$", allParameterReading);
                         resultString = resultString.Replace("$$_PUSH_TUNABLE_PARAMETERS_$$", allParameterWriting);
@@ -639,5 +642,9 @@ namespace CoreCodeGenerator
             return Path.Combine(theToolConfiguration.rootOutputFolder, "mechanisms", mechanismName);
         }
 
+        internal string getDeployOutputPath()
+        {
+            return Path.Combine(theToolConfiguration.rootOutputFolder, @"..\deploy");
+        }
     }
 }

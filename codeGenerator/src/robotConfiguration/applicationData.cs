@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -371,6 +372,96 @@ namespace ApplicationData
         public string getIncludePath()
         {
             return String.Format("mechanisms/{0}/{0}.h", name);
+        }
+
+        public void SerializeToXml(string outputFolder)
+        {
+            Directory.CreateDirectory(outputFolder);
+
+            string fullFilePath = Path.Combine(outputFolder, name + @".xml");
+
+            var mySerializer = new XmlSerializer(typeof(MechanismParameters));
+
+            string controlDataAsString = "";
+            using (StringWriter textWriter = new StringWriter())
+            {
+                mySerializer.Serialize(textWriter, new MechanismParameters(mechanism));
+                controlDataAsString = textWriter.ToString();
+            }
+
+            File.WriteAllText(fullFilePath, controlDataAsString);
+        }
+    }
+
+    [Serializable]
+    public class MechanismParameters
+    {
+        public List<MinimalMotorControlData> MotorControlData;
+
+        public MechanismParameters()
+        {
+        }
+        public MechanismParameters(mechanism m)
+        {
+            MotorControlData = new List<MinimalMotorControlData>();
+
+            foreach (motorControlData mcd in m.stateMotorControlData)
+                MotorControlData.Add( new MinimalMotorControlData(mcd));
+        }
+    }
+
+    [Serializable]
+    public class MinimalMotorControlData
+    {
+        [XmlAttribute]
+        public string name { get; set; }
+        [XmlAttribute]
+        public double pGain { get; set; }
+        [XmlAttribute]
+        public double iGain { get; set; }
+        [XmlAttribute]
+        public double dGain { get; set; }
+        [XmlAttribute]
+        public double fGain { get; set; }
+        [XmlAttribute]
+        public double iZone { get; set; }
+        [XmlAttribute]
+        public double peakValue { get; set; }
+        [XmlAttribute]
+        public double nominalValue { get; set; }
+        [XmlAttribute]
+        public double maxAcceleration { get; set; }
+        [XmlAttribute]
+        public double cruiseVelocity { get; set; }
+        [XmlAttribute]
+        public bool enableFOC { get; set; }
+        [XmlAttribute]
+        public FEEDFORWARD_TYPE feedForwardType { get; set; }
+        [XmlAttribute]
+        public CONTROL_TYPE controlType { get; set; }
+        [XmlAttribute]
+        public CONTROL_RUN_LOCS controlLoopLocation { get; set; }
+
+        public MinimalMotorControlData()
+        { 
+        }
+
+        public MinimalMotorControlData(motorControlData mcd)
+        {
+            name = mcd.name;
+            pGain = mcd.PID.pGain.value;
+            iGain = mcd.PID.iGain.value;
+            dGain = mcd.PID.dGain.value;
+            fGain = mcd.PID.fGain.value;
+            iZone = mcd.PID.iZone.value;
+            peakValue = mcd.peakValue.value;
+            nominalValue = mcd.nominalValue.value;
+            maxAcceleration = mcd.maxAcceleration.value;
+            cruiseVelocity = mcd.cruiseVelocity.value;
+            enableFOC = mcd.enableFOC.value;
+            feedForwardType = mcd.feedForwardType;
+            controlType = mcd.controlType;
+            controlLoopLocation = mcd.controlLoopLocation;
         }
     }
 

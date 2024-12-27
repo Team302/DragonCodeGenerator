@@ -312,7 +312,7 @@ namespace ApplicationData
         {
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
             if (mcs.Count == 1)
-                return new List<string> { string.Format("{0}* Get{1}() const {{return {1};}}", getImplementationName(), AsMemberVariableName()) };
+                return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), name, AsMemberVariableName()) };
             else
             {
                 StringBuilder sb = new StringBuilder();
@@ -830,10 +830,10 @@ namespace ApplicationData
                 sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", this.name, mcd.name, mi.name));
                 sb.AppendLine("{");
                 sb.AppendLine("Slot0Configs slot0Configs{};");
-                sb.AppendLine(string.Format("slot0Configs.kP = 2.4;"));
-                sb.AppendLine(string.Format("slot0Configs.kI = 0;"));
-                sb.AppendLine(string.Format("slot0Configs.kD = 0.1;"));
-                sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);",AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kI = {0}->GetI();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kD = {0}->GetD();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);", AsMemberVariableName()));
                 sb.AppendLine("}");
 
                 return sb.ToString();
@@ -866,7 +866,7 @@ namespace ApplicationData
             if (string.IsNullOrEmpty(call))
                 return "";
 
-            return string.Format("{0};",call.Replace("void ", ""));
+            return string.Format("{0};", call.Replace("void ", ""));
         }
 
         override public string GenerateCyclicGenericTargetRefresh()
