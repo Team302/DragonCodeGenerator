@@ -374,11 +374,11 @@ namespace ApplicationData
             return String.Format("mechanisms/{0}/{0}.h", name);
         }
 
-        public void SerializeToXml(string outputFolder)
+        public string SerializeAdjustableParametersToXml(string outputFolder)
         {
             Directory.CreateDirectory(outputFolder);
 
-            string fullFilePath = Path.Combine(outputFolder, name + @".xml");
+            string fullFilePath = GetAdjustableParametersXmlFullFilePath(outputFolder);
 
             var mySerializer = new XmlSerializer(typeof(MechanismParameters));
 
@@ -390,6 +390,15 @@ namespace ApplicationData
             }
 
             File.WriteAllText(fullFilePath, controlDataAsString);
+
+            return fullFilePath;
+        }
+
+        public string GetAdjustableParametersXmlFullFilePath(string outputFolder)
+        {
+            string fullFilePath = Path.Combine(outputFolder, name + @".xml");
+
+            return fullFilePath;
         }
     }
 

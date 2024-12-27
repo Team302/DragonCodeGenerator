@@ -544,7 +544,7 @@ namespace ApplicationData
 
             if ((ControllerEnabled == Enabled.Yes))
             {
-                string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_ID_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
+                string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_FULL_NAME_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
 
                 initCode.Add(string.Format("CALL:{0}", signatureWithoutReturn));
                 initCode.Add(string.Format("DECLARATION:void {0}", signatureWithoutReturn));

@@ -4,6 +4,8 @@ using Configuration;
 using CoreCodeGenerator;
 using DataConfiguration;
 using NetworkTablesUtils;
+using Renci.SshNet.Sftp;
+using Renci.SshNet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -181,6 +183,12 @@ namespace FRCrobotCodeGen302
                 #endregion
             }
             robotTreeView.ImageList = treeViewIcons;
+
+            int y = clearReportButton.Top;
+            this.generateButton.Location = new System.Drawing.Point(this.Width - generateButton.Width - 25, y);
+            this.cleanButton.Location = new System.Drawing.Point(generateButton.Left - cleanButton.Width - 3, y);
+            this.writeParameterFileButton.Location = new System.Drawing.Point(cleanButton.Left - writeParameterFileButton.Width - 3, y);
+            this.UploadParameterFilesButton.Location = new System.Drawing.Point(writeParameterFileButton.Left - UploadParameterFilesButton.Width - 3, y);
         }
 
         private void addProgress(string info)
@@ -543,6 +551,68 @@ namespace FRCrobotCodeGen302
                 MessageBox.Show("Something went wrong. See below. \r\n\r\n" + ex.Message, "Code generator error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        private void writeParameterFileButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                codeGenerator.WriteMechanismParameterFiles(ProductVersion, theAppDataConfiguration, generatorConfig);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Something went wrong. See below. \r\n\r\n" + ex.Message, "Code generator error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        private void UploadParameterFilesButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                foreach (applicationData robot in theAppDataConfiguration.theRobotVariants.Robots)
+                {
+                    try
+                    {
+                        string sftpServerName = string.Format("roboRIO-{0}-frc.local", robot.robotID);
+
+                        using (var client = new SftpClient(sftpServerName, 22, "admin", ""))
+                        {
+                            try
+                            {
+                                client.Connect();
+                            }
+                            catch
+                            {
+                                addProgress("Failed to connect to " + sftpServerName);
+                            }
+
+                            if (client.IsConnected)
+                            {
+                                // we connected to a robot
+                                List<string> fullFilePaths = codeGenerator.GetMechanismParameterFullFilePaths(ProductVersion, theAppDataConfiguration, generatorConfig, robot.robotID.value);
+                                foreach (string f in fullFilePaths)
+                                {
+                                    using (FileStream SourceStream = File.Open(f, FileMode.Open))
+                                    {
+                                        string destination = "/home/lvuser/deploy/mechanisms/" + robot.robotID.value + "/" + Path.GetFileName(f);
+                                        client.UploadFile(SourceStream, destination);
+                                        addProgress(string.Format("Uploaded {0} to {1}", Path.GetFullPath(f), destination));
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Something went wrong. See below. \r\n\r\n" + ex.Message, "Code generator error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Something went wrong. See below. \r\n\r\n" + ex.Message, "Code generator error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void configurationBrowseButton_Click(object sender, EventArgs e)
         {
             try

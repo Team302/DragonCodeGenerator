@@ -34,6 +34,8 @@ namespace FRCrobotCodeGen302
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.generateButton = new System.Windows.Forms.Button();
             this.cleanButton = new System.Windows.Forms.Button();
+            this.writeParameterFileButton = new System.Windows.Forms.Button();
+            this.UploadParameterFilesButton = new System.Windows.Forms.Button();
             this.configurationBrowseButton = new System.Windows.Forms.Button();
             this.configurationFilePathNameTextBox = new System.Windows.Forms.TextBox();
             this.outputFolderLabel = new System.Windows.Forms.Label();
@@ -97,7 +99,7 @@ namespace FRCrobotCodeGen302
             this.generateButton.Location = new System.Drawing.Point(766, 405);
             this.generateButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.generateButton.Name = "generateButton";
-            this.generateButton.Size = new System.Drawing.Size(105, 49);
+            this.generateButton.Size = new System.Drawing.Size(90, 49);
             this.generateButton.TabIndex = 0;
             this.generateButton.Text = "Generate";
             this.generateButton.UseVisualStyleBackColor = true;
@@ -109,11 +111,35 @@ namespace FRCrobotCodeGen302
             this.cleanButton.Location = new System.Drawing.Point(648, 405);
             this.cleanButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cleanButton.Name = "cleanButton";
-            this.cleanButton.Size = new System.Drawing.Size(105, 49);
+            this.cleanButton.Size = new System.Drawing.Size(80, 49);
             this.cleanButton.TabIndex = 0;
             this.cleanButton.Text = "Clean";
             this.cleanButton.UseVisualStyleBackColor = true;
             this.cleanButton.Click += new System.EventHandler(this.cleanButton_Click);
+            // 
+            // writeParameterFileButton
+            // 
+            this.writeParameterFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.writeParameterFileButton.Location = new System.Drawing.Point(600, 405);
+            this.writeParameterFileButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.writeParameterFileButton.Name = "writeParameterFileButton";
+            this.writeParameterFileButton.Size = new System.Drawing.Size(175, 49);
+            this.writeParameterFileButton.TabIndex = 0;
+            this.writeParameterFileButton.Text = "Write parameter files";
+            this.writeParameterFileButton.UseVisualStyleBackColor = true;
+            this.writeParameterFileButton.Click += new System.EventHandler(this.writeParameterFileButton_Click);
+            // 
+            // UploadParameterFilesButton
+            // 
+            this.UploadParameterFilesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.UploadParameterFilesButton.Location = new System.Drawing.Point(600, 405);
+            this.UploadParameterFilesButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.UploadParameterFilesButton.Name = "UploadParameterFilesButton";
+            this.UploadParameterFilesButton.Size = new System.Drawing.Size(160, 49);
+            this.UploadParameterFilesButton.TabIndex = 0;
+            this.UploadParameterFilesButton.Text = "Deploy";
+            this.UploadParameterFilesButton.UseVisualStyleBackColor = true;
+            this.UploadParameterFilesButton.Click += new System.EventHandler(this.UploadParameterFilesButton_Click);
             // 
             // configurationBrowseButton
             // 
@@ -216,10 +242,10 @@ namespace FRCrobotCodeGen302
             // createNewRobotVariantsConfigButton
             // 
             this.createNewRobotVariantsConfigButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.createNewRobotVariantsConfigButton.Location = new System.Drawing.Point(225, 405);
+            this.createNewRobotVariantsConfigButton.Location = new System.Drawing.Point(200, 405);
             this.createNewRobotVariantsConfigButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.createNewRobotVariantsConfigButton.Name = "createNewRobotVariantsConfigButton";
-            this.createNewRobotVariantsConfigButton.Size = new System.Drawing.Size(330, 49);
+            this.createNewRobotVariantsConfigButton.Size = new System.Drawing.Size(300, 49);
             this.createNewRobotVariantsConfigButton.TabIndex = 3;
             this.createNewRobotVariantsConfigButton.Text = "Create new robot variants configuration";
             this.createNewRobotVariantsConfigButton.UseVisualStyleBackColor = true;
@@ -258,6 +284,8 @@ namespace FRCrobotCodeGen302
             this.tabMainPage.Controls.Add(this.label1);
             this.tabMainPage.Controls.Add(this.generateButton);
             this.tabMainPage.Controls.Add(this.cleanButton);
+            this.tabMainPage.Controls.Add(this.writeParameterFileButton);
+            this.tabMainPage.Controls.Add(this.UploadParameterFilesButton);
             this.tabMainPage.Controls.Add(this.configurationFilePathNameTextBox);
             this.tabMainPage.Controls.Add(this.progressTextBox);
             this.tabMainPage.Controls.Add(this.configurationBrowseButton);
@@ -703,6 +731,8 @@ namespace FRCrobotCodeGen302
 
         private System.Windows.Forms.Button generateButton;
         private System.Windows.Forms.Button cleanButton;
+        private System.Windows.Forms.Button writeParameterFileButton;
+        private System.Windows.Forms.Button UploadParameterFilesButton;
         private System.Windows.Forms.Button configurationBrowseButton;
         private System.Windows.Forms.Button createNewRobotVariantsConfigButton;
         private System.Windows.Forms.TextBox configurationFilePathNameTextBox;

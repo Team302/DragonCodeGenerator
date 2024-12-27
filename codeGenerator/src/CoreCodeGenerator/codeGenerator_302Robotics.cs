@@ -1,6 +1,7 @@
 ﻿using applicationConfiguration;
 using Configuration;
 using DataConfiguration;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CoreCodeGenerator
@@ -48,6 +49,15 @@ namespace CoreCodeGenerator
             new RobotConfigManagerGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
             new RobotConfigRobotSpecificGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
             //new ChassisGenerator(codeGenVersion, theRobotConfig, generatorConfig, cleanMode, addProgress).generate();
+        }
+
+        public void WriteMechanismParameterFiles(string codeGenVersion, applicationDataConfig theRobotConfig, toolConfiguration generatorConfig)
+        {
+            new MechanismInstanceGenerator(codeGenVersion, theRobotConfig, generatorConfig, false, false, addProgress).WriteMechanismParameterFiles();
+        }
+        public List<string> GetMechanismParameterFullFilePaths(string codeGenVersion, applicationDataConfig theRobotConfig, toolConfiguration generatorConfig, uint robotID)
+        {
+            return new MechanismInstanceGenerator(codeGenVersion, theRobotConfig, generatorConfig, false, false, addProgress).GetMechanismParameterFileList(robotID);
         }
     }
 }

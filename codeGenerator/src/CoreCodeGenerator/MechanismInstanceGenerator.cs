@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 //using ApplicationData.motorControlData;
 
@@ -21,7 +22,35 @@ namespace CoreCodeGenerator
             setProgressCallback(displayProgress);
         }
 
+        public void WriteMechanismParameterFiles()
+        {
+            foreach (applicationData robot in theRobotConfiguration.theRobotVariants.Robots)
+            {
+                foreach (mechanismInstance mi in robot.mechanismInstances)
+                {
+                    string report = mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+                    addProgress("Wrote " + report);
+                }
+            }
+        }
 
+        public List<string> GetMechanismParameterFileList(uint robotID)
+        {
+            List<string> files = new List<string>();
+
+            applicationData robot = theRobotConfiguration.theRobotVariants.Robots.Find(r => r.robotID.value == robotID);
+
+            if (robot is null)
+                throw new Exception("Cannot find a robot with ID " + robotID);
+
+            foreach (mechanismInstance mi in robot.mechanismInstances)
+            {
+                string fullFilePath = mi.GetAdjustableParametersXmlFullFilePath(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+                files.Add(fullFilePath);
+            }
+
+            return files;
+        }
 
         internal void generate()
         {
@@ -152,7 +181,18 @@ namespace CoreCodeGenerator
                             }
                         }
 
-                        mi.SerializeToXml(Path.Combine(getDeployOutputPath(), "mechanisms"));
+                        // Serialize the controlData parameters to xml
+                        mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+
+                        // Create conversion from motorControlData string name to the member variable
+                        StringBuilder mcdConv = new StringBuilder();
+                        foreach (motorControlData mcd in mi.mechanism.stateMotorControlData)
+                        {
+                            mcdConv.AppendLine(string.Format("if (name.compare(\"{0}\") == 0)", mcd.name));
+                            mcdConv.AppendLine(string.Format("return {0};", mcd.AsMemberVariableName()));
+                        }
+
+                        resultString = resultString.Replace("$$_CONTROLDATA_NAME_TO_VARIABLE_$$", mcdConv.ToString());
 
                         resultString = resultString.Replace("$$_READ_TUNABLE_PARAMETERS_$$", allParameterReading);
                         resultString = resultString.Replace("$$_PUSH_TUNABLE_PARAMETERS_$$", allParameterWriting);
@@ -538,17 +578,19 @@ namespace CoreCodeGenerator
         private string GenerateCreateFunctions(mechanismInstance mi, out string functionDeclarations)
         {
             string createFunctionTemplate =
-                            @"void $$_MECHANISM_INSTANCE_NAME_$$::Create$$_ROBOT_ID_$$()
+                            @"void $$_MECHANISM_INSTANCE_NAME_$$::Create$$_ROBOT_FULL_NAME_$$()
                                 {
                                     m_ntName = ""$$_MECHANISM_INSTANCE_NAME_$$"";
                                     $$_OBJECT_CREATION_$$
+                                    
+                                    ReadConstants(""$$_MECHANISM_INSTANCE_NAME_$$.xml"", $$_ROBOT_ID_$$);
 
                                     m_table = nt::NetworkTableInstance::GetDefault().GetTable(m_ntName);
                                     m_tuningIsEnabledStr = ""Enable Tuning for "" + m_ntName; // since this string is used every loop, we do not want to create the string every time
                                     m_table.get()->PutBoolean(m_tuningIsEnabledStr, m_tuning);
                                 }";
 
-            string createFunctionDeclarationTemplate = "void Create$$_ROBOT_ID_$$()";
+            string createFunctionDeclarationTemplate = "void Create$$_ROBOT_FULL_NAME_$$()";
 
             List<string> createCode = new List<string>();
             List<string> createDeclarationCode = new List<string>();
@@ -559,11 +601,12 @@ namespace CoreCodeGenerator
                 {
                     string temp = createFunctionTemplate;
                     temp = temp.Replace("$$_OBJECT_CREATION_$$", ListToString(generateMethod(mis, "generateIndexedObjectCreation")));
-                    temp = temp.Replace("$$_ROBOT_ID_$$", r.getFullRobotName());
+                    temp = temp.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName());
+                    temp = temp.Replace("$$_ROBOT_ID_$$", r.robotID.value.ToString());
                     createCode.Add(temp);
 
                     string tempDecl = createFunctionDeclarationTemplate;
-                    createDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()));
+                    createDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName()));
                 }
             }
 
@@ -575,12 +618,12 @@ namespace CoreCodeGenerator
         private string GenerateInitializationFunctions(mechanismInstance mi, out string publicFunctionDeclarations, out string privateFunctionDeclarations)
         {
             string createFunctionTemplate =
-                            @"void $$_MECHANISM_INSTANCE_NAME_$$::Initialize$$_ROBOT_ID_$$()
+                            @"void $$_MECHANISM_INSTANCE_NAME_$$::Initialize$$_ROBOT_FULL_NAME_$$()
                                 {
                                     $$_ELEMENT_INITIALIZATION_$$
                                 }";
 
-            string createFunctionDeclarationTemplate = "void Initialize$$_ROBOT_ID_$$()";
+            string createFunctionDeclarationTemplate = "void Initialize$$_ROBOT_FULL_NAME_$$()";
 
             List<string> createCode = new List<string>();
             List<string> createCodeFunctions = new List<string>();
@@ -598,16 +641,16 @@ namespace CoreCodeGenerator
                     List<string> initFunctionDeclarations = initFunctions.FindAll(s => s.StartsWith("DECLARATION:"));
 
                     temp = temp.Replace("$$_ELEMENT_INITIALIZATION_$$", ListToString(initFunctionCalls, ";").Replace("CALL:", ""));
-                    temp = temp.Replace("$$_ROBOT_ID_$$", r.getFullRobotName());
+                    temp = temp.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName());
                     createCode.Add(temp);
 
-                    string function = ListToString(initFunctions.FindAll(s => !s.StartsWith("CALL:") && !s.StartsWith("DECLARATION:"))).Replace("$$_ROBOT_ID_$$", r.getFullRobotName());
+                    string function = ListToString(initFunctions.FindAll(s => !s.StartsWith("CALL:") && !s.StartsWith("DECLARATION:"))).Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName());
                     createCodeFunctions.Add(function);
 
                     string tempDecl = createFunctionDeclarationTemplate;
-                    publicInitDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()));
+                    publicInitDeclarationCode.Add(tempDecl.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName()));
                     foreach (string s in initFunctionDeclarations)
-                        privateInitDeclarationCode.Add(s.Replace("$$_ROBOT_ID_$$", r.getFullRobotName()).Replace("DECLARATION:", ""));
+                        privateInitDeclarationCode.Add(s.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName()).Replace("DECLARATION:", ""));
                 }
             }
 
