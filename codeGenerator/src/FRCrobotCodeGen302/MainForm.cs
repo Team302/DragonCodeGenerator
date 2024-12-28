@@ -591,7 +591,7 @@ namespace FRCrobotCodeGen302
                                 {
                                     using (FileStream SourceStream = File.Open(f, FileMode.Open))
                                     {
-                                        string destination = "/home/lvuser/deploy/mechanisms/" + robot.robotID.value + "/" + Path.GetFileName(f);
+                                        string destination = "/home/lvuser/deploy/" + robot.robotID.value + "/mechanisms/" + Path.GetFileName(f);
                                         client.UploadFile(SourceStream, destination);
                                         addProgress(string.Format("Uploaded {0} to {1}", Path.GetFullPath(f), destination));
                                     }

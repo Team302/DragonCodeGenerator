@@ -28,7 +28,7 @@ namespace CoreCodeGenerator
             {
                 foreach (mechanismInstance mi in robot.mechanismInstances)
                 {
-                    string report = mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+                    string report = mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine(robot.robotID.value.ToString(), "mechanisms")));
                     addProgress("Wrote " + report);
                 }
             }
@@ -45,7 +45,7 @@ namespace CoreCodeGenerator
 
             foreach (mechanismInstance mi in robot.mechanismInstances)
             {
-                string fullFilePath = mi.GetAdjustableParametersXmlFullFilePath(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+                string fullFilePath = mi.GetAdjustableParametersXmlFullFilePath(Path.Combine(getDeployOutputPath(), Path.Combine(robot.robotID.value.ToString(), "mechanisms")));
                 files.Add(fullFilePath);
             }
 
@@ -182,7 +182,7 @@ namespace CoreCodeGenerator
                         }
 
                         // Serialize the controlData parameters to xml
-                        mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine("mechanisms", robot.robotID.value.ToString())));
+                        mi.SerializeAdjustableParametersToXml(Path.Combine(getDeployOutputPath(), Path.Combine(robot.robotID.value.ToString(), "mechanisms")));
 
                         // Create conversion from motorControlData string name to the member variable
                         StringBuilder mcdConv = new StringBuilder();
