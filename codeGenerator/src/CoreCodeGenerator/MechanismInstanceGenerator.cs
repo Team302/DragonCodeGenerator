@@ -286,7 +286,7 @@ namespace CoreCodeGenerator
 
                         List<string> targetVariables = new List<string>();
                         List<string> targetUpdateFunctions = new List<string>();
-                        string genericTargetVariable = "";
+                        List<string> genericTargetVariables = new List<string>();
                         foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
                         {
                             foreach (motorTarget mt in s.motorTargets)
@@ -297,14 +297,13 @@ namespace CoreCodeGenerator
                                 {
                                     targetUpdateFunctions.AddRange(mc.GenerateTargetUpdateFunctions(mcd));
                                     targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
-                                    if (string.IsNullOrEmpty(genericTargetVariable))
-                                        genericTargetVariable = mc.GenerateGenericTargetMemberVariable();
+                                    genericTargetVariables.Add(mc.GenerateGenericTargetMemberVariable());
                                 }
                             }
                         }
 
                         if (targetVariables.Count > 0)
-                            targetVariables.Add(genericTargetVariable);
+                            targetVariables.AddRange(genericTargetVariables.Distinct());
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
