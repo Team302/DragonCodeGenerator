@@ -384,9 +384,10 @@ namespace CoreCodeGenerator
                                     //if this mechanism exists in this robot
                                     if (theMi != null)
                                     {
+                                        state instanceState = theMi.mechanism.states.Find(st => st.name == s.name);
                                         StringBuilder stateTargets = new StringBuilder();
                                         List<string> motorTargets = new List<string>();
-                                        foreach (motorTarget mT in s.motorTargets)
+                                        foreach (motorTarget mT in instanceState.motorTargets)
                                         {
                                             if (mT.Enabled.value)
                                             {
@@ -453,20 +454,23 @@ namespace CoreCodeGenerator
 
                                         setTargetFunctionDefinitions.AppendLine(String.Format("void {0}State::Init{1}()", s.name, r.getFullRobotName()));
                                         setTargetFunctionDefinitions.AppendLine("{");
-                                        foreach (motorTarget mT in s.motorTargets)
+                                        foreach (motorTarget mT in instanceState.motorTargets)
                                         {
-                                            motorControlData mcd = theMi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
-                                            MotorController mc = theMi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
-                                            if (mc == null)
-                                                addProgress(string.Format("In mechanism {0}, cannot find a Motor controller called {1}, referenced in state {2}, target {3}", theMi.name, mT.motorName, s.name, mT.name));
-                                            else if (mcd == null)
-                                                addProgress(string.Format("In mechanism {0}, cannot find a Motor control data called {1}, referenced in state {2}", theMi.name, mT.controlDataName, s.name));
-                                            else
+                                            if (mT.Enabled.value == true)
                                             {
-                                                string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
-                                                if (!string.IsNullOrEmpty(PidSetCall))
-                                                    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
-                                                setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                                motorControlData mcd = theMi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
+                                                MotorController mc = theMi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
+                                                if (mc == null)
+                                                    addProgress(string.Format("In mechanism {0}, cannot find a Motor controller called {1}, referenced in state {2}, target {3}", theMi.name, mT.motorName, s.name, mT.name));
+                                                else if (mcd == null)
+                                                    addProgress(string.Format("In mechanism {0}, cannot find a Motor control data called {1}, referenced in state {2}", theMi.name, mT.controlDataName, s.name));
+                                                else
+                                                {
+                                                    string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
+                                                    if (!string.IsNullOrEmpty(PidSetCall))
+                                                        setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
+                                                    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                                }
                                             }
                                         }
                                         setTargetFunctionDefinitions.AppendLine("}");
