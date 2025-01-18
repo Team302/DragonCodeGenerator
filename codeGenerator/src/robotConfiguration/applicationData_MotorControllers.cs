@@ -106,21 +106,12 @@ namespace ApplicationData
         [Serializable]
         public class DistanceAngleCalcStruc : baseDataClass
         {
-            [DefaultValue(0)]
-            public intParameter countsPerRev { get; set; }
-
             [DefaultValue(1.0)]
             public doubleParameter gearRatio { get; set; }
 
             [DefaultValue(1.0)]
             [PhysicalUnitsFamily(physicalUnit.Family.length)]
             public doubleParameter diameter { get; set; }
-
-            [DefaultValue(0)]
-            public doubleParameter countsPerInch { get; set; }
-
-            [DefaultValue(0)]
-            public doubleParameter countsPerDegree { get; set; }
 
             public DistanceAngleCalcStruc()
             {
@@ -530,10 +521,6 @@ namespace ApplicationData
         }
         public ConfigMotorSettings theConfigMotorSettings { get; set; }
 
-        [PhysicalUnitsFamily(physicalUnit.Family.length)]
-        [ConstantInMechInstance]
-        public doubleParameter diameter { get; set; }
-
         public TalonFX()
         {
         }
@@ -790,8 +777,13 @@ namespace ApplicationData
             }
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
             }
 
             return output;

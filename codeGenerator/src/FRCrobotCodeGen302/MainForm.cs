@@ -16,6 +16,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using static Configuration.physicalUnit;
+using System.Drawing;
 
 namespace FRCrobotCodeGen302
 {
@@ -182,6 +183,7 @@ namespace FRCrobotCodeGen302
                 }
                 #endregion
             }
+
             robotTreeView.ImageList = treeViewIcons;
 
             int y = clearReportButton.Top;
@@ -661,7 +663,11 @@ namespace FRCrobotCodeGen302
 
             int index = generatorConfig.appDataConfigurations.IndexOf(generatorConfig.robotConfiguration.Replace('\\', '/'));
 
-            generatorConfig.rootOutputFolder = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(filePathName), generatorConfig.rootOutputFolder));
+            // The generatorConfig.rootOutputFolder is stored in the settings
+            if (string.IsNullOrEmpty(Properties.Settings.Default.OutputFolder))
+                Properties.Settings.Default.OutputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DragonCodeGenerator", "Output");
+            generatorConfig.rootOutputFolder = Properties.Settings.Default.OutputFolder;
+
             generatorConfig.robotConfiguration = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(filePathName), robotConfigurationFileComboBox.Text));
             loadRobotConfig = true;
 
@@ -973,7 +979,7 @@ namespace FRCrobotCodeGen302
                 {
                     rightSideSplitContainer.Panel1Collapsed = false;
 
-                    ShowStateTable(nt);
+                    ShowStateTable(nt, ((nodeTag)e.Node.Parent.Tag).obj as mechanism);
                 }
                 else
                 {
@@ -1210,8 +1216,9 @@ namespace FRCrobotCodeGen302
             }
         }
 
-        private void ShowStateTable(nodeTag nt)
+        private void ShowStateTable(nodeTag nt, mechanism mi)
         {
+            this.stateDataGridView.CellEndEdit -= stateDataGridView_CellEndEdit;
 
             stateGridVisualization.Clear();
 
@@ -1231,14 +1238,14 @@ namespace FRCrobotCodeGen302
                 bool first = true;
                 foreach (motorTarget mt in s.motorTargets)
                 {
-                    if (mt.Enabled.value)
+                    //if (mt.Enabled.value) // uncomment this if we want to only show the enabled targets
                     {
                         stateVisualization sv = new stateVisualization();
                         stateGridVisualization.Add(sv);
 
+                        sv.TargetObject = mt;
                         sv.transitionTo = first ? transitions : "";
-                        sv.Target = string.Format("{0} {1}", mt.target.value, mt.target.physicalUnits);
-                        sv.ControlData = mt.controlDataName;
+                        sv.TargetUnits = mt.target.physicalUnits;
                         sv.StateName = first ? s.name : "";
                         sv.ActuatorName = mt.motorName;
 
@@ -1246,13 +1253,119 @@ namespace FRCrobotCodeGen302
                     }
                 }
             }
-            stateDataGridView.DataSource = null;
-            stateDataGridView.DataSource = stateGridVisualization;
-            stateDataGridView.RowHeadersVisible = false;
-            stateDataGridView.Columns["transitionTo"].HeaderText = "Transitions to";
-            stateDataGridView.Columns["StateName"].HeaderText = "State";
-            stateDataGridView.Columns["ControlData"].HeaderText = "Control data";
-            stateDataGridView.Columns["ActuatorName"].HeaderText = "Actuator";
+
+            if (theStates.Count > 0)
+            {
+                // for the Control data, add a combobox column so that we do not have to type the names and risk making mistakes
+                DataGridViewComboBoxColumn dgvCmb = stateDataGridView.Columns["cmbControlData"] as DataGridViewComboBoxColumn;
+                if (dgvCmb == null)
+                {
+                    dgvCmb = new DataGridViewComboBoxColumn();
+                    dgvCmb.HeaderText = "Control data";
+                    dgvCmb.Name = "cmbControlData";
+                    stateDataGridView.Columns.Add(dgvCmb);
+                }
+
+                dgvCmb.Items.Clear();
+                foreach (motorControlData mcd in mi.stateMotorControlData)
+                {
+                    dgvCmb.Items.Add(mcd.name);
+                }
+
+                stateDataGridView.DataSource = null;
+                stateDataGridView.DataSource = stateGridVisualization;
+
+                stateDataGridView.RowHeadersVisible = true;
+                stateDataGridView.Columns["TargetObject"].Visible = false;
+                stateDataGridView.Columns["ControlData"].Visible = false;
+                stateDataGridView.Columns["transitionTo"].HeaderText = "Transitions to";
+                stateDataGridView.Columns["StateName"].HeaderText = "State";
+                stateDataGridView.Columns["TargetEnabled"].HeaderText = "Target\r\nenabled";
+                stateDataGridView.Columns["TargetUnits"].HeaderText = "Units";
+                stateDataGridView.Columns["ActuatorName"].HeaderText = "Actuator";
+
+                stateDataGridView.ReadOnly = false;
+                stateDataGridView.Columns["StateName"].ReadOnly = true;
+                stateDataGridView.Columns["ActuatorName"].ReadOnly = true;
+                stateDataGridView.Columns["TargetUnits"].ReadOnly = true;
+
+                stateDataGridView.AllowUserToResizeColumns = true;
+                stateDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
+                //initialize the selected item in the comboboxes
+                foreach (DataGridViewRow row in stateDataGridView.Rows)
+                {
+                    row.Cells[dgvCmb.Name].Value = stateGridVisualization[row.Index].ControlData;
+                }
+
+                // set the column order
+                for (int i = 0; i < columnOrderStateDataGridView.Count; i++)
+                {
+                    stateDataGridView.Columns[columnOrderStateDataGridView[i]].DisplayIndex = i;
+                }
+
+                this.stateDataGridView.CellEndEdit += stateDataGridView_CellEndEdit;
+            }
+        }
+
+        List<string> editableColumnsStateDataGridView = new List<string>()
+            {
+                "TargetEnabled",
+                "Target",
+                "transitionTo",
+                "cmbControlData"
+            };
+
+        List<string> columnOrderStateDataGridView = new List<string>()
+            {
+                "StateName",
+                "transitionTo",
+                "ActuatorName",
+                "TargetEnabled",
+                "cmbControlData",
+                "Target",
+                "TargetUnits"
+            };
+
+
+        void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if ((e.RowIndex == -1) && (e.ColumnIndex >= 0)) // RowIndex == -1 means that it is the header row. Column < 0  is the row selection margin
+            {
+                int iconIndex = treeIconIndex_lockedPadlock;
+                if (editableColumnsStateDataGridView.Find(c => c == stateDataGridView.Columns[e.ColumnIndex].Name) != null)
+                    iconIndex = treeIconIndex_unlockedPadlock;
+
+                if (iconIndex == treeIconIndex_unlockedPadlock) // so that we only draw the unlocked padlock... otherwise the header becomes a bit too crowded
+                {
+                    e.PaintBackground(e.CellBounds, false);  // or maybe false ie no selection?
+                    e.PaintContent(e.CellBounds);
+
+                    int margin = 4;
+                    int left = e.CellBounds.Left + e.CellBounds.Width - treeViewIcons.Images[iconIndex].Width - margin;
+                    treeViewIcons.Draw(e.Graphics, new Point(left, margin), iconIndex);
+
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void stateDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (stateDataGridView.Columns["cmbControlData"].Index == e.ColumnIndex) // the control data combobox column
+            {
+                string controlDataName = stateDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
+
+                ((stateVisualization)stateDataGridView.Rows[e.RowIndex].DataBoundItem).ControlData = controlDataName;
+            }
+
+            if (stateVisualization.HasChanged == true)
+                setNeedsSaving();
+        }
+
+        private void StateDataGridView_DataError(object sender, System.Windows.Forms.DataGridViewDataErrorEventArgs e)
+        {
+            MessageBox.Show("Incorrect data entered");
         }
 
         bool isABasicSystemType(object obj)
@@ -2365,6 +2478,9 @@ namespace FRCrobotCodeGen302
                 }
             }
         }
+
+
+
     }
 
     class valueRange
@@ -2451,10 +2567,27 @@ namespace FRCrobotCodeGen302
 
     public class stateVisualization
     {
+        public static bool HasChanged { get; set; } = false;
+        public motorTarget TargetObject { get; set; }
         public string StateName { get; set; }
-        public string ActuatorName { get; set; }
-        public string Target { get; set; }
-        public string ControlData { get; set; }
         public string transitionTo { get; set; }
+        public string ActuatorName { get; set; }
+        public bool TargetEnabled
+        {
+            get { return TargetObject.Enabled.value; }
+            set { TargetObject.Enabled.value = value; HasChanged = true; }
+        }
+        public double Target
+        {
+            get { return TargetObject.target.value; }
+            set { TargetObject.target.value = value; HasChanged = true; }
+        }
+
+        public string TargetUnits { get; set; }
+        public string ControlData
+        {
+            get { return TargetObject.controlDataName; }
+            set { TargetObject.controlDataName = value; HasChanged = true; }
+        }
     }
 }

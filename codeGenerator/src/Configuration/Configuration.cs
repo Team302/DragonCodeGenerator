@@ -12,7 +12,9 @@ namespace Configuration
         [XmlIgnore]
         public string configurationFullPath = "";
 
+        [XmlIgnore]
         public string rootOutputFolder = "";
+        
         public string robotConfiguration = "";
         public List<string> appDataConfigurations = new List<string>();
 

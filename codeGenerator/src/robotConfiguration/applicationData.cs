@@ -1693,6 +1693,11 @@ namespace ApplicationData
 
             return initCode;
         }
+
+        public override string ToString()
+        {
+            return name;
+        }
     }
 
     [Serializable]
@@ -1841,6 +1846,11 @@ namespace ApplicationData
         public controlData()
         {
             name = GetType().Name;
+        }
+
+        public override string ToString()
+        {
+            return name;
         }
     }
 
