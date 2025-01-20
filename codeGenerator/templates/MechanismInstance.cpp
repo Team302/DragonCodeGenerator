@@ -1,38 +1,163 @@
+
 $$_COPYRIGHT_$$
 $$_GEN_NOTICE_$$
 
-// C++ Includes
+#include <string>
 
 // FRC Includes
+#include <networktables/NetworkTableInstance.h>
 
-// Team 302 includes
+#include "$$_MECHANISM_INSTANCE_NAME_$$.h"
+#include "utils/logging/Logger.h"
 #include "PeriodicLooper.h"
-#include "mechanisms/$$_MECHANISM_INSTANCE_NAME_$$/decoratormods/$$_MECHANISM_INSTANCE_NAME_$$.h"
 
-$$_STATE_CLASSES_INCLUDES_$$
+$$_INCLUDE_FILES_$$
+
+$$_USING_DIRECTIVES_$$
 
 using std::string;
 using namespace $$_MECHANISM_INSTANCE_NAME_$$States;
 
-/// @brief  This method constructs the mechanism using composition with its various actuators and sensors.
-/// @param controlFileName The control file with the PID constants and Targets for each state
-/// @param networkTableName Location for logging information
-/// @param motor  Motor in the mechanims - code generator should probably use the usage for the variable name
-/// @param otherMotor Same as previous
-/// @param solenoid Solenoid in the mechanism - code generator should probably use the usage for the variable name
-/// Additional actuators and sensors are also in this list.
-$$_MECHANISM_INSTANCE_NAME_$$::$$_MECHANISM_INSTANCE_NAME_$$(RobotConfigMgr::RobotIdentifier activeRobotId) : $$_MECHANISM_INSTANCE_NAME_$$Gen(activeRobotId),
-                                                                                                              m_$$_MECHANISM_INSTANCE_NAME_$$(base)
+void $$_MECHANISM_INSTANCE_NAME_$$::CreateAndRegisterStates(){
+    $$_OBJECT_CREATION_$$
+
+        $$_STATE_TRANSITION_REGISTRATION_$$}
+
+$$_MECHANISM_INSTANCE_NAME_$$::$$_MECHANISM_INSTANCE_NAME_$$(RobotConfigMgr::RobotIdentifier activeRobotId) : BaseMech(MechanismTypes::MECHANISM_TYPE::$$_MECHANISM_TYPE_NAME_$$, std::string("$$_MECHANISM_INSTANCE_NAME_$$")),
+                                                                                                              m_activeRobotId(activeRobotId),
+                                                                                                              m_stateMap()
 {
+    PeriodicLooper::GetInstance()->RegisterAll(this);
+}
+
+std::map<std::string, $$_MECHANISM_INSTANCE_NAME_$$::STATE_NAMES> $$_MECHANISM_INSTANCE_NAME_$$::stringToSTATE_NAMESEnumMap{
+    $$_STATE_MAP_$$};
+
+$$_CREATE_FUNCTIONS_$$
+
+$$_INITIALZATION_FUNCTIONS_$$
+
+$$_PID_UPDATE_FUNCTION_$$
+
+void $$_MECHANISM_INSTANCE_NAME_$$::SetCurrentState(int state, bool run)
+{
+    StateMgr::SetCurrentState(state, run);
     PeriodicLooper::GetInstance()->RegisterAll(this);
 }
 
 void $$_MECHANISM_INSTANCE_NAME_$$::RunCommonTasks()
 {
     // This function is called once per loop before the current state Run()
+    Cyclic();
 }
 
-void $$_MECHANISM_INSTANCE_NAME_$$::SetCurrentState(int state, bool run)
+_STATE_MANAGER_START_
+/// @brief  Set the control constants (e.g. PIDF values).
+/// @param [in] ControlData*                                   pid:  the control constants
+/// @return void
+void $$_MECHANISM_INSTANCE_NAME_$$::SetControlConstants(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier, int slot, ControlData pid)
 {
-    $$_MECHANISM_INSTANCE_NAME_$$Gen::SetCurrentState(state, run);
+}
+
+/// @brief update the output to the mechanism using the current controller and target value(s)
+/// @return void
+void $$_MECHANISM_INSTANCE_NAME_$$::Update()
+{
+    $$_CYCLIC_GENERIC_TARGET_REFRESH_$$;
+}
+_STATE_MANAGER_END_
+
+_MECHANISM_HAS_MOTORS_START_
+_STATE_MANAGER_START_
+bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMinPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const
+{
+    // auto motor = GetMotorMech(identifier);
+    // if (motor != nullptr)
+    // {
+    //     return motor->IsAtMinTravel();
+    // }
+    return false;
+}
+
+bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMaxPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const
+{
+    // auto motor = GetMotorMech(identifier);
+    // if (motor != nullptr)
+    // {
+    //     return motor->IsAtMaxTravel();
+    // }
+    return false;
+}
+_STATE_MANAGER_END_
+
+_MECHANISM_HAS_MOTORS_END_
+
+_MECHANISM_HAS_SOLENOIDS_START_
+_STATE_MANAGER_START_
+void $$_MECHANISM_INSTANCE_NAME_$$::UpdateTarget(RobotElementNames::SOLENOID_USAGE identifier, bool extend)
+{
+    auto sol = GetSolenoidMech(identifier);
+    if (sol != nullptr)
+    {
+        sol->ActivateSolenoid(extend);
+    }
+}
+
+bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMinPosition(RobotElementNames::SOLENOID_USAGE identifier) const
+{
+    // auto sol = GetSolenoidMech(identifier);
+    // if (sol != nullptr)
+    // {
+    //     return !sol->IsSolenoidActivated();
+    // }
+    return false;
+}
+
+bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMaxPosition(RobotElementNames::SOLENOID_USAGE identifier) const
+{
+    // auto sol = GetSolenoidMech(identifier);
+    // if (sol != nullptr)
+    // {
+    //     return sol->IsSolenoidActivated();
+    // }
+    return false;
+}
+_STATE_MANAGER_END_
+
+_MECHANISM_HAS_SOLENOIDS_END_
+
+void $$_MECHANISM_INSTANCE_NAME_$$::Cyclic()
+{
+    Update();
+
+    CheckForTuningEnabled();
+    if (m_tuning)
+    {
+        ReadTuningParamsFromNT();
+    }
+}
+
+void $$_MECHANISM_INSTANCE_NAME_$$::CheckForTuningEnabled()
+{
+    bool pastTuning = m_tuning;
+    m_tuning = m_table.get()->GetBoolean(m_tuningIsEnabledStr, false);
+    if (pastTuning != m_tuning && m_tuning == true)
+    {
+        PushTuningParamsToNT();
+    }
+}
+
+void $$_MECHANISM_INSTANCE_NAME_$$::ReadTuningParamsFromNT()
+{
+    $$_READ_TUNABLE_PARAMETERS_$$
+}
+
+void $$_MECHANISM_INSTANCE_NAME_$$::PushTuningParamsToNT(){
+    $$_PUSH_TUNABLE_PARAMETERS_$$}
+
+ControlData *$$_MECHANISM_INSTANCE_NAME_$$::GetControlData(string name)
+{
+    $$_CONTROLDATA_NAME_TO_VARIABLE_$$
+
+    return nullptr;
 }

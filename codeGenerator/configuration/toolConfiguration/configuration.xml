@@ -1,16 +1,17 @@
 <?xml version="1.0"?>
 <toolConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <rootOutputFolder>..\..\..\src\main\cpp</rootOutputFolder>
-  <robotConfiguration>..\RobotConfig\2024Crescendo.xml</robotConfiguration>
+  <sourceCodeRelativePath>main\cpp</sourceCodeRelativePath>
+  <deployRelativePath>main\deploy</deployRelativePath>
+  <robotConfiguration>..\Robots\2025Reefscape.xml</robotConfiguration>
   <appDataConfigurations>
     <string>../Minimal/minimalRobot.xml</string>
     <string>../RobotConfig/2024Crescendo.xml</string>
+    <string>../Robots/2025Reefscape.xml</string>
   </appDataConfigurations>
   <collectionBaseTypes>
     <string>ApplicationData.MotorController</string>
     <string>ApplicationData.SparkController</string>
     <string>ApplicationData.Camera</string>
-    <string>ApplicationData.PriceChange</string>
     <string>ApplicationData.parameter</string>
   </collectionBaseTypes>
   <physicalUnits>
@@ -135,41 +136,7 @@
       <wpiClassName>Units.pounds_per_square_inch</wpiClassName>
     </physicalUnit>
   </physicalUnits>
-  <templateMechanismCppPath>..\templates\MECHANISM_NAME.cpp</templateMechanismCppPath>
-  <templateMechanismHPath>..\templates\MECHANISM_NAME.h</templateMechanismHPath>
-  <templateRobotDefinitionsCppPath>..\templates\RobotDefinitions.cpp</templateRobotDefinitionsCppPath>
-  <templateRobotDefinitionsHPath>..\templates\RobotDefinitions.h</templateRobotDefinitionsHPath>
   <codeTemplateFiles>
-    <codeTemplateFile>
-      <name>RobotElementNames</name>
-      <templateFilePathName>..\..\templates\RobotElementNames.h</templateFilePathName>
-      <outputFilePathName>configs\RobotElementNames.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>MechanismTypes</name>
-      <templateFilePathName>..\..\templates\MechanismTypes.h</templateFilePathName>
-      <outputFilePathName>mechanisms\MechanismTypes.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>MechanismDefinition_h</name>
-      <templateFilePathName>..\..\templates\Mechanism.h</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_NAME.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>MechanismDefinition_cpp</name>
-      <templateFilePathName>..\..\templates\Mechanism.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_NAME.cpp</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>MechanismInstance_gen_h</name>
-      <templateFilePathName>..\..\templates\MechanismInstance_gen.h</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMEGen.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>MechanismInstance_gen_cpp</name>
-      <templateFilePathName>..\..\templates\MechanismInstance_gen.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMEGen.cpp</outputFilePathName>
-    </codeTemplateFile>
     <codeTemplateFile>
       <name>MechanismInstance_h</name>
       <templateFilePathName>..\..\templates\MechanismInstance.h</templateFilePathName>
@@ -181,19 +148,34 @@
       <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAME.cpp</outputFilePathName>
     </codeTemplateFile>
     <codeTemplateFile>
-      <name>MechanismInstance_decorated_cpp</name>
-      <templateFilePathName>..\..\templates\MechanismInstance_decorated.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAME_decorated.cpp</outputFilePathName>
+      <name>RobotElementNames</name>
+      <templateFilePathName>..\..\templates\RobotElementNames.h</templateFilePathName>
+      <outputFilePathName>configs\RobotElementNames.h</outputFilePathName>
     </codeTemplateFile>
     <codeTemplateFile>
-      <name>RobotConfigMgr_h</name>
-      <templateFilePathName>..\..\templates\RobotConfigMgr.h</templateFilePathName>
-      <outputFilePathName>configs\RobotConfigMgr.h</outputFilePathName>
+      <name>MechanismTypes</name>
+      <templateFilePathName>..\..\templates\MechanismTypes.h</templateFilePathName>
+      <outputFilePathName>mechanisms\MechanismTypes.h</outputFilePathName>
+    </codeTemplateFile>
+    <codeTemplateFile>
+      <name>state_h</name>
+      <templateFilePathName>..\..\templates\state.h</templateFilePathName>
+      <outputFilePathName>mechanisms\STATE_NAMEState.h</outputFilePathName>
+    </codeTemplateFile>
+    <codeTemplateFile>
+      <name>state_cpp</name>
+      <templateFilePathName>..\..\templates\state.cpp</templateFilePathName>
+      <outputFilePathName>mechanisms\STATE_NAMEState.cpp</outputFilePathName>
     </codeTemplateFile>
     <codeTemplateFile>
       <name>RobotConfigMgr_cpp</name>
       <templateFilePathName>..\..\templates\RobotConfigMgr.cpp</templateFilePathName>
       <outputFilePathName>configs\RobotConfigMgr.cpp</outputFilePathName>
+    </codeTemplateFile>
+    <codeTemplateFile>
+      <name>RobotConfigMgr_h</name>
+      <templateFilePathName>..\..\templates\RobotConfigMgr.h</templateFilePathName>
+      <outputFilePathName>configs\RobotConfigMgr.h</outputFilePathName>
     </codeTemplateFile>
     <codeTemplateFile>
       <name>RobotConfigRobotSpecific_h</name>
@@ -205,45 +187,10 @@
       <templateFilePathName>..\..\templates\RobotConfigRobotSpecific.cpp</templateFilePathName>
       <outputFilePathName>configs\RobotConfig$$_ROBOT_NAME_$$.cpp</outputFilePathName>
     </codeTemplateFile>
-    <codeTemplateFile>
-      <name>BaseStateGen_h</name>
-      <templateFilePathName>..\..\templates\baseStateGen.h</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMEBaseStateGen.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>BaseStateGen_cpp</name>
-      <templateFilePathName>..\..\templates\baseStateGen.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMEBaseStateGen.cpp</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>stateGen_h</name>
-      <templateFilePathName>..\..\templates\stateGen.h</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMESTATE_NAMEStateGen.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>stateGen_cpp</name>
-      <templateFilePathName>..\..\templates\stateGen.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\MECHANISM_INSTANCE_NAMESTATE_NAMEStateGen.cpp</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>stateGen_Decorator_h</name>
-      <templateFilePathName>..\..\templates\stateGen_Decorator.h</templateFilePathName>
-      <outputFilePathName>mechanisms\STATE_NAMEState.h</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>stateGen_Decorator_cpp</name>
-      <templateFilePathName>..\..\templates\stateGen_Decorator.cpp</templateFilePathName>
-      <outputFilePathName>mechanisms\STATE_NAMEState.cpp</outputFilePathName>
-    </codeTemplateFile>
-    <codeTemplateFile>
-      <name>chassis_h</name>
-      <templateFilePathName>..\..\templates\Chassis.h</templateFilePathName>
-      <outputFilePathName>mechanisms\ROBOT_NAME_CHASSIS_NAME.h</outputFilePathName>
-    </codeTemplateFile>
   </codeTemplateFiles>
   <CopyrightNotice>
 //====================================================================================================================================================
-// Copyright 2024 Lake Orion Robotics FIRST Team 302
+// Copyright 2025 Lake Orion Robotics FIRST Team 302
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
