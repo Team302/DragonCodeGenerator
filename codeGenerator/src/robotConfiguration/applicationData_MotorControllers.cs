@@ -318,7 +318,7 @@ namespace ApplicationData
                         if (mcs.Count > 1)
                             throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
 
-                        sb.AppendLine(string.Format("else if ( RobotConfigMgr::RobotIdentifier::{0}_{1} == m_activeRobotId )",
+                        sb.AppendLine(string.Format("else if ( MechanismConfigMgr::RobotIdentifier::{0}_{1} == m_activeRobotId )",
                             ToUnderscoreCase(robot.name).ToUpper(), robot.robotID));
                         sb.AppendLine(string.Format("return {1}{0};", mcs[0].getImplementationName(), mcs[0].name));
                     }
@@ -449,6 +449,7 @@ namespace ApplicationData
             public boolParameter forwardResetPosition { get; set; }
 
             [ConstantInMechInstance]
+            [PhysicalUnitsFamily(physicalUnit.Family.angle)]
             public doubleParameter forwardPosition { get; set; }
 
             [ConstantInMechInstance]
@@ -467,6 +468,7 @@ namespace ApplicationData
             public boolParameter reverseResetPosition { get; set; }
 
             [ConstantInMechInstance]
+            [PhysicalUnitsFamily(physicalUnit.Family.angle)] 
             public doubleParameter reversePosition { get; set; }
 
             [ConstantInMechInstance]
@@ -541,12 +543,12 @@ namespace ApplicationData
 
 
                 initCode.Add(string.Format(@"   CurrentLimitsConfigs currconfigs{{}};
-                                                currconfigs.StatorCurrentLimit = {1}({2}).to<double>();
+                                                currconfigs.StatorCurrentLimit = {1}({2});
                                                 currconfigs.StatorCurrentLimitEnable = {3};
-                                                currconfigs.SupplyCurrentLimit = {4}({5}).to<double>();
+                                                currconfigs.SupplyCurrentLimit = {4}({5});
                                                 currconfigs.SupplyCurrentLimitEnable = {6};
-                                                currconfigs.SupplyCurrentThreshold = {7}({8}).to<double>();
-                                                currconfigs.SupplyTimeThreshold = {9}({10}).to<double>();
+                                                currconfigs.SupplyCurrentLowerLimit = {7}({8});
+                                                currconfigs.SupplyCurrentLowerTime = {9}({10});
                                                 {0}->GetConfigurator().Apply(currconfigs);",
 
                                                 AsMemberVariableName(),
@@ -584,7 +586,7 @@ namespace ApplicationData
 	                                            hwswitch.ForwardLimitEnable = {1};
 	                                            hwswitch.ForwardLimitRemoteSensorID = {2};
 	                                            hwswitch.ForwardLimitAutosetPositionEnable = {3};
-	                                            hwswitch.ForwardLimitAutosetPositionValue = {4};
+	                                            hwswitch.ForwardLimitAutosetPositionValue = {17}({4});
 
 	                                            hwswitch.ForwardLimitSource = {5}::{6};
 	                                            hwswitch.ForwardLimitType = {7}::{8};
@@ -592,7 +594,7 @@ namespace ApplicationData
 	                                            hwswitch.ReverseLimitEnable = {9};
 	                                            hwswitch.ReverseLimitRemoteSensorID = {10};
 	                                            hwswitch.ReverseLimitAutosetPositionEnable = {11};
-	                                            hwswitch.ReverseLimitAutosetPositionValue = {12};
+	                                            hwswitch.ReverseLimitAutosetPositionValue = {18}({12});
 	                                            hwswitch.ReverseLimitSource = {13}::{14};
 	                                            hwswitch.ReverseLimitType = {15}::{16};
 	                                            {0}->GetConfigurator().Apply(hwswitch);"
@@ -616,7 +618,9 @@ namespace ApplicationData
                                                 theConfigHWLimitSW.revType.GetType().Name,
                                                 theConfigHWLimitSW.revType,
                                                 theConfigHWLimitSW.revOpenClose.GetType().Name,
-                                                theConfigHWLimitSW.revOpenClose));
+                                                theConfigHWLimitSW.revOpenClose,
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theConfigHWLimitSW.forwardPosition.__units__),
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theConfigHWLimitSW.reversePosition.__units__)));
 
                 initCode.Add("");
 
@@ -702,7 +706,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(RobotConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1245,7 +1249,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(RobotConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1421,7 +1425,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(RobotConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1570,7 +1574,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(RobotConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())

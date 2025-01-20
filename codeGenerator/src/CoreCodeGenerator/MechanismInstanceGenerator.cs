@@ -446,7 +446,7 @@ namespace CoreCodeGenerator
 
                                         stateTargets.AppendLine(ListToString(motorTargets, ";"));
 
-                                        setTargetFunctionCalls.AppendLine(string.Format("else if(m_RobotId == RobotConfigMgr::RobotIdentifier::{0})", ToUnderscoreDigit(ToUnderscoreCase(robot.getFullRobotName())).ToUpper()));
+                                        setTargetFunctionCalls.AppendLine(string.Format("else if(m_RobotId == MechanismConfigMgr::RobotIdentifier::{0})", ToUnderscoreDigit(ToUnderscoreCase(robot.getFullRobotName())).ToUpper()));
                                         setTargetFunctionCalls.AppendLine(String.Format(" Init{0}();", r.getFullRobotName()));
 
                                         setTargetFunctionDeclerations.AppendLine(String.Format("void Init{0}();", r.getFullRobotName()));
