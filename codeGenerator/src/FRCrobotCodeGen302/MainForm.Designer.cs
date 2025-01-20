@@ -43,6 +43,7 @@ namespace FRCrobotCodeGen302
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.configurationGroupBox = new System.Windows.Forms.GroupBox();
+            this.buttonBrowseOutputFolder = new System.Windows.Forms.Button();
             this.robotConfigurationFileComboBox = new System.Windows.Forms.ComboBox();
             this.createNewRobotVariantsConfigButton = new System.Windows.Forms.Button();
             this.progressTextBox = new System.Windows.Forms.TextBox();
@@ -147,7 +148,7 @@ namespace FRCrobotCodeGen302
             this.configurationBrowseButton.Location = new System.Drawing.Point(788, 14);
             this.configurationBrowseButton.Margin = new System.Windows.Forms.Padding(8);
             this.configurationBrowseButton.Name = "configurationBrowseButton";
-            this.configurationBrowseButton.Size = new System.Drawing.Size(86, 35);
+            this.configurationBrowseButton.Size = new System.Drawing.Size(80, 35);
             this.configurationBrowseButton.TabIndex = 3;
             this.configurationBrowseButton.Text = "Browse";
             this.configurationBrowseButton.UseVisualStyleBackColor = true;
@@ -185,7 +186,7 @@ namespace FRCrobotCodeGen302
             this.configuredOutputFolderLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.configuredOutputFolderLabel.Location = new System.Drawing.Point(164, 38);
             this.configuredOutputFolderLabel.Name = "configuredOutputFolderLabel";
-            this.configuredOutputFolderLabel.Size = new System.Drawing.Size(682, 30);
+            this.configuredOutputFolderLabel.Size = new System.Drawing.Size(598, 30);
             this.configuredOutputFolderLabel.TabIndex = 5;
             // 
             // label1
@@ -212,6 +213,7 @@ namespace FRCrobotCodeGen302
             // 
             this.configurationGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.configurationGroupBox.Controls.Add(this.buttonBrowseOutputFolder);
             this.configurationGroupBox.Controls.Add(this.robotConfigurationFileComboBox);
             this.configurationGroupBox.Controls.Add(this.configuredOutputFolderLabel);
             this.configurationGroupBox.Controls.Add(this.label2);
@@ -225,6 +227,18 @@ namespace FRCrobotCodeGen302
             this.configurationGroupBox.TabIndex = 8;
             this.configurationGroupBox.TabStop = false;
             this.configurationGroupBox.Text = "Configuration";
+            // 
+            // buttonBrowseOutputFolder
+            // 
+            this.buttonBrowseOutputFolder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonBrowseOutputFolder.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonBrowseOutputFolder.Location = new System.Drawing.Point(778, 35);
+            this.buttonBrowseOutputFolder.Name = "buttonBrowseOutputFolder";
+            this.buttonBrowseOutputFolder.Size = new System.Drawing.Size(80, 35);
+            this.buttonBrowseOutputFolder.TabIndex = 9;
+            this.buttonBrowseOutputFolder.Text = "Browse";
+            this.buttonBrowseOutputFolder.UseVisualStyleBackColor = true;
+            this.buttonBrowseOutputFolder.Click += new System.EventHandler(this.buttonBrowseOutputFolder_Click);
             // 
             // robotConfigurationFileComboBox
             // 
@@ -375,7 +389,7 @@ namespace FRCrobotCodeGen302
             // rightSideSplitContainer.Panel2
             // 
             this.rightSideSplitContainer.Panel2.Controls.Add(this.panel1);
-            this.rightSideSplitContainer.Size = new System.Drawing.Size(530, 432);
+            this.rightSideSplitContainer.Size = new System.Drawing.Size(518, 432);
             this.rightSideSplitContainer.SplitterDistance = 68;
             this.rightSideSplitContainer.SplitterWidth = 6;
             this.rightSideSplitContainer.TabIndex = 15;
@@ -402,10 +416,12 @@ namespace FRCrobotCodeGen302
             this.stateDataGridView.RowHeadersWidth = 62;
             this.stateDataGridView.RowTemplate.Height = 28;
             this.stateDataGridView.ShowEditingIcon = false;
-            this.stateDataGridView.Size = new System.Drawing.Size(530, 68);
+            this.stateDataGridView.Size = new System.Drawing.Size(518, 68);
             this.stateDataGridView.TabIndex = 0;
+            this.stateDataGridView.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.StateDataGridView_CellClick);
             this.stateDataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.stateDataGridView_CellEndEdit);
-            this.stateDataGridView.CellPainting += dataGridView1_CellPainting;
+            this.stateDataGridView.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.stateDataGridView_CellPainting);
+            this.stateDataGridView.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.StateDataGridView_DataError);
             // 
             // panel1
             // 
@@ -428,14 +444,14 @@ namespace FRCrobotCodeGen302
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(530, 334);
+            this.panel1.Size = new System.Drawing.Size(518, 322);
             this.panel1.TabIndex = 2;
             // 
             // selectNodeButton
             // 
             this.selectNodeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.selectNodeButton.Enabled = false;
-            this.selectNodeButton.Location = new System.Drawing.Point(401, 136);
+            this.selectNodeButton.Location = new System.Drawing.Point(389, 124);
             this.selectNodeButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.selectNodeButton.Name = "selectNodeButton";
             this.selectNodeButton.Size = new System.Drawing.Size(123, 40);
@@ -449,7 +465,7 @@ namespace FRCrobotCodeGen302
             // 
             this.getSelectedTreeElementPathButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.getSelectedTreeElementPathButton.Enabled = false;
-            this.getSelectedTreeElementPathButton.Location = new System.Drawing.Point(401, 22);
+            this.getSelectedTreeElementPathButton.Location = new System.Drawing.Point(389, 10);
             this.getSelectedTreeElementPathButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.getSelectedTreeElementPathButton.Name = "getSelectedTreeElementPathButton";
             this.getSelectedTreeElementPathButton.Size = new System.Drawing.Size(123, 40);
@@ -463,7 +479,7 @@ namespace FRCrobotCodeGen302
             // 
             this.getCheckBoxListItemsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.getCheckBoxListItemsButton.Enabled = false;
-            this.getCheckBoxListItemsButton.Location = new System.Drawing.Point(401, 99);
+            this.getCheckBoxListItemsButton.Location = new System.Drawing.Point(389, 87);
             this.getCheckBoxListItemsButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.getCheckBoxListItemsButton.Name = "getCheckBoxListItemsButton";
             this.getCheckBoxListItemsButton.Size = new System.Drawing.Size(123, 40);
@@ -477,7 +493,7 @@ namespace FRCrobotCodeGen302
             // 
             this.checkCheckBoxListItemButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkCheckBoxListItemButton.Enabled = false;
-            this.checkCheckBoxListItemButton.Location = new System.Drawing.Point(401, 53);
+            this.checkCheckBoxListItemButton.Location = new System.Drawing.Point(389, 41);
             this.checkCheckBoxListItemButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.checkCheckBoxListItemButton.Name = "checkCheckBoxListItemButton";
             this.checkCheckBoxListItemButton.Size = new System.Drawing.Size(123, 40);
@@ -492,10 +508,10 @@ namespace FRCrobotCodeGen302
             this.infoIOtextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.infoIOtextBox.Enabled = false;
-            this.infoIOtextBox.Location = new System.Drawing.Point(4, 141);
+            this.infoIOtextBox.Location = new System.Drawing.Point(4, 129);
             this.infoIOtextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.infoIOtextBox.Name = "infoIOtextBox";
-            this.infoIOtextBox.Size = new System.Drawing.Size(396, 26);
+            this.infoIOtextBox.Size = new System.Drawing.Size(384, 26);
             this.infoIOtextBox.TabIndex = 9;
             this.infoIOtextBox.Visible = false;
             // 
@@ -504,10 +520,10 @@ namespace FRCrobotCodeGen302
             this.selectedNodePathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.selectedNodePathTextBox.Enabled = false;
-            this.selectedNodePathTextBox.Location = new System.Drawing.Point(4, 96);
+            this.selectedNodePathTextBox.Location = new System.Drawing.Point(4, 84);
             this.selectedNodePathTextBox.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.selectedNodePathTextBox.Name = "selectedNodePathTextBox";
-            this.selectedNodePathTextBox.Size = new System.Drawing.Size(396, 26);
+            this.selectedNodePathTextBox.Size = new System.Drawing.Size(384, 26);
             this.selectedNodePathTextBox.TabIndex = 9;
             this.selectedNodePathTextBox.Visible = false;
             // 
@@ -536,7 +552,7 @@ namespace FRCrobotCodeGen302
             this.buttonAndInputTableLayoutPanel.Controls.Add(this.addTreeElementButton, 0, 2);
             this.buttonAndInputTableLayoutPanel.Controls.Add(this.configureStatesButton, 0, 1);
             this.buttonAndInputTableLayoutPanel.Controls.Add(this.valueNumericUpDown, 0, 0);
-            this.buttonAndInputTableLayoutPanel.Location = new System.Drawing.Point(95, 118);
+            this.buttonAndInputTableLayoutPanel.Location = new System.Drawing.Point(95, 106);
             this.buttonAndInputTableLayoutPanel.Name = "buttonAndInputTableLayoutPanel";
             this.buttonAndInputTableLayoutPanel.RowCount = 5;
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
@@ -544,7 +560,7 @@ namespace FRCrobotCodeGen302
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.buttonAndInputTableLayoutPanel.Size = new System.Drawing.Size(264, 175);
+            this.buttonAndInputTableLayoutPanel.Size = new System.Drawing.Size(252, 175);
             this.buttonAndInputTableLayoutPanel.TabIndex = 5;
             // 
             // tuningButton
@@ -555,7 +571,7 @@ namespace FRCrobotCodeGen302
             this.tuningButton.Location = new System.Drawing.Point(3, 142);
             this.tuningButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tuningButton.Name = "tuningButton";
-            this.tuningButton.Size = new System.Drawing.Size(126, 31);
+            this.tuningButton.Size = new System.Drawing.Size(120, 31);
             this.tuningButton.TabIndex = 13;
             this.tuningButton.Text = "Toggle Tuning";
             this.tuningButton.UseVisualStyleBackColor = false;
@@ -564,10 +580,10 @@ namespace FRCrobotCodeGen302
             // saveConfigBbutton
             // 
             this.saveConfigBbutton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.saveConfigBbutton.Location = new System.Drawing.Point(135, 142);
+            this.saveConfigBbutton.Location = new System.Drawing.Point(129, 142);
             this.saveConfigBbutton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.saveConfigBbutton.Name = "saveConfigBbutton";
-            this.saveConfigBbutton.Size = new System.Drawing.Size(126, 31);
+            this.saveConfigBbutton.Size = new System.Drawing.Size(120, 31);
             this.saveConfigBbutton.TabIndex = 2;
             this.saveConfigBbutton.Text = "Save";
             this.saveConfigBbutton.UseVisualStyleBackColor = true;
@@ -580,7 +596,7 @@ namespace FRCrobotCodeGen302
             this.deleteTreeElementButton.Location = new System.Drawing.Point(3, 107);
             this.deleteTreeElementButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.deleteTreeElementButton.Name = "deleteTreeElementButton";
-            this.deleteTreeElementButton.Size = new System.Drawing.Size(258, 31);
+            this.deleteTreeElementButton.Size = new System.Drawing.Size(246, 31);
             this.deleteTreeElementButton.TabIndex = 6;
             this.deleteTreeElementButton.Text = "Delete";
             this.deleteTreeElementButton.UseVisualStyleBackColor = true;
@@ -594,7 +610,7 @@ namespace FRCrobotCodeGen302
             this.addTreeElementButton.Location = new System.Drawing.Point(3, 72);
             this.addTreeElementButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.addTreeElementButton.Name = "addTreeElementButton";
-            this.addTreeElementButton.Size = new System.Drawing.Size(258, 31);
+            this.addTreeElementButton.Size = new System.Drawing.Size(246, 31);
             this.addTreeElementButton.TabIndex = 4;
             this.addTreeElementButton.Text = "Add";
             this.addTreeElementButton.UseVisualStyleBackColor = true;
@@ -607,7 +623,7 @@ namespace FRCrobotCodeGen302
             this.configureStatesButton.Location = new System.Drawing.Point(3, 37);
             this.configureStatesButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.configureStatesButton.Name = "configureStatesButton";
-            this.configureStatesButton.Size = new System.Drawing.Size(258, 31);
+            this.configureStatesButton.Size = new System.Drawing.Size(246, 31);
             this.configureStatesButton.TabIndex = 14;
             this.configureStatesButton.Text = "Configure states";
             this.configureStatesButton.UseVisualStyleBackColor = true;
@@ -620,7 +636,7 @@ namespace FRCrobotCodeGen302
             this.valueNumericUpDown.Location = new System.Drawing.Point(3, 2);
             this.valueNumericUpDown.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.valueNumericUpDown.Name = "valueNumericUpDown";
-            this.valueNumericUpDown.Size = new System.Drawing.Size(258, 26);
+            this.valueNumericUpDown.Size = new System.Drawing.Size(246, 26);
             this.valueNumericUpDown.TabIndex = 3;
             this.valueNumericUpDown.Visible = false;
             this.valueNumericUpDown.ValueChanged += new System.EventHandler(this.valueNumericUpDown_ValueChanged);
@@ -628,7 +644,7 @@ namespace FRCrobotCodeGen302
             // valueTextBox
             // 
             this.valueTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.valueTextBox.Location = new System.Drawing.Point(59, 181);
+            this.valueTextBox.Location = new System.Drawing.Point(47, 169);
             this.valueTextBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.valueTextBox.Name = "valueTextBox";
             this.valueTextBox.Size = new System.Drawing.Size(228, 26);
@@ -640,7 +656,7 @@ namespace FRCrobotCodeGen302
             // 
             this.valueDatePicker.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.valueDatePicker.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            this.valueDatePicker.Location = new System.Drawing.Point(659, 273);
+            this.valueDatePicker.Location = new System.Drawing.Point(647, 261);
             this.valueDatePicker.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.valueDatePicker.Name = "valueDatePicker";
             this.valueDatePicker.Size = new System.Drawing.Size(228, 26);
@@ -652,7 +668,7 @@ namespace FRCrobotCodeGen302
             this.physicalUnitsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.physicalUnitsComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.physicalUnitsComboBox.FormattingEnabled = true;
-            this.physicalUnitsComboBox.Location = new System.Drawing.Point(241, 181);
+            this.physicalUnitsComboBox.Location = new System.Drawing.Point(229, 169);
             this.physicalUnitsComboBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.physicalUnitsComboBox.Name = "physicalUnitsComboBox";
             this.physicalUnitsComboBox.Size = new System.Drawing.Size(73, 28);
@@ -665,7 +681,7 @@ namespace FRCrobotCodeGen302
             this.valueComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.valueComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.valueComboBox.FormattingEnabled = true;
-            this.valueComboBox.Location = new System.Drawing.Point(59, 214);
+            this.valueComboBox.Location = new System.Drawing.Point(47, 202);
             this.valueComboBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.valueComboBox.Name = "valueComboBox";
             this.valueComboBox.Size = new System.Drawing.Size(228, 28);
@@ -681,7 +697,7 @@ namespace FRCrobotCodeGen302
             this.robotElementCheckedListBox.FormattingEnabled = true;
             this.robotElementCheckedListBox.Location = new System.Drawing.Point(3, 37);
             this.robotElementCheckedListBox.Name = "robotElementCheckedListBox";
-            this.robotElementCheckedListBox.Size = new System.Drawing.Size(519, 50);
+            this.robotElementCheckedListBox.Size = new System.Drawing.Size(507, 4);
             this.robotElementCheckedListBox.TabIndex = 7;
             this.robotElementCheckedListBox.Visible = false;
             // 
@@ -694,6 +710,7 @@ namespace FRCrobotCodeGen302
             this.treeViewIcons.Images.SetKeyName(2, "gear.ico");
             this.treeViewIcons.Images.SetKeyName(3, "wrench.ico");
             this.treeViewIcons.Images.SetKeyName(4, "lock-unlock-instance.ico");
+            this.treeViewIcons.Images.SetKeyName(5, "lock-unlock_.ico");
             // 
             // MainForm
             // 
@@ -774,6 +791,7 @@ namespace FRCrobotCodeGen302
         private System.Windows.Forms.SplitContainer rightSideSplitContainer;
         private System.Windows.Forms.TableLayoutPanel buttonAndInputTableLayoutPanel;
         private System.Windows.Forms.DataGridView stateDataGridView;
+        private System.Windows.Forms.Button buttonBrowseOutputFolder;
     }
 }
 

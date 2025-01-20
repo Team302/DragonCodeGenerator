@@ -65,7 +65,6 @@ namespace CoreCodeGenerator
 
                 List<mechanismInstance> mechInstances = new List<mechanismInstance>();
                 mechInstances.AddRange(robot.mechanismInstances);
-                mechInstances.AddRange(robot.Chassis.mechanismInstances);
 
                 int index = 0;
                 foreach (mechanismInstance mi in mechInstances)
@@ -685,12 +684,12 @@ namespace CoreCodeGenerator
 
         internal string getMechanismOutputPath(string mechanismName, bool generated)
         {
-            return Path.Combine(theToolConfiguration.rootOutputFolder, "mechanisms", mechanismName);
+            return Path.Combine(theToolConfiguration.GetGeneratedSourceCodeBasePath(), "mechanisms", mechanismName);
         }
 
         internal string getDeployOutputPath()
         {
-            return Path.Combine(theToolConfiguration.rootOutputFolder, @"..\deploy");
+            return Path.Combine(theToolConfiguration.GetGeneratedDeployBasePath(), @"..\deploy");
         }
     }
 }

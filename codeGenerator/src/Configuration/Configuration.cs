@@ -14,7 +14,9 @@ namespace Configuration
 
         [XmlIgnore]
         public string rootOutputFolder = "";
-        
+
+        public string sourceCodeRelativePath = @"main\cpp";
+        public string deployRelativePath = @"main\deploy";
         public string robotConfiguration = "";
         public List<string> appDataConfigurations = new List<string>();
 
@@ -34,6 +36,16 @@ namespace Configuration
         public override string ToString()
         {
             return "";
+        }
+
+        public string GetGeneratedSourceCodeBasePath()
+        {
+            return Path.Combine(rootOutputFolder,sourceCodeRelativePath);
+        }
+
+        public string GetGeneratedDeployBasePath()
+        {
+            return Path.Combine(rootOutputFolder, deployRelativePath);
         }
 
         public string getWPIphysicalUnitType(string unitShortName)

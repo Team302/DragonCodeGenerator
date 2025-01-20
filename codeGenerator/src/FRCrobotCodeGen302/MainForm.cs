@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using static Configuration.physicalUnit;
 using System.Drawing;
+using System.ComponentModel;
 
 namespace FRCrobotCodeGen302
 {
@@ -38,6 +39,7 @@ namespace FRCrobotCodeGen302
         const int treeIconIndex_gear = 2;
         const int treeIconIndex_wrench = 3;
         const int treeIconIndex_unlockedPadlock_Instance = 4;
+        const int treeIconIndex_unlockedPadlockNoShadow = 5;
 
         public MainForm()
         {
@@ -979,7 +981,9 @@ namespace FRCrobotCodeGen302
                 {
                     rightSideSplitContainer.Panel1Collapsed = false;
 
-                    ShowStateTable(nt, ((nodeTag)e.Node.Parent.Tag).obj as mechanism);
+                    mechanism m = ((nt.obj.GetType() == typeof(state)) ? ((nodeTag)e.Node.Parent.Parent.Tag).obj : ((nodeTag)e.Node.Parent.Tag).obj) as mechanism;
+
+                    ShowStateTable(nt, m);
                 }
                 else
                 {
@@ -1220,6 +1224,8 @@ namespace FRCrobotCodeGen302
         {
             this.stateDataGridView.CellEndEdit -= stateDataGridView_CellEndEdit;
 
+            stateVisualization.UpdateMechanismInstances = null;
+
             stateGridVisualization.Clear();
 
             List<state> theStates = new List<state>();
@@ -1230,10 +1236,7 @@ namespace FRCrobotCodeGen302
 
             foreach (state s in theStates)
             {
-                string transitions = "";
-                foreach (stringParameterConstInMechInstance transition in s.transitionsTo)
-                    transitions += transition.value + Environment.NewLine;
-                transitions = transitions.Trim();
+                string transitions = GetTransitions(s);
 
                 bool first = true;
                 foreach (motorTarget mt in s.motorTargets)
@@ -1243,6 +1246,7 @@ namespace FRCrobotCodeGen302
                         stateVisualization sv = new stateVisualization();
                         stateGridVisualization.Add(sv);
 
+                        sv.ThisState = s;
                         sv.TargetObject = mt;
                         sv.transitionTo = first ? transitions : "";
                         sv.TargetUnits = mt.target.physicalUnits;
@@ -1256,6 +1260,10 @@ namespace FRCrobotCodeGen302
 
             if (theStates.Count > 0)
             {
+                stateVisualization.States = mi.states;
+
+                stateDataGridView.DataSource = null;
+
                 // for the Control data, add a combobox column so that we do not have to type the names and risk making mistakes
                 DataGridViewComboBoxColumn dgvCmb = stateDataGridView.Columns["cmbControlData"] as DataGridViewComboBoxColumn;
                 if (dgvCmb == null)
@@ -1267,17 +1275,24 @@ namespace FRCrobotCodeGen302
                 }
 
                 dgvCmb.Items.Clear();
-                foreach (motorControlData mcd in mi.stateMotorControlData)
+                if (mi.stateMotorControlData != null)
                 {
-                    dgvCmb.Items.Add(mcd.name);
+                    foreach (motorControlData mcd in mi.stateMotorControlData)
+                    {
+                        dgvCmb.Items.Add(mcd.name);
+                    }
+                    dgvCmb.Items.Add("");
                 }
 
-                stateDataGridView.DataSource = null;
-                stateDataGridView.DataSource = stateGridVisualization;
+                stateDataGridView.DataSource = new BindingList<stateVisualization>( stateGridVisualization);
+
+                stateDataGridView.ColumnHeadersDefaultCellStyle.BackColor = Color.Green;
+                stateDataGridView.EnableHeadersVisualStyles = false;
 
                 stateDataGridView.RowHeadersVisible = true;
                 stateDataGridView.Columns["TargetObject"].Visible = false;
                 stateDataGridView.Columns["ControlData"].Visible = false;
+                stateDataGridView.Columns["ThisState"].Visible = false;
                 stateDataGridView.Columns["transitionTo"].HeaderText = "Transitions to";
                 stateDataGridView.Columns["StateName"].HeaderText = "State";
                 stateDataGridView.Columns["TargetEnabled"].HeaderText = "Target\r\nenabled";
@@ -1288,6 +1303,7 @@ namespace FRCrobotCodeGen302
                 stateDataGridView.Columns["StateName"].ReadOnly = true;
                 stateDataGridView.Columns["ActuatorName"].ReadOnly = true;
                 stateDataGridView.Columns["TargetUnits"].ReadOnly = true;
+                stateDataGridView.Columns["transitionTo"].ReadOnly = true;
 
                 stateDataGridView.AllowUserToResizeColumns = true;
                 stateDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
@@ -1295,7 +1311,8 @@ namespace FRCrobotCodeGen302
                 //initialize the selected item in the comboboxes
                 foreach (DataGridViewRow row in stateDataGridView.Rows)
                 {
-                    row.Cells[dgvCmb.Name].Value = stateGridVisualization[row.Index].ControlData;
+                    int index = dgvCmb.Items.IndexOf(stateGridVisualization[row.Index].ControlData);
+                    row.Cells[dgvCmb.Name].Value = index == -1 ? "" : stateGridVisualization[row.Index].ControlData;
                 }
 
                 // set the column order
@@ -1304,8 +1321,33 @@ namespace FRCrobotCodeGen302
                     stateDataGridView.Columns[columnOrderStateDataGridView[i]].DisplayIndex = i;
                 }
 
+                stateVisualization.UpdateMechanismInstances = UpdateMechanismInstances;
                 this.stateDataGridView.CellEndEdit += stateDataGridView_CellEndEdit;
             }
+        }
+
+        void UpdateMechanismInstances()
+        {
+            mechanism theMechanism;
+            if (lastSelectedArrayNode != null)
+            {
+                if (isPartOfAMechanismTemplate(lastSelectedArrayNode, out theMechanism))
+                    updateMechInstancesFromMechTemplate(theMechanism);
+            }
+            else if (lastSelectedValueNode != null)
+            {
+                if (isPartOfAMechanismTemplate(lastSelectedValueNode, out theMechanism))
+                    updateMechInstancesFromMechTemplate(theMechanism);
+            }
+        }
+
+        private static string GetTransitions(state s)
+        {
+            string transitions = "";
+            foreach (stringParameterConstInMechInstance transition in s.transitionsTo)
+                transitions += transition.value + Environment.NewLine;
+            transitions = transitions.Trim();
+            return transitions;
         }
 
         List<string> editableColumnsStateDataGridView = new List<string>()
@@ -1328,15 +1370,15 @@ namespace FRCrobotCodeGen302
             };
 
 
-        void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        void stateDataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             if ((e.RowIndex == -1) && (e.ColumnIndex >= 0)) // RowIndex == -1 means that it is the header row. Column < 0  is the row selection margin
             {
                 int iconIndex = treeIconIndex_lockedPadlock;
                 if (editableColumnsStateDataGridView.Find(c => c == stateDataGridView.Columns[e.ColumnIndex].Name) != null)
-                    iconIndex = treeIconIndex_unlockedPadlock;
+                    iconIndex = treeIconIndex_unlockedPadlockNoShadow;
 
-                if (iconIndex == treeIconIndex_unlockedPadlock) // so that we only draw the unlocked padlock... otherwise the header becomes a bit too crowded
+                if (iconIndex == treeIconIndex_unlockedPadlockNoShadow) // so that we only draw the unlocked padlock... otherwise the header becomes a bit too crowded
                 {
                     e.PaintBackground(e.CellBounds, false);  // or maybe false ie no selection?
                     e.PaintContent(e.CellBounds);
@@ -1363,9 +1405,41 @@ namespace FRCrobotCodeGen302
                 setNeedsSaving();
         }
 
+
+        private void StateDataGridView_CellClick(object sender, System.Windows.Forms.DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex >= 0)
+            {
+                if ((e.RowIndex > -1) && (e.ColumnIndex == stateDataGridView.Columns["transitionTo"].Index)) // RowIndex == -1 means that it is the header row
+                {
+                    if (stateDataGridView.Rows[e.RowIndex].DataBoundItem is stateVisualization sv)
+                    {
+                        CheckListForm stateSelectionForm = new CheckListForm();
+                        stateSelectionForm.Text = "State transitions";
+                        foreach (state s in stateVisualization.States)
+                        {
+                            stateSelectionForm.checkedListBox.Items.Add(s.name, sv.ThisState.transitionsTo.Find(t => t.value == s.name) != null);
+                        }
+
+                        if (stateSelectionForm.ShowDialog() == DialogResult.OK)
+                        {
+                            sv.ThisState.transitionsTo.Clear();
+                            foreach (var v in stateSelectionForm.checkedListBox.CheckedItems)
+                            {
+                                sv.ThisState.transitionsTo.Add(new stringParameterConstInMechInstance());
+                                sv.ThisState.transitionsTo.Last().value = v as string;
+                            }
+                            sv.transitionTo = GetTransitions(sv.ThisState);
+                            stateDataGridView.Refresh();
+                        }
+                    }
+                }
+            }
+        }
+
         private void StateDataGridView_DataError(object sender, System.Windows.Forms.DataGridViewDataErrorEventArgs e)
         {
-            MessageBox.Show("Incorrect data entered");
+            MessageBox.Show("Incorrect data entered " + stateDataGridView.Columns[e.ColumnIndex]);
         }
 
         bool isABasicSystemType(object obj)
@@ -1793,6 +1867,8 @@ namespace FRCrobotCodeGen302
                                 mTarget = new motorTarget();
                                 mTarget.name = mc.name;
                                 mTarget.motorName = mc.name;
+                                if (m.stateMotorControlData.Count > 0)
+                                    mTarget.controlDataName = m.stateMotorControlData.First().name;
                                 s.motorTargets.Add(mTarget);
                                 addedItems = true;
                             }
@@ -2119,7 +2195,6 @@ namespace FRCrobotCodeGen302
             {
                 List<mechanismInstance> mis = new List<mechanismInstance>();
                 mis.AddRange(r.mechanismInstances);
-                mis.AddRange(r.Chassis.mechanismInstances);
 
                 foreach (mechanismInstance mi in mis)
                 {
@@ -2479,7 +2554,17 @@ namespace FRCrobotCodeGen302
             }
         }
 
-
+        private void buttonBrowseOutputFolder_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                Properties.Settings.Default.OutputFolder = dialog.SelectedPath;
+                generatorConfig.rootOutputFolder = Properties.Settings.Default.OutputFolder;
+                configuredOutputFolderLabel.Text = generatorConfig.rootOutputFolder;
+                Properties.Settings.Default.Save();
+            }
+        }
 
     }
 
@@ -2567,27 +2652,88 @@ namespace FRCrobotCodeGen302
 
     public class stateVisualization
     {
+        public delegate void UpdateMechanismInstancesDelegate();
+
+        public static UpdateMechanismInstancesDelegate UpdateMechanismInstances;
         public static bool HasChanged { get; set; } = false;
+        public static List<state> States { get; set; }
+        public state ThisState { get; set; }
         public motorTarget TargetObject { get; set; }
         public string StateName { get; set; }
-        public string transitionTo { get; set; }
+        private string transitionTo_ = "";
+        public string transitionTo
+        {
+            get { return transitionTo_; }
+            set
+            {
+                if (transitionTo_ != value)
+                {
+                    transitionTo_ = value;
+                    HasChanged = true;
+                    CallUpdateMechanismInstances();
+                }
+            }
+        }
         public string ActuatorName { get; set; }
         public bool TargetEnabled
         {
             get { return TargetObject.Enabled.value; }
-            set { TargetObject.Enabled.value = value; HasChanged = true; }
+            set
+            {
+                if (TargetObject.Enabled.value != value)
+                {
+                    TargetObject.Enabled.value = value;
+                    HasChanged = true;
+                    CallUpdateMechanismInstances();
+                }
+            }
         }
         public double Target
         {
             get { return TargetObject.target.value; }
-            set { TargetObject.target.value = value; HasChanged = true; }
+            set
+            {
+                if (TargetObject.target.value != value)
+                {
+                    TargetObject.target.value = value;
+                    HasChanged = true;
+                    CallUpdateMechanismInstances();
+                }
+            }
         }
 
-        public string TargetUnits { get; set; }
+        public string TargetUnits
+        {
+            get { return TargetObject.target.physicalUnits; }
+            set
+            {
+                if (TargetObject.target.physicalUnits != value)
+                {
+                    TargetObject.target.physicalUnits = value;
+                    HasChanged = true;
+                    CallUpdateMechanismInstances();
+                }
+            }
+        }
+
         public string ControlData
         {
             get { return TargetObject.controlDataName; }
-            set { TargetObject.controlDataName = value; HasChanged = true; }
+            set
+            {
+                if (TargetObject.controlDataName != value)
+                {
+                    TargetObject.controlDataName = value;
+                    HasChanged = true;
+                    CallUpdateMechanismInstances();
+                }
+            }
+        }
+
+        private void CallUpdateMechanismInstances()
+        {
+            if (UpdateMechanismInstances != null)
+                UpdateMechanismInstances();
         }
     }
 }

@@ -44,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="baseGenerator.cs" />
-    <Compile Include="ChassisGenerator.cs" />
     <Compile Include="codeGenerator_302Robotics.cs" />
     <Compile Include="MechanismInstanceGenerator.cs" />
     <Compile Include="MiscellaneousGenerator.cs" />

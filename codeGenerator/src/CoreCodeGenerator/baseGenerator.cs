@@ -95,7 +95,7 @@ namespace CoreCodeGenerator
                 return filePath;
             }
 
-            return Path.Combine(theToolConfiguration.rootOutputFolder, filePath);
+            return Path.Combine(theToolConfiguration.GetGeneratedSourceCodeBasePath(), filePath);
         }
 
         internal string loadTemplate(string templatePath)
@@ -186,6 +186,10 @@ namespace CoreCodeGenerator
             {
                 if (writeFile)
                 {
+                    string dir = Path.GetDirectoryName(outputFilePathName);
+                    if(!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
+
                     File.WriteAllText(outputFullFilePathName, contents);
                     addProgress("\tWrote " + outputFullFilePathName);
                 }

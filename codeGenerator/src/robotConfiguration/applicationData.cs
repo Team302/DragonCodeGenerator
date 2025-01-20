@@ -166,9 +166,6 @@ namespace ApplicationData
         [DataDescription("A robot can contain multiple pneumatic control modules")]
         public List<pcm> PneumaticControlModules { get; set; }
 
-        [DataDescription("A robot can have one chassis definition")]
-        public chassis Chassis { get; set; }
-
         [DataDescription("A robot can contain multiple mechanism instances")]
         public List<mechanismInstance> mechanismInstances { get; set; }
 
@@ -1825,6 +1822,11 @@ namespace ApplicationData
             }
             else
                 return new List<string> { "generateElementNames got to the else statement...should not be here" };
+        }
+
+        public override string ToString()
+        {
+            return name;
         }
     }
     /*

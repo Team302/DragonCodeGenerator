@@ -36,7 +36,6 @@ namespace CoreCodeGenerator
             {
                 List<mechanismInstance> instances = new List<mechanismInstance>();
                 instances.AddRange(robot.mechanismInstances);
-                instances.AddRange(robot.Chassis.mechanismInstances);
 
                 foreach (mechanismInstance mechInst in instances)
                 {
@@ -131,7 +130,6 @@ namespace CoreCodeGenerator
             {
                 List<mechanismInstance> instances = new List<mechanismInstance>();
                 instances.AddRange(robot.mechanismInstances);
-                instances.AddRange(robot.Chassis.mechanismInstances);
 
                 foreach (mechanismInstance mi in instances)
                 {
