@@ -947,7 +947,7 @@ namespace ApplicationData
 
         public override List<string> generateIndexedObjectCreation(int index)
         {
-            string creation = string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6}));",
+            string creation = string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6}) ;",
                                             name,
                                             getImplementationName(),
                                             utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
@@ -958,6 +958,18 @@ namespace ApplicationData
                                             );
 
             return new List<string> { creation };
+        }
+        override public List<string> generateDefinition()
+        {
+            if (debouncetime.value != 0)
+            {
+                return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()), 
+                                          string.Format("frc::Debouncer *{0}Debouncer;", getImplementationName())};
+            }
+            else
+            {
+                return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) };
+            }
         }
 
         override public List<string> generateObjectCreation()
