@@ -1026,8 +1026,10 @@ namespace ApplicationData
 
 
     [Serializable()]
-    [ImplementationName("DragonCanCoder")]
-    [UserIncludeFile("hw/DragonCanCoder.h")]
+    [ImplementationName("ctre::phoenix6::hardware::CANcoder")]
+    [UserIncludeFile("<ctre/phoenix6/CANcoder.hpp>")]
+    [UserIncludeFile("<ctre/phoenix6/CANCoderConfiguration.hpp>")]
+    [UserIncludeFile("<ctre/phoenix6/signals/SpnEnums.hpp>")]
     public class CANcoder : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -1051,17 +1053,18 @@ namespace ApplicationData
 
         override public List<string> generateIndexedObjectCreation(int index)
         {
-            string creation = string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},\"{4}\",{5},{6});",
-                name,
-                getImplementationName(),
-                utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-                canID.value,
-                canBusName,
-                offset.value,
-                reverse.value.ToString().ToLower()
-                );
 
-            return new List<string> { creation };
+            List<string> creation = new List<string>()
+            {
+                string.Format("ctre::phoenix6::configs::CANcoderConfiguration {0}Configs{{}};", name),
+                string.Format("{0} = new ctre::phoenix6::hardware::CANcoder({1},\"{2}\");", AsMemberVariableName(),canID.value,canBusName),
+                string.Format("{0}->GetConfigurator().Apply({1}Configs); //Applying Factory Defaults",AsMemberVariableName(), name),
+                string.Format("{0}Configs.MagnetSensor.MagnetOffset = units::angle::turn_t({1});", name, offset.value),
+                string.Format("{0}Configs.MagnetSensor.SensorDirection = ctre::phoenix6::signals::SensorDirectionValue::{1};", name, reverse.value ?  "Clockwise_Positive" : "CounterClockwise_Positive"),
+                string.Format("{0}->GetConfigurator().Apply({1}Configs);", AsMemberVariableName(),name)
+            };
+
+            return creation;
         }
 
         override public List<string> generateInitialization()
