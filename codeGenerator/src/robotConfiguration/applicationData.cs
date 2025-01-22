@@ -412,7 +412,7 @@ namespace ApplicationData
             MotorControlData = new List<MinimalMotorControlData>();
 
             foreach (motorControlData mcd in m.stateMotorControlData)
-                MotorControlData.Add( new MinimalMotorControlData(mcd));
+                MotorControlData.Add(new MinimalMotorControlData(mcd));
         }
     }
 
@@ -449,7 +449,7 @@ namespace ApplicationData
         public CONTROL_RUN_LOCS controlLoopLocation { get; set; }
 
         public MinimalMotorControlData()
-        { 
+        {
         }
 
         public MinimalMotorControlData(motorControlData mcd)
@@ -923,8 +923,9 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    [ImplementationName("DragonDigitalInput")]
-    [UserIncludeFile("hw/DragonDigitalInput.h")]
+    [ImplementationName("DigitalInput")]
+    [UserIncludeFile("<frc/DigitalInput.h>")]
+    [UserIncludeFile("<frc/Debouncer.h>")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -947,7 +948,12 @@ namespace ApplicationData
 
         public override List<string> generateIndexedObjectCreation(int index)
         {
-            string creation = string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6}) ;",
+            string creation = string.Format("frc::DigitalInput {0}({1});",
+                name,
+                digitalId.value);
+
+
+                string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6})) ;",
                                             name,
                                             getImplementationName(),
                                             utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
@@ -963,7 +969,7 @@ namespace ApplicationData
         {
             if (debouncetime.value != 0)
             {
-                return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()), 
+                return new List<string> { string.Format("frc::DigitalInput *{0};", AsMemberVariableName()),
                                           string.Format("frc::Debouncer *{0}Debouncer;", getImplementationName())};
             }
             else
