@@ -343,6 +343,28 @@ namespace CoreCodeGenerator
                                 resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                                 resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                                 resultString = resultString.Replace("$$_STATE_NAME_$$", s.name);
+                                List<string> targetConstants = new List<string>();
+                                foreach (motorTarget mT in s.motorTargets) {
+                                    motorControlData mcd = mi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
+                                    MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
+                                    if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+                                    {
+                                        targetConstants.Add($"const double m_{s.name}{mT.motorName}{mcd.name} = {mT.target.value};");
+                                    }
+                                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                                    {
+                                        targetConstants.Add($"const units::voltage::volt_t m_{s.name}{mT.motorName}{mcd.name};");
+                                    }
+                                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                                    {
+                                        targetConstants.Add($"const units::angle::turn_t m_{s.name}{mT.motorName}{mcd.name};");
+                                    }
+                                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                                    {
+                                        targetConstants.Add($"const units::length::inch_t m_{s.name}{mT.motorName}{mcd.name};");
+                                    }
+                                }
+                                resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", string.Join("\n", targetConstants));
 
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
