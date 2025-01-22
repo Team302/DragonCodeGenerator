@@ -1027,9 +1027,9 @@ namespace ApplicationData
 
     [Serializable()]
     [ImplementationName("ctre::phoenix6::hardware::CANcoder")]
-    [UserIncludeFile("<ctre/phoenix6/CANcoder.hpp>")]
-    [UserIncludeFile("<ctre/phoenix6/CANCoderConfiguration.hpp>")]
-    [UserIncludeFile("<ctre/phoenix6/signals/SpnEnums.hpp>")]
+    [SystemIncludeFile("ctre/phoenix6/CANcoder.hpp")]
+    [SystemIncludeFile("ctre/phoenix6/configs/Configurator.hpp")]
+    [SystemIncludeFile("ctre/phoenix6/signals/SpnEnums.hpp")]
     public class CANcoder : baseRobotElementClass
     {
         [DefaultValue(0u)]
