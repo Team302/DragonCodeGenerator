@@ -948,29 +948,30 @@ namespace ApplicationData
 
         public override List<string> generateIndexedObjectCreation(int index)
         {
-            string creation = string.Format("frc::DigitalInput {0}({1});",
-                name,
-                digitalId.value);
+            string digitalInput = string.Format("{0} = new frc::DigitalInput({1});", AsMemberVariableName(), digitalId.value);
+            string debouncer;
+            if (debouncetime.value != 0)
+            {
+                if (debouncetime.__units__ == "s")
+                {
+                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer({1}, frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value);
+                }
+                else
+                {
+                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer({1}, frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value*1000);
 
-
-                string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6})) ;",
-                                            name,
-                                            getImplementationName(),
-                                            utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-                                            digitalId.value,
-                                            reversed.value.ToString().ToLower(),
-                                            generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__),
-                                            debouncetime.value
-                                            );
-
-            return new List<string> { creation };
+                }
+                return new List<string> { digitalInput, debouncer };
+            }
+ 
+            return new List<string> {digitalInput};
         }
         override public List<string> generateDefinition()
         {
             if (debouncetime.value != 0)
             {
                 return new List<string> { string.Format("frc::DigitalInput *{0};", AsMemberVariableName()),
-                                          string.Format("frc::Debouncer *{0}Debouncer;", getImplementationName())};
+                                          string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName())};
             }
             else
             {
