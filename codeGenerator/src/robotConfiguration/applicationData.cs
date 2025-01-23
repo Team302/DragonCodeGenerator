@@ -993,6 +993,10 @@ namespace ApplicationData
 
             return initCode;
         }
+        override public List<string> generateDefinitionGetter()
+        {
+            return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), name, AsMemberVariableName()) };
+        }
     }
 
     [Serializable()]
