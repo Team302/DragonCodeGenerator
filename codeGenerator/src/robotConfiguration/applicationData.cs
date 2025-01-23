@@ -923,9 +923,9 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    [ImplementationName("DigitalInput")]
+    [ImplementationName("frc::DigitalInput")]
     [SystemIncludeFile("frc/DigitalInput.h")]
-    [SystemIncludeFile("frc/Debouncer.h")]
+    [SystemIncludeFile("frc/filter/Debouncer.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]

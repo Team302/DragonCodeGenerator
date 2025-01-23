@@ -1024,7 +1024,7 @@ namespace ApplicationData
     }
 
     [Serializable]
-    [ImplementationName("TalonSRX")]
+    [ImplementationName("ctre::phoenix::motorcontrol::can::TalonSRX")]
     [SystemIncludeFile("ctre/phoenix/motorcontrol/can/TalonSRX.h")]
     [SystemIncludeFile("ctre/phoenix/motorcontrol/SupplyCurrentLimitConfiguration.h")]
     public class TalonSRX : MotorController
@@ -1110,7 +1110,7 @@ namespace ApplicationData
         }
         override public List<string> generateDefinition()
         {
-            return new List<string> { string.Format("ctre::phoenix::motorcontrol::can::{0} *{1};", getImplementationName(), AsMemberVariableName()) };
+            return new List<string> { string.Format("{0} *{1};", getImplementationName(), AsMemberVariableName()) };
         }
         override public List<string> generateInitialization()
         {
@@ -1195,7 +1195,7 @@ namespace ApplicationData
 
             string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});",AsMemberVariableName(),canID);
 
-            StringBuilder sb = new StringBuilder();
+            /*StringBuilder sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine(conditionalsSb.ToString());
             if (robotsToCreateFor.Count > 0)
@@ -1204,9 +1204,57 @@ namespace ApplicationData
             sb.AppendLine();
             sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
             if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("}");
+                sb.AppendLine("}");*/
 
-            return new List<string>() { sb.ToString() };
+            return new List<string>() { creation };
+        }
+        override public string GenerateTargetMemberVariable(motorControlData mcd)
+        {
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
+            }
+           /* //TO DO if we need more than Percent Out implement below
+
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+            }*/
+
+            return "";
+        }
+        override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
+        {
+            /*  if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value);
+            }
+           //TO DO if we need more than Percent Out implement below
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }*/
+
+            return "";
+        }
+        override public string GenerateCyclicGenericTargetRefresh()
+        {
+            //Set	(TalonSRXControlMode	mode,double value )
+            return string.Format("{0}->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput,*{0}ActiveTarget);", AsMemberVariableName());
+        }
+        override public string GenerateGenericTargetMemberVariable()
+        {
+            return string.Format("double  *{0}ActiveTarget;", AsMemberVariableName());
         }
     }
 
