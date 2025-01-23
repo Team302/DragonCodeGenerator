@@ -1116,14 +1116,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>();
 
-            /*
-    ctre::phoenix::motorcontrol::SupplyCurrentLimitConfiguration climit;
-    climit.enable = false;
-    climit.currentLimit = 1.0;
-    climit.triggerThresholdCurrent = 1.0;
-    climit.triggerThresholdTime = 0.001;
-    m_talon->ConfigSupplyCurrentLimit(climit, 0);*/
-
             if (ControllerEnabled == Enabled.Yes)
             {
                 string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_FULL_NAME_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
@@ -1273,7 +1265,6 @@ namespace ApplicationData
         }
         override public string GenerateCyclicGenericTargetRefresh()
         {
-            //Set	(TalonSRXControlMode	mode,double value )
             return string.Format("{0}->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput,{0}ActiveTarget);", AsMemberVariableName());
         }
     }
