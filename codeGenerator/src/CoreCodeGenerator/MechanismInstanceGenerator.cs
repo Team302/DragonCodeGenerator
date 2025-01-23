@@ -353,8 +353,11 @@ namespace CoreCodeGenerator
                                 foreach (motorTarget mT in s.motorTargets) {
                                     motorControlData mcd = mi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
                                     MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
-                                    string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
-                                    targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {mT.target.value};");
+                                    if (mc != null && mcd != null)
+                                    {
+                                        string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
+                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {mT.target.value};");
+                                    }
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
 
