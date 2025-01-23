@@ -1057,10 +1057,9 @@ namespace ApplicationData
             List<string> creation = new List<string>()
             {
                 string.Format("ctre::phoenix6::configs::CANcoderConfiguration {0}Configs{{}};", name),
-                string.Format("{0} = new ctre::phoenix6::hardware::CANcoder({1},\"{2}\");", AsMemberVariableName(),canID.value,canBusName),
-                string.Format("{0}->GetConfigurator().Apply({1}Configs); //Applying Factory Defaults",AsMemberVariableName(), name),
                 string.Format("{0}Configs.MagnetSensor.MagnetOffset = units::angle::turn_t({1});", name, offset.value),
                 string.Format("{0}Configs.MagnetSensor.SensorDirection = ctre::phoenix6::signals::SensorDirectionValue::{1};", name, reverse.value ?  "Clockwise_Positive" : "CounterClockwise_Positive"),
+                string.Format("{0} = new ctre::phoenix6::hardware::CANcoder({1},\"{2}\");", AsMemberVariableName(),canID.value,canBusName),
                 string.Format("{0}->GetConfigurator().Apply({1}Configs);", AsMemberVariableName(),name)
             };
 
