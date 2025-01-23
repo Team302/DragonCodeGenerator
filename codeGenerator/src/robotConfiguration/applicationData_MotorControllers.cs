@@ -1024,8 +1024,9 @@ namespace ApplicationData
     }
 
     [Serializable]
-    [ImplementationName("DragonTalonSRX")]
-    [UserIncludeFile("hw/DragonTalonSRX.h")]
+    [ImplementationName("ctre::phoenix::motorcontrol::can::TalonSRX")]
+    [SystemIncludeFile("ctre/phoenix/motorcontrol/can/TalonSRX.h")]
+    [SystemIncludeFile("ctre/phoenix/motorcontrol/SupplyCurrentLimitConfiguration.h")]
     public class TalonSRX : MotorController
     {
 
@@ -1107,122 +1108,83 @@ namespace ApplicationData
         public TalonSRX()
         {
         }
-
+        override public List<string> generateDefinition()
+        {
+            return new List<string> { string.Format("{0} *{1};", getImplementationName(), AsMemberVariableName()) };
+        }
         override public List<string> generateInitialization()
         {
             List<string> initCode = new List<string>();
 
             if (ControllerEnabled == Enabled.Yes)
             {
-                foreach (RemoteFeedbackSensorConfig_SRX config in remoteFeedbackSensorConfig)
+                string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_FULL_NAME_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
+
+                initCode.Add(string.Format("CALL:{0}", signatureWithoutReturn));
+                initCode.Add(string.Format("DECLARATION:void {0}", signatureWithoutReturn));
+                initCode.Add("");
+                initCode.Add(string.Format("void {0}::{1}", generatorContext.theMechanismInstance.name, signatureWithoutReturn));
+                initCode.Add("{");
+
+                initCode.Add(string.Format("{0}->SetInverted({1});",
+                                                                         AsMemberVariableName(),
+                                                                         (theConfigMotorSettings.inverted == InvertedValue.CounterClockwise_Positive).ToString().ToLower()));
+
+                initCode.Add(string.Format("{0}->EnableVoltageCompensation(true);", AsMemberVariableName()));
+
+                initCode.Add(string.Format("{0}->ConfigVoltageCompSaturation(10.0, 0);", AsMemberVariableName()));
+
+                initCode.Add(string.Format("{0}->SetNeutralMode(ctre::phoenix::motorcontrol::NeutralMode::{1});",
+                                                                      AsMemberVariableName(),
+                                                                      theConfigMotorSettings.mode.ToString()));
+
+                if (currentLimits.EnableCurrentLimits.value)
                 {
-
-                    initCode.Add(string.Format(@"{0}->ConfigSelectedFeedbackSensor({1}::{2},
-                                                                                {3}, 
-                                                                                units::time::millisecond_t({4}({5})).to<double>());",
-                                                                                        name,
-                                                                                        "ctre::phoenix::motorcontrol::RemoteFeedbackDevice",
-                                                                                        config.device,
-                                                                                        config.pidSlotId,
-                                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(config.timeOut.physicalUnits),
-                                                                                        config.timeOut
-                                                                                        ));
+                    initCode.Add(string.Format(@"ctre::phoenix::motorcontrol::SupplyCurrentLimitConfiguration climit;
+                                                climit.enable = true;
+                                                climit.currentLimit = {0};
+                                                climit.triggerThresholdCurrent = {1};
+                                                climit.triggerThresholdTime = {2};
+                                                {3}->ConfigSupplyCurrentLimit(climit, 0);",
+                                                currentLimits.ContinuousCurrentLimit.value,
+                                                currentLimits.PeakCurrentLimit.value,
+                                                currentLimits.PeakCurrentDuration.value,
+                                                AsMemberVariableName()));
                 }
-
-                foreach (FeedbackSensorConfig_SRX config in feedbackSensorConfig)
-                {
-
-                    initCode.Add(string.Format(@"{0}->ConfigSelectedFeedbackSensor({1}::{2},
-                                                                                {3}, 
-                                                                                units::time::millisecond_t({4}({5})).to<double>());",
-                                                                                        name,
-                                                                                        "ctre::phoenix::motorcontrol::FeedbackDevice",
-                                                                                        config.device,
-                                                                                        config.pidSlotId,
-                                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(config.timeOut.physicalUnits),
-                                                                                        config.timeOut
-                                                                                        ));
-                }
-
-                initCode.Add(string.Format(@"{0}->SetRemoteSensor({1},
-                                                              ctre::phoenix::motorcontrol::{2}::{2}_{3} );",
-                                                                        name + getImplementationName(),
-                                                                        remoteSensor.CanID.value,
-                                                                        remoteSensor.Source.GetType().Name,
-                                                                        remoteSensor.Source
-                                                                        ));
-
-                initCode.Add(string.Format("{0}->Invert( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (theConfigMotorSettings.inverted == InvertedValue.CounterClockwise_Positive).ToString().ToLower()));
-
-                initCode.Add(string.Format("{0}->EnableBrakeMode( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (theConfigMotorSettings.mode == NeutralModeValue.Brake).ToString().ToLower()));
-
-                initCode.Add(string.Format("{0}->EnableCurrentLimiting( {1});",
-                                                                        name + getImplementationName(),
-                                                                        currentLimits.EnableCurrentLimits.value.ToString().ToLower()));
-
-                initCode.Add(string.Format(@"{0}->ConfigPeakCurrentLimit(units::current::ampere_t ( {1}({2})).to<int>(), 
-                                                                     units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                                                                        name + getImplementationName(),
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentLimit.physicalUnits),
-                                                                        currentLimits.PeakCurrentLimit.value,
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentLimitTimeout.physicalUnits),
-                                                                        currentLimits.PeakCurrentLimitTimeout.value));
-
-                initCode.Add(string.Format(@"{0}->ConfigPeakCurrentDuration(units::time::millisecond_t ( {1}({2})).to<int>(), 
-                                                                        units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                                                                        name + getImplementationName(),
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentDuration.physicalUnits),
-                                                                        currentLimits.PeakCurrentDuration.value,
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentDurationTimeout.physicalUnits),
-                                                                        currentLimits.PeakCurrentDurationTimeout.value));
-
-                initCode.Add(string.Format(@"{0}->ConfigContinuousCurrentLimit(units::current::ampere_t ( {1}({2})).to<int>(), 
-                                                                           units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                                                                        name + getImplementationName(),
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.ContinuousCurrentLimit.physicalUnits),
-                                                                        currentLimits.ContinuousCurrentLimit.value,
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.ContinuousCurrentLimitTimeout.physicalUnits),
-                                                                        currentLimits.ContinuousCurrentLimitTimeout.value));
-
-                initCode.Add(string.Format("{0}->SetDiameter(units::length::inch_t ( {1}({2})).to<double>());",      //todo Should SetDiameter(double) be called within the constructor, since the diameter is inside the calcStruct that is passed to the constructor?
-                                                                        name + getImplementationName(),
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theDistanceAngleCalcInfo.diameter.physicalUnits),
-                                                                        theDistanceAngleCalcInfo.diameter.value));
-
-                initCode.Add(string.Format("{0}->EnableDisableLimitSwitches( {1});",
-                                                                        name + getImplementationName(),
-                                                                        limitSwitches.LimitSwitchesEnabled.value.ToString().ToLower()));
-
-                initCode.Add(string.Format("{0}->SetForwardLimitSwitch( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (limitSwitches.ForwardLimitSwitch == SwitchConfiguration.NormallyOpen).ToString().ToLower()));
-
-                initCode.Add(string.Format("{0}->SetReverseLimitSwitch( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (limitSwitches.ReverseLimitSwitch == SwitchConfiguration.NormallyOpen).ToString().ToLower()));
-
-                if (enableFollowID.value)
-                {
-                    initCode.Add(string.Format("{0}->SetAsFollowerMotor( {1} );",
-                                                                            name,
-                                                                            followID.value));
-                }
-                else
-                    initCode.Add(string.Format("// {0} : Follower motor mode is not enabled", name));
-
-                initCode.AddRange(base.generateInitialization());
-
+                initCode.Add("}");
                 initCode.Add(Environment.NewLine);
-
             }
-
             return initCode;
         }
+        override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
+        {
+            List<string> output = new List<string>();
 
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+            string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
+
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut)  {{{2} = percentOut;}}", this.name, mcd.name, activeTargetNameAsMemVar));
+            }/*TO DO if we use SRX for mor than Percent Out
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+            }*/
+
+            return output;
+        }
         override public List<string> generateIndexedObjectCreation(int currentIndex)
         {
             List<applicationData> robotsToCreateFor = new List<applicationData>();
@@ -1258,34 +1220,52 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format(@"{0}{1} = new {1}(""{0}"",
-                                                                RobotElementNames::{2},
-                                                                {3},
-                                                                {4},
-                                                                {5}, 
-                                                                IDragonMotorController::MOTOR_TYPE::{6});",
-                name,
-                getImplementationName(),
-                utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-                canID.value.ToString(),
-                pdpID.value.ToString(),
-                theDistanceAngleCalcInfo.getName(name),
-                motorType
-                );
+            string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});",AsMemberVariableName(),canID);
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine();
-            sb.AppendLine(conditionalsSb.ToString());
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("{");
-            sb.AppendLine(theDistanceAngleCalcInfo.getDefinition(name));
-            sb.AppendLine(creation);
-            sb.AppendLine();
-            sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("}");
+            return new List<string>() { creation };
+        }
+        override public string GenerateTargetMemberVariable(motorControlData mcd)
+        {
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
 
-            return new List<string>() { sb.ToString() };
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return string.Format("double  {0}ActiveTarget;", AsMemberVariableName());
+            }
+           /* //TO DO if we need more than Percent Out implement below
+
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+            }*/
+
+            return "";
+        }
+        override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
+        {
+             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                return string.Format("UpdateTarget{0}{1}( {2})", this.name,mcd.name, value);
+            }
+           /*TO DO if we need more than Percent Out implement below
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }*/
+
+            return "";
+        }
+        override public string GenerateCyclicGenericTargetRefresh()
+        {
+            return string.Format("{0}->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput,{0}ActiveTarget);", AsMemberVariableName());
         }
     }
 
