@@ -924,8 +924,8 @@ namespace ApplicationData
 
     [Serializable()]
     [ImplementationName("DigitalInput")]
-    [UserIncludeFile("<frc/DigitalInput.h>")]
-    [UserIncludeFile("<frc/Debouncer.h>")]
+    [SystemIncludeFile("frc/DigitalInput.h")]
+    [SystemIncludeFile("frc/Debouncer.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -954,11 +954,11 @@ namespace ApplicationData
             {
                 if (debouncetime.__units__ == "s")
                 {
-                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer({1}, frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value);
+                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer(units::time::second_t({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value);
                 }
                 else
                 {
-                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer({1}, frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value*1000);
+                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer(units::time::second_t({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value*1000);
 
                 }
                 return new List<string> { digitalInput, debouncer };
