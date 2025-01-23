@@ -952,15 +952,7 @@ namespace ApplicationData
             string debouncer;
             if (debouncetime.value != 0)
             {
-                if (debouncetime.__units__ == "s")
-                {
-                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer(units::time::second_t({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value);
-                }
-                else
-                {
-                    debouncer = string.Format("{0}Debouncer = new frc::Debouncer(units::time::second_t({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value*1000);
-
-                }
+                debouncer = string.Format("{0}Debouncer = new frc::Debouncer({2}({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value, generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__));
                 return new List<string> { digitalInput, debouncer };
             }
  
@@ -968,15 +960,12 @@ namespace ApplicationData
         }
         override public List<string> generateDefinition()
         {
+            List<string> create = new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) };
             if (debouncetime.value != 0)
             {
-                return new List<string> { string.Format("frc::DigitalInput *{0};", AsMemberVariableName()),
-                                          string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName())};
+                create.Add(string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName()));
             }
-            else
-            {
-                return new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) };
-            }
+            return create;
         }
 
         override public List<string> generateObjectCreation()
