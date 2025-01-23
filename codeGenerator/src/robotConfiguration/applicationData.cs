@@ -995,7 +995,13 @@ namespace ApplicationData
         }
         override public List<string> generateDefinitionGetter()
         {
-            return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), name, AsMemberVariableName()) };
+            if(debouncetime.value != 0)
+            {
+                return new List<string> { string.Format("bool Get{1}State() const {{return {3}Debouncer->Calculate({2}{3}->Get());}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
+
+            }
+ 
+            return new List<string> { string.Format("bool Get{1}State() const {{return {2}{3}->Get();}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
         }
     }
 
