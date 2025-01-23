@@ -412,7 +412,7 @@ namespace ApplicationData
             MotorControlData = new List<MinimalMotorControlData>();
 
             foreach (motorControlData mcd in m.stateMotorControlData)
-                MotorControlData.Add( new MinimalMotorControlData(mcd));
+                MotorControlData.Add(new MinimalMotorControlData(mcd));
         }
     }
 
@@ -449,7 +449,7 @@ namespace ApplicationData
         public CONTROL_RUN_LOCS controlLoopLocation { get; set; }
 
         public MinimalMotorControlData()
-        { 
+        {
         }
 
         public MinimalMotorControlData(motorControlData mcd)
@@ -923,8 +923,9 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    [ImplementationName("DragonDigitalInput")]
-    [UserIncludeFile("hw/DragonDigitalInput.h")]
+    [ImplementationName("DigitalInput")]
+    [SystemIncludeFile("frc/DigitalInput.h")]
+    [SystemIncludeFile("frc/Debouncer.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -947,17 +948,24 @@ namespace ApplicationData
 
         public override List<string> generateIndexedObjectCreation(int index)
         {
-            string creation = string.Format("{0} = new {1}(\"{0}\",RobotElementNames::{2},{3},{4},{5}({6}));",
-                                            name,
-                                            getImplementationName(),
-                                            utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-                                            digitalId.value,
-                                            reversed.value.ToString().ToLower(),
-                                            generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__),
-                                            debouncetime.value
-                                            );
-
-            return new List<string> { creation };
+            string digitalInput = string.Format("{0} = new frc::DigitalInput({1});", AsMemberVariableName(), digitalId.value);
+            string debouncer;
+            if (debouncetime.value != 0)
+            {
+                debouncer = string.Format("{0}Debouncer = new frc::Debouncer({2}({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value, generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__));
+                return new List<string> { digitalInput, debouncer };
+            }
+ 
+            return new List<string> {digitalInput};
+        }
+        override public List<string> generateDefinition()
+        {
+            List<string> create = new List<string> { string.Format("{0}* {1};", getImplementationName(), AsMemberVariableName()) };
+            if (debouncetime.value != 0)
+            {
+                create.Add(string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName()));
+            }
+            return create;
         }
 
         override public List<string> generateObjectCreation()
@@ -973,6 +981,16 @@ namespace ApplicationData
             };
 
             return initCode;
+        }
+        override public List<string> generateDefinitionGetter()
+        {
+            if(debouncetime.value != 0)
+            {
+                return new List<string> { string.Format("bool Get{1}State() const {{return {3}Debouncer->Calculate({2}{3}->Get());}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
+
+            }
+ 
+            return new List<string> { string.Format("bool Get{1}State() const {{return {2}{3}->Get();}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
         }
     }
 
