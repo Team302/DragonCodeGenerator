@@ -1126,6 +1126,13 @@ namespace ApplicationData
 
             if (ControllerEnabled == Enabled.Yes)
             {
+                string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_FULL_NAME_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
+
+                initCode.Add(string.Format("CALL:{0}", signatureWithoutReturn));
+                initCode.Add(string.Format("DECLARATION:void {0}", signatureWithoutReturn));
+                initCode.Add("");
+                initCode.Add(string.Format("void {0}::{1}", generatorContext.theMechanismInstance.name, signatureWithoutReturn));
+                initCode.Add("{");
 
                 initCode.Add(string.Format("{0}->SetInverted({1});",
                                                                          AsMemberVariableName(),
@@ -1152,12 +1159,40 @@ namespace ApplicationData
                                                 currentLimits.PeakCurrentDuration.value,
                                                 AsMemberVariableName()));
                 }
-
+                initCode.Add("}");
                 initCode.Add(Environment.NewLine);
             }
             return initCode;
         }
+        override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
+        {
+            List<string> output = new List<string>();
 
+            string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+            string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
+
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut)  {{{2} = percentOut;}}", this.name, mcd.name, activeTargetNameAsMemVar));
+            }/*TO DO if we use SRX for mor than Percent Out
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            {
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+            }*/
+
+            return output;
+        }
         override public List<string> generateIndexedObjectCreation(int currentIndex)
         {
             List<applicationData> robotsToCreateFor = new List<applicationData>();
@@ -1195,17 +1230,6 @@ namespace ApplicationData
 
             string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});",AsMemberVariableName(),canID);
 
-            /*StringBuilder sb = new StringBuilder();
-            sb.AppendLine();
-            sb.AppendLine(conditionalsSb.ToString());
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("{");
-            sb.AppendLine(creation);
-            sb.AppendLine();
-            sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("}");*/
-
             return new List<string>() { creation };
         }
         override public string GenerateTargetMemberVariable(motorControlData mcd)
@@ -1214,7 +1238,7 @@ namespace ApplicationData
 
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
+                return string.Format("double  {0}ActiveTarget;", AsMemberVariableName());
             }
            /* //TO DO if we need more than Percent Out implement below
 
@@ -1231,11 +1255,11 @@ namespace ApplicationData
         }
         override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
-            /*  if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value);
+                return string.Format("UpdateTarget{0}{1}( {2})", this.name,mcd.name, value);
             }
-           //TO DO if we need more than Percent Out implement below
+           /*TO DO if we need more than Percent Out implement below
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
                 return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
@@ -1250,11 +1274,7 @@ namespace ApplicationData
         override public string GenerateCyclicGenericTargetRefresh()
         {
             //Set	(TalonSRXControlMode	mode,double value )
-            return string.Format("{0}->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput,*{0}ActiveTarget);", AsMemberVariableName());
-        }
-        override public string GenerateGenericTargetMemberVariable()
-        {
-            return string.Format("double  *{0}ActiveTarget;", AsMemberVariableName());
+            return string.Format("{0}->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput,{0}ActiveTarget);", AsMemberVariableName());
         }
     }
 
