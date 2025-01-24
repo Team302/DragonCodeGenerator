@@ -395,6 +395,9 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
     [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
     [Using("ctre::phoenix6::configs::Slot0Configs")]
+    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+
     public class TalonFX : MotorController
     {
         [Serializable]
@@ -573,7 +576,23 @@ namespace ApplicationData
                 initCode.Add("");
 
 
-
+                /*
+                 * ClosedLoopRampsConfigs rampConfigs{};
+	                rampConfigs.TorqueClosedLoopRampPeriod = units::time::millisecond_t ( 250 );
+	                m_Climber->GetConfigurator().Apply ( rampConfigs );
+                 */
+                if (voltageRamping.enableClosedLoop.value)                
+                    initCode.Add(string.Format(@" ClosedLoopRampsConfigs rampConfigs{{}};
+                                                rampConfigs.TorqueClosedLoopRampPeriod = {1}({2});
+                                                {0}->GetConfigurator().Apply(rampConfigs);",
+                                                AsMemberVariableName(),
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.closedLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
+                else
+                    initCode.Add(string.Format(@" OpenLoopRampsConfigs rampConfigs{{}};
+                                                rampConfigs.VoltageOpenLoopRampPeriod = {1}({2});
+                                                {0}->GetConfigurator().Apply(rampConfigs);",
+                                                AsMemberVariableName(),
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
 
                 //foreach (PIDFslot pIDFslot in PIDFs)
                 //{
