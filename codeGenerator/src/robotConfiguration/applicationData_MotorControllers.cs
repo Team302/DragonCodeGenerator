@@ -1078,33 +1078,17 @@ namespace ApplicationData
             [DefaultValue(0)]
             [PhysicalUnitsFamily(physicalUnit.Family.current)]
             [ConstantInMechInstance]
-            public intParameter PeakCurrentLimit { get; set; }
+            public intParameter currentLimit { get; set; }
 
             [DefaultValue(0)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
             [ConstantInMechInstance]
-            public intParameter PeakCurrentLimitTimeout { get; set; }
+            public intParameter triggerThresholdCurrent { get; set; }
 
             [DefaultValue(0)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
             [ConstantInMechInstance]
-            public intParameter PeakCurrentDuration { get; set; }
-
-            [DefaultValue(0)]
-            [PhysicalUnitsFamily(physicalUnit.Family.time)]
-            [ConstantInMechInstance]
-            public intParameter PeakCurrentDurationTimeout { get; set; }
-
-
-            [DefaultValue(0)]
-            [PhysicalUnitsFamily(physicalUnit.Family.current)]
-            [ConstantInMechInstance]
-            public intParameter ContinuousCurrentLimit { get; set; }
-
-            [DefaultValue(0)]
-            [PhysicalUnitsFamily(physicalUnit.Family.time)]
-            [ConstantInMechInstance]
-            public intParameter ContinuousCurrentLimitTimeout { get; set; }
+            public intParameter triggerThresholdTime { get; set; }
 
             public CurrentLimits_SRX()
             {
@@ -1182,9 +1166,9 @@ namespace ApplicationData
                                                 climit.triggerThresholdCurrent = {1};
                                                 climit.triggerThresholdTime = {2};
                                                 {3}->ConfigSupplyCurrentLimit(climit, 0);",
-                                                currentLimits.ContinuousCurrentLimit.value,
-                                                currentLimits.PeakCurrentLimit.value,
-                                                currentLimits.PeakCurrentDuration.value,
+                                                currentLimits.currentLimit.value,
+                                                currentLimits.triggerThresholdCurrent.value,
+                                                currentLimits.triggerThresholdTime.value,
                                                 AsMemberVariableName()));
                 }
                 initCode.Add("}");
