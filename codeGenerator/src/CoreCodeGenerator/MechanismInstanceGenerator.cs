@@ -485,7 +485,8 @@ namespace CoreCodeGenerator
                                                     string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
                                                     if (!string.IsNullOrEmpty(PidSetCall))
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
-                                                    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                                    if(!mc.enableFollowID.value)
+                                                        setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
                                                 }
                                             }
                                         }

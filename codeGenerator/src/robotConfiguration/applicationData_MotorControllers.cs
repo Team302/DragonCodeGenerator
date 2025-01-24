@@ -397,6 +397,8 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::Slot0Configs")]
     [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
     [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
+    [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
 
     public class TalonFX : MotorController
     {
@@ -685,8 +687,8 @@ namespace ApplicationData
                 if (fusedSyncCANcoder.enable.value == true)
                 {
                     sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED 
-                        ? "signals::FeedbackSensorSourceValue::FusedCANcoder" 
-                        : "signals::FeedbackSensorSourceValue::SyncCANcoder";
+                        ? "FeedbackSensorSourceValue::FusedCANcoder" 
+                        : "FeedbackSensorSourceValue::SyncCANcoder";
                 }
 
                 /*
