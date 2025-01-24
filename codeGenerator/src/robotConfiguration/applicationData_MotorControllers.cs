@@ -776,18 +776,34 @@ namespace ApplicationData
                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
                 {
                     return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
-                }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                }else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
                 {
-                    return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+                        return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
                 }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+
+                if (!mcd.enableFOC.value)
                 {
-                    return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+           
+                    if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                    {
+                        return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                    }
+                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                    {
+                        return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                    }
                 }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                else
                 {
-                    return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                  
+                    if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                    {
+                        return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                    }
+                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                    {
+                        return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                    }
                 }
             }
             return "";
