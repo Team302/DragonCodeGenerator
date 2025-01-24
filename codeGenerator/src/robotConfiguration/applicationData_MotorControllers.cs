@@ -698,7 +698,7 @@ namespace ApplicationData
                 
                 if (enableFollowID.value)
                 {
-                    initCode.Add(string.Format(@"   {0}->SetControl(controls::Follower{{{1}, false}})",
+                    initCode.Add(string.Format(@"   {0}->SetControl(controls::StrictFollower{{1}}",
                                                AsMemberVariableName(),
                                                followID.value));
                 }
