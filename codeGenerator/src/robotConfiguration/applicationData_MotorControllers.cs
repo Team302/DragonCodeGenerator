@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Serialization;
 using static ApplicationData.motorControlData;
@@ -837,14 +838,14 @@ namespace ApplicationData
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t( (position/({4}({5}))).value() * {6} / std::numbers::pi); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar,
+                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theDistanceAngleCalcInfo.diameter.__units__), theDistanceAngleCalcInfo.diameter.value, theDistanceAngleCalcInfo.gearRatio));
                 }
             }
+            
             return output;
 
         }
@@ -862,11 +863,11 @@ namespace ApplicationData
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
-                    return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+                    return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}))", this.name, mcd.name, value);
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                 {
-                    return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+                    return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}))", this.name, mcd.name, value);
                 }
             }
             return "";
@@ -882,7 +883,7 @@ namespace ApplicationData
             {
                 return ""; // not closed loop
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", this.name, mcd.name, mi.name));
@@ -896,6 +897,7 @@ namespace ApplicationData
 
                 return sb.ToString();
             }
+
 
             return "";
         }
