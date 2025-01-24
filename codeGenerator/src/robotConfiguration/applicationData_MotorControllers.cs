@@ -648,32 +648,22 @@ namespace ApplicationData
                                                 theConfigMotorSettings.peakReverseDutyCycle.value,
                                                 theConfigMotorSettings.deadbandPercent.value));
 
-                /*
-                                initCode.Add(string.Format(@"{0}->SetAsFollowerMotor({1} ); // masterCANID",
-                                                                name + getImplementationName(),
-                                                                followID.value
-                                                                ));
+                
 
-                                initCode.Add(string.Format(@"{0}->SetRemoteSensor({1}, // canID
-                                                                              {2}::{2}_{3} ); // ctre::phoenix::motorcontrol::RemoteSensorSource",
-                                                                name + getImplementationName(),
-                                                                remoteSensor.CanID.value,
-                                                                remoteSensor.Source.GetType().Name,
-                                                                remoteSensor.Source
-                                                                ));
+                /*
+                initCode.Add(string.Format(@"{0}->SetRemoteSensor({1}, // canID
+                                                                {2}::{2}_{3} ); // ctre::phoenix::motorcontrol::RemoteSensorSource",
+                                                name + getImplementationName(),
+                                                remoteSensor.CanID.value,
+                                                remoteSensor.Source.GetType().Name,
+                                                remoteSensor.Source
+                                                ));
                 */
+                
 
                 string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
                 {
-                    initCode.Add(string.Format(@"{0}->FuseCancoder(*{1}, // DragonCanCoder &cancoder
-                                                                {2}, // sensorToMechanismRatio
-                                                                {3} ); // rotorToSensorRatio",
-                                                name,
-                                                fusedSyncCANcoder.fusedCANcoder.name,
-                                                fusedSyncCANcoder.sensorToMechanismRatio.value,
-                                                fusedSyncCANcoder.rotorToSensorRatio.value
-                                                ));
                     sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED 
                         ? "signals::FeedbackSensorSourceValue::FusedCANcoder" 
                         : "signals::FeedbackSensorSourceValue::SyncCANcoder";
@@ -705,9 +695,16 @@ namespace ApplicationData
                 }
                 else
                 {
-                    LogProgress("Can Coder was not set properly on the TalonFX");
+                    LogProgress($"Can Coder was not set properly on {name}");
                 }
                 
+                if (enableFollowID.value)
+                {
+                    initCode.Add(string.Format(@"   {0}->SetControl(controls::Follower{{{1}, false}})",
+                                               AsMemberVariableName(),
+                                               followID.value));
+                }
+
                 initCode.Add("}");
             }
 
@@ -905,6 +902,7 @@ namespace ApplicationData
 
         override public string GenerateCyclicGenericTargetRefresh()
         {
+            if (enableFollowID.value) return "";
             return string.Format("{0}->SetControl(*{0}ActiveTarget);", AsMemberVariableName());
         }
     }
