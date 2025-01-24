@@ -414,7 +414,7 @@ namespace ApplicationData
             public boolParameter enableSupplyCurrentLimit { get; set; }
 
             [DefaultValue(0)]
-            [Range(typeof(double), "0", "50.0")] //todo choose a valid range
+            [Range(typeof(double), "0", "70.0")] //todo choose a valid range
             [PhysicalUnitsFamily(physicalUnit.Family.current)]
             [ConstantInMechInstance]
             public doubleParameter supplyCurrentLimit { get; set; }
