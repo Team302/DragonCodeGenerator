@@ -275,14 +275,14 @@ namespace ApplicationData
 
             initCode.Add(string.Format(@"{0}->SetVoltageRamping( units::time::second_t({1}({2})).to<double>(),
                                                                  units::time::second_t({3}({4})).to<double>() );",
-                                                        name + getImplementationName(),
+                                                        AsMemberVariableName(),
                                                         generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.physicalUnits),
                                                         voltageRamping.openLoopRampTime.value,
                                                         generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.closedLoopRampTime.physicalUnits),
                                                         voltageRamping.enableClosedLoop.value ? voltageRamping.closedLoopRampTime.value : 0.0));
 
             initCode.Add(string.Format("{0}->SetSensorInverted( {1});",
-                                                        name + getImplementationName(),
+                                                        AsMemberVariableName(),
                                                         sensorIsInverted.ToString().ToLower()));
 
             return initCode;
