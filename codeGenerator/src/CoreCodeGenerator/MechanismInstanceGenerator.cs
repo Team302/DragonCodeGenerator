@@ -16,10 +16,15 @@ namespace CoreCodeGenerator
 {
     internal class MechanismInstanceGenerator : baseGenerator
     {
+        Dictionary<motorControlData.CONTROL_TYPE, string> ControlDataMapping = new Dictionary<motorControlData.CONTROL_TYPE, string>();
         internal MechanismInstanceGenerator(string codeGeneratorVersion, applicationDataConfig theRobotConfiguration, toolConfiguration theToolConfiguration, bool cleanMode, bool cleanDecoratorModFolders, showMessage displayProgress)
         : base(codeGeneratorVersion, theRobotConfiguration, theToolConfiguration, cleanMode, cleanDecoratorModFolders)
         {
             setProgressCallback(displayProgress);
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.PERCENT_OUTPUT, "double");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT, "units::voltage::volt_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::turn_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_INCH, "units::length::inch_t");
         }
 
         public void WriteMechanismParameterFiles()
@@ -292,7 +297,7 @@ namespace CoreCodeGenerator
                             {
                                 motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
                                 MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
-                                if (mcd != null)
+                                if (mcd != null && mc != null)
                                 {
                                     targetUpdateFunctions.AddRange(mc.GenerateTargetUpdateFunctions(mcd));
                                     targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
@@ -343,6 +348,18 @@ namespace CoreCodeGenerator
                                 resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                                 resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                                 resultString = resultString.Replace("$$_STATE_NAME_$$", s.name);
+                                
+                                StringBuilder targetConstants = new StringBuilder();
+                                foreach (motorTarget mT in s.motorTargets) {
+                                    motorControlData mcd = mi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
+                                    MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
+                                    if (mc != null && mcd != null)
+                                    {
+                                        string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
+                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {mT.target.value};");
+                                    }
+                                }
+                                resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
 
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
