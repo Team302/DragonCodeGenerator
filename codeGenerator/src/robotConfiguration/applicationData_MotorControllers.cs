@@ -783,6 +783,9 @@ namespace ApplicationData
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
             {
                 return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+            }else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            {
+                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::length::inch_t(0.0)}};", targetNameAsMemVar);
             }
 
             return "";

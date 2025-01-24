@@ -356,7 +356,7 @@ namespace CoreCodeGenerator
                                     if (mc != null && mcd != null)
                                     {
                                         string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
-                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {mT.target.value};");
+                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
                                     }
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
