@@ -675,8 +675,6 @@ namespace ApplicationData
                                     diameter.value
                                     ));
                 */
-
-                initCode.AddRange(base.generateInitialization());
                                 
                 CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
                 if (cc != null)
