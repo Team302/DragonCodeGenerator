@@ -1326,6 +1326,14 @@ namespace ApplicationData
     [Serializable]
     public class baseRobotElementClass
     {
+        public delegate void showMessage(string message);
+        public static showMessage logMessage;
+
+        protected void LogProgress(string info)
+        {
+            logMessage?.Invoke(info);
+        }
+
         [ConstantInMechInstance]
         public string name { get; set; }
 

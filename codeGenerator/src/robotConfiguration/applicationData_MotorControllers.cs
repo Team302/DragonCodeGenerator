@@ -227,9 +227,14 @@ namespace ApplicationData
         }
         public RemoteSensor remoteSensor { get; set; }
 
+        public enum FusedSyncChoice
+        {
+            FUSED,
+            SYNC
+        }
 
         [Serializable]
-        public class FusedCANcoder : baseDataClass
+        public class FusedSyncCANcoder : baseDataClass
         {
             [DefaultValue(false)]
             [ConstantInMechInstance]
@@ -244,13 +249,16 @@ namespace ApplicationData
             [ConstantInMechInstance]
             public doubleParameter rotorToSensorRatio { get; set; }
 
-            public FusedCANcoder()
+            [ConstantInMechInstance]
+            public FusedSyncChoice fusedSyncChoice { get; set; }
+
+            public FusedSyncCANcoder()
             {
-                defaultDisplayName = "FusedCANcoder";
+                defaultDisplayName = "FusedSyncCANcoder";
             }
         }
 
-        public FusedCANcoder fusedCANcoder { get; set; }
+        public FusedSyncCANcoder fusedSyncCANcoder { get; set; }
 
         [DefaultValue(false)]
         [ConstantInMechInstance]
@@ -653,27 +661,53 @@ namespace ApplicationData
                                                                 remoteSensor.Source.GetType().Name,
                                                                 remoteSensor.Source
                                                                 ));
+                */
 
-                                if (fusedCANcoder.enable.value == true)
-                                {
-                                    initCode.Add(string.Format(@"{0}->FuseCancoder(*{1}, // DragonCanCoder &cancoder
-                                                                               {2}, // sensorToMechanismRatio
-                                                                               {3} ); // rotorToSensorRatio",
-                                                                name,
-                                                                fusedCANcoder.fusedCANcoder.name,
-                                                                fusedCANcoder.sensorToMechanismRatio.value,
-                                                                fusedCANcoder.rotorToSensorRatio.value
-                                                                ));
-                                }
+                string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
+                if (fusedSyncCANcoder.enable.value == true)
+                {
+                    initCode.Add(string.Format(@"{0}->FuseCancoder(*{1}, // DragonCanCoder &cancoder
+                                                                {2}, // sensorToMechanismRatio
+                                                                {3} ); // rotorToSensorRatio",
+                                                name,
+                                                fusedSyncCANcoder.fusedCANcoder.name,
+                                                fusedSyncCANcoder.sensorToMechanismRatio.value,
+                                                fusedSyncCANcoder.rotorToSensorRatio.value
+                                                ));
+                    sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED 
+                        ? "signals::FeedbackSensorSourceValue::FusedCANcoder" 
+                        : "signals::FeedbackSensorSourceValue::SyncCANcoder";
+                }
 
-                                initCode.Add(string.Format(@"{0}->SetDiameter({1} ); // double diameter",
-                                                    name + getImplementationName(),
-                                                    diameter.value
-                                                    ));
+                /*
+                initCode.Add(string.Format(@"{0}->SetDiameter({1} ); // double diameter",
+                                    name + getImplementationName(),
+                                    diameter.value
+                                    ));
+                */
 
-                                initCode.AddRange(base.generateInitialization());
-                                */
-
+                initCode.AddRange(base.generateInitialization());
+                                
+                CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
+                if (cc != null)
+                {
+                    initCode.Add(string.Format(@"   TalonFXConfiguration fxConfig{{}};
+                                                    fxConfig.Feedback.FeedbackRemoteSensorID = {1};
+                                                    fxConfig.Feedback.FeedbackSensorSource = {2};
+                                                    fxConfig.Feedback.SensorToMechanismRatio = {3};
+                                                    fxConfig.Feedback.RotorToSensorRatio = {4};
+                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                                                    AsMemberVariableName(),
+                                                    cc.canID.value,
+                                                    sensorSource,
+                                                    fusedSyncCANcoder.sensorToMechanismRatio.value,
+                                                    fusedSyncCANcoder.rotorToSensorRatio.value));
+                }
+                else
+                {
+                    LogProgress("Can Coder was not set properly on the TalonFX");
+                }
+                
                 initCode.Add("}");
             }
 
@@ -805,6 +839,10 @@ namespace ApplicationData
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
             {
                 return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+            }
+            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            {
+                return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
             }
 
             return "";
