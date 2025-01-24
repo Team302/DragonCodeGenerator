@@ -912,7 +912,7 @@ namespace ApplicationData
             {
                 return ""; // not closed loop
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 return string.Format("void SetPID{0}{1}()", this.name, mcd.name, mi.name);
             }
