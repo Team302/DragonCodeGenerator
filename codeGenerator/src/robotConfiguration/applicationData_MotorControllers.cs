@@ -1205,6 +1205,9 @@ namespace ApplicationData
                 initCode.Add(string.Format("{0}->SetNeutralMode(ctre::phoenix::motorcontrol::NeutralMode::{1});",
                                                                       AsMemberVariableName(),
                                                                       theConfigMotorSettings.mode.ToString()));
+               initCode.Add(string.Format("{0}->ConfigOpenloopRamp({1});",AsMemberVariableName(),voltageRamping.openLoopRampTime.value));
+
+                initCode.Add(Environment.NewLine);
 
                 if (currentLimits.EnableCurrentLimits.value)
                 {
