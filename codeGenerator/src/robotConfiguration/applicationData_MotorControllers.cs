@@ -698,9 +698,11 @@ namespace ApplicationData
                 
                 if (enableFollowID.value)
                 {
-                    initCode.Add(string.Format(@"   {0}->SetControl(controls::StrictFollower{{1}}",
-                                               AsMemberVariableName(),
-                                               followID.value));
+                    initCode.Add(string.Format(@"   {0}->SetControl(ctre::phoenix6::controls::StrictFollower{{{1}}});",
+                                    AsMemberVariableName(), followID.value));
+
+
+
                 }
 
                 initCode.Add("}");
