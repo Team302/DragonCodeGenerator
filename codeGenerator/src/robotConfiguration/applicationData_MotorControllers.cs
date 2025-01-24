@@ -771,29 +771,33 @@ namespace ApplicationData
         override public string GenerateTargetMemberVariable(motorControlData mcd)
         {
             string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
-
-            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (!this.enableFollowID.value)
             {
-                return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
+                if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+                {
+                    return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                {
+                    return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                {
+                    return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                {
+                    return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                }
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-            {
-                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
-            }else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
-            {
-                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::length::inch_t(0.0)}};", targetNameAsMemVar);
-            }
-
             return "";
         }
 
         override public string GenerateGenericTargetMemberVariable()
         {
-            return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", AsMemberVariableName());
+            if(!this.enableFollowID.value)
+                return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", AsMemberVariableName());
+            return "";
         }
 
         override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
@@ -802,49 +806,53 @@ namespace ApplicationData
 
             string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
             string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
-
-            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (!this.enableFollowID.value)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
+                }
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-            {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position, bool enableFOC) {{ {2}.Position = position * {4}; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
-            {
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
-                output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position, bool enableFOC) {{ {2}.Position = position * {4} / (std::numbers::pi * {5}); {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio, this.theDistanceAngleCalcInfo.diameter));
-            }
-
             return output;
+
         }
         override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
-            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (!this.enableFollowID.value)
             {
-                return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value, mcd.enableFOC);
+                if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+                {
+                    return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value, mcd.enableFOC);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                {
+                    return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                {
+                    return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                {
+                    return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+                }
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-            {
-                return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
-            {
-                return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-            }
-
             return "";
         }
 
