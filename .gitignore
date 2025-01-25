@@ -8,3 +8,6 @@
 /codeGenerator/src/*/bin/Release
 /codeGenerator/src/*/obj/Release
 /codeGenerator/src/packages
+/codeGenerator/tool/*.exe
+/codeGenerator/tool/*.dll
+!/codeGenerator/tool/AStyle32*.dll
