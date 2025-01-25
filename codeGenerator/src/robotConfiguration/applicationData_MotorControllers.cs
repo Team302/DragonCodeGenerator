@@ -578,11 +578,6 @@ namespace ApplicationData
                 initCode.Add("");
 
 
-                /*
-                 * ClosedLoopRampsConfigs rampConfigs{};
-	                rampConfigs.TorqueClosedLoopRampPeriod = units::time::millisecond_t ( 250 );
-	                m_Climber->GetConfigurator().Apply ( rampConfigs );
-                 */
                 if (voltageRamping.enableClosedLoop.value)                
                     initCode.Add(string.Format(@" ClosedLoopRampsConfigs rampConfigs{{}};
                                                 rampConfigs.TorqueClosedLoopRampPeriod = {1}({2});
