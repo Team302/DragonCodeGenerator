@@ -33,6 +33,10 @@ namespace FRCrobotCodeGen302
         bool automationEnabled = false;
 
         List<stateVisualization> stateGridVisualization = new List<stateVisualization>();
+        Form StateDiagramForm;
+        bool StateDiagramFormCreated = false;
+        Dictionary<string, Microsoft.Msagl.GraphViewerGdi.GViewer> StateDiagramViewers = new Dictionary<string, Microsoft.Msagl.GraphViewerGdi.GViewer>();
+
 
         const int treeIconIndex_lockedPadlock = 0;
         const int treeIconIndex_unlockedPadlock = 1;
@@ -1285,7 +1289,7 @@ namespace FRCrobotCodeGen302
                     dgvCmb.Items.Add("");
                 }
 
-                stateDataGridView.DataSource = new BindingList<stateVisualization>( stateGridVisualization);
+                stateDataGridView.DataSource = new BindingList<stateVisualization>(stateGridVisualization);
 
                 stateDataGridView.ColumnHeadersDefaultCellStyle.BackColor = Color.Green;
                 stateDataGridView.EnableHeadersVisualStyles = false;
@@ -1846,6 +1850,98 @@ namespace FRCrobotCodeGen302
                 addProgress(ex.Message);
             }
         }
+
+        private void showStateDiagramButton_Click(object sender, EventArgs e)
+        {
+            if (StateDiagramFormCreated == false)
+            {
+                StateDiagramForm = new Form();
+                StateDiagramForm.Text = "Mechanism state diagrams";
+                StateDiagramForm.FormClosed += StateDiagramForm_FormClosed;
+
+                Button updateStateDiagrams = new Button();
+                updateStateDiagrams.Text = "Update";
+                updateStateDiagrams.Height = 35;
+                int gap = 10;
+                updateStateDiagrams.Width = StateDiagramForm.ClientSize.Width - (2 * gap);
+                updateStateDiagrams.Location = new Point(gap, StateDiagramForm.ClientSize.Height - updateStateDiagrams.Height - gap);
+                updateStateDiagrams.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                StateDiagramForm.Controls.Add(updateStateDiagrams);
+                updateStateDiagrams.Click += UpdateStateDiagrams_Click;
+
+                TabControl tabControl = new TabControl();
+                tabControl.Name = "TheTabControl";
+                StateDiagramForm.Controls.Add(tabControl);
+                tabControl.Location = new Point(0, 0);
+                tabControl.Height = updateStateDiagrams.Top - gap;
+                tabControl.Width = StateDiagramForm.Width;
+                tabControl.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Bottom;
+
+                UpdateStateDiagrams_Click(null, null);
+
+                StateDiagramForm.Show(this);
+
+                StateDiagramFormCreated = true;
+            }
+        }
+
+        private void UpdateStateDiagrams_Click(object sender, EventArgs e)
+        {
+            TabControl tabControl = StateDiagramForm.Controls["TheTabControl"] as TabControl;
+
+            if (tabControl != null)
+            {
+                bool recreateTabs = false;
+
+                if (theAppDataConfiguration.theRobotVariants.Mechanisms.Count != tabControl.Controls.Count)
+                {
+                    recreateTabs = true;
+                    tabControl.Controls.Clear();
+                    StateDiagramViewers.Clear();
+                }
+
+                int tabIndex = 0;
+                foreach (mechanism m in theAppDataConfiguration.theRobotVariants.Mechanisms)
+                {
+                    TabPage tp;
+
+                    if (recreateTabs)
+                    {
+                        tp = new TabPage(m.name);
+                        tabControl.Controls.Add(tp);
+
+                        StateDiagramViewers.Add(m.name, new Microsoft.Msagl.GraphViewerGdi.GViewer());
+                        
+                        tp.Controls.Add(StateDiagramViewers[m.name]);
+                        StateDiagramViewers[m.name].Name = "Graph" + m.name;
+                        StateDiagramViewers[m.name].Dock = DockStyle.Fill;
+
+                        Microsoft.Msagl.Drawing.Graph graph = new Microsoft.Msagl.Drawing.Graph("graph");
+                        graph.Attr.BackgroundColor = Microsoft.Msagl.Drawing.Color.LightGray;
+
+                        StateDiagramViewers[m.name].Graph = graph;
+                    }
+                    else
+                        tp = tabControl.Controls[tabIndex++] as TabPage;
+
+                    Microsoft.Msagl.Drawing.Graph mechanismGraph = StateDiagramViewers[m.name].Graph;
+
+                    mechanismGraph.NodeMap.Clear();
+                    foreach (state s in m.states)
+                    {
+                        mechanismGraph.AddNode(s.name).Attr.FillColor = Microsoft.Msagl.Drawing.Color.Green;
+                    }
+
+                    StateDiagramViewers[m.name].Graph = mechanismGraph;
+                }
+            }
+        }
+
+        private void StateDiagramForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            StateDiagramFormCreated = false;
+        }
+
         private void configureStatesButton_Click(object sender, EventArgs e)
         {
             if (lastSelectedArrayNode != null)

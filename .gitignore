@@ -7,6 +7,8 @@
 /codeGenerator/src/*/obj/Debug
 /codeGenerator/src/*/bin/Release
 /codeGenerator/src/*/obj/Release
+/codeGenerator/src/*/obj
+/codeGenerator/src/*/src
 /codeGenerator/src/packages
 /codeGenerator/tool/*.exe
 /codeGenerator/tool/*.dll
