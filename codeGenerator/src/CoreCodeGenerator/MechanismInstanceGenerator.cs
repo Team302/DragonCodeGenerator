@@ -356,7 +356,7 @@ namespace CoreCodeGenerator
                                     if (mc != null && mcd != null)
                                     {
                                         string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
-                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {mT.target.value};");
+                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
                                     }
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
@@ -485,7 +485,8 @@ namespace CoreCodeGenerator
                                                     string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
                                                     if (!string.IsNullOrEmpty(PidSetCall))
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
-                                                    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
+                                                    if(!mc.enableFollowID.value)
+                                                        setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
                                                 }
                                             }
                                         }

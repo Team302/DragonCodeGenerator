@@ -71,6 +71,7 @@ namespace FRCrobotCodeGen302
             robotTreeView.ShowNodeToolTips = true;
 
             codeGenerator.setProgressCallback(addProgress);
+            baseRobotElementClass.logMessage = addProgress;
             theAppDataConfiguration.setProgressCallback(addProgress);
             clearNeedsSaving();
 
