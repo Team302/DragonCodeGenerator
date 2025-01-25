@@ -33,6 +33,8 @@ namespace FRCrobotCodeGen302
         bool automationEnabled = false;
 
         List<stateVisualization> stateGridVisualization = new List<stateVisualization>();
+        Form StateDiagramForm;
+        bool StateDiagramFormCreated = false;
 
         const int treeIconIndex_lockedPadlock = 0;
         const int treeIconIndex_unlockedPadlock = 1;
@@ -1845,6 +1847,47 @@ namespace FRCrobotCodeGen302
                 addProgress(ex.Message);
             }
         }
+        
+        private void showStateDiagramButton_Click(object sender, EventArgs e)
+        {
+            if (StateDiagramFormCreated == false)
+            {
+                StateDiagramForm = new Form();
+                StateDiagramForm.Text = "Mechanism state diagrams";
+                StateDiagramForm.FormClosed += StateDiagramForm_FormClosed;
+                
+                Button updateStateDiagrams = new Button();
+                updateStateDiagrams.Text = "Update";
+                updateStateDiagrams.Height = 35;
+                int gap = 10;
+                updateStateDiagrams.Width = StateDiagramForm.ClientSize.Width - (2*gap);
+                updateStateDiagrams.Location = new Point(gap, StateDiagramForm.ClientSize.Height - updateStateDiagrams.Height-gap);
+                updateStateDiagrams.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                StateDiagramForm.Controls.Add(updateStateDiagrams);
+
+                TabControl tabControl = new TabControl();
+                StateDiagramForm.Controls.Add(tabControl);
+                tabControl.Location = new Point(0, 0);  
+                tabControl.Height = updateStateDiagrams.Top - gap;
+                tabControl.Width = StateDiagramForm.Width;
+                tabControl.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Bottom;
+
+                foreach (mechanism m in theAppDataConfiguration.theRobotVariants.Mechanisms)
+                {
+                    TabPage tp = new TabPage(m.name);
+                    tabControl.Controls.Add(tp);
+                }
+                StateDiagramForm.Show(this);
+
+                StateDiagramFormCreated = true;
+            }
+        }
+
+        private void StateDiagramForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            StateDiagramFormCreated = false;
+        }
+
         private void configureStatesButton_Click(object sender, EventArgs e)
         {
             if (lastSelectedArrayNode != null)

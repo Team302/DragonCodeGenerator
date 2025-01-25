@@ -75,6 +75,7 @@ namespace FRCrobotCodeGen302
             this.physicalUnitsComboBox = new System.Windows.Forms.ComboBox();
             this.valueComboBox = new System.Windows.Forms.ComboBox();
             this.robotElementCheckedListBox = new System.Windows.Forms.CheckedListBox();
+            this.showStateDiagramButton = new System.Windows.Forms.Button();
             this.treeViewIcons = new System.Windows.Forms.ImageList(this.components);
             this.configurationGroupBox.SuspendLayout();
             this.theTabControl.SuspendLayout();
@@ -546,15 +547,17 @@ namespace FRCrobotCodeGen302
             this.buttonAndInputTableLayoutPanel.ColumnCount = 2;
             this.buttonAndInputTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.buttonAndInputTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.buttonAndInputTableLayoutPanel.Controls.Add(this.tuningButton, 0, 4);
-            this.buttonAndInputTableLayoutPanel.Controls.Add(this.saveConfigBbutton, 1, 4);
-            this.buttonAndInputTableLayoutPanel.Controls.Add(this.deleteTreeElementButton, 0, 3);
-            this.buttonAndInputTableLayoutPanel.Controls.Add(this.addTreeElementButton, 0, 2);
-            this.buttonAndInputTableLayoutPanel.Controls.Add(this.configureStatesButton, 0, 1);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.tuningButton, 0, 5);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.saveConfigBbutton, 1, 5);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.deleteTreeElementButton, 0, 4);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.addTreeElementButton, 0, 3);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.configureStatesButton, 0, 2);
+            this.buttonAndInputTableLayoutPanel.Controls.Add(this.showStateDiagramButton, 0, 1);
             this.buttonAndInputTableLayoutPanel.Controls.Add(this.valueNumericUpDown, 0, 0);
             this.buttonAndInputTableLayoutPanel.Location = new System.Drawing.Point(95, 106);
             this.buttonAndInputTableLayoutPanel.Name = "buttonAndInputTableLayoutPanel";
-            this.buttonAndInputTableLayoutPanel.RowCount = 5;
+            this.buttonAndInputTableLayoutPanel.RowCount = 6;
+            this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
@@ -628,6 +631,19 @@ namespace FRCrobotCodeGen302
             this.configureStatesButton.Text = "Configure states";
             this.configureStatesButton.UseVisualStyleBackColor = true;
             this.configureStatesButton.Click += new System.EventHandler(this.configureStatesButton_Click);
+            // 
+            // showStateDigramButton
+            // 
+            this.buttonAndInputTableLayoutPanel.SetColumnSpan(this.showStateDiagramButton, 2);
+            this.showStateDiagramButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.showStateDiagramButton.Location = new System.Drawing.Point(3, 57);
+            this.showStateDiagramButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.showStateDiagramButton.Name = "showStateDiagramButton";
+            this.showStateDiagramButton.Size = new System.Drawing.Size(244, 31);
+            this.showStateDiagramButton.TabIndex = 14;
+            this.showStateDiagramButton.Text = "Show state diagram";
+            this.showStateDiagramButton.UseVisualStyleBackColor = true;
+            this.showStateDiagramButton.Click += new System.EventHandler(this.showStateDiagramButton_Click);
             // 
             // valueNumericUpDown
             // 
@@ -774,6 +790,7 @@ namespace FRCrobotCodeGen302
         private System.Windows.Forms.NumericUpDown valueNumericUpDown;
         private System.Windows.Forms.Button addTreeElementButton;
         private System.Windows.Forms.Button configureStatesButton;
+        private System.Windows.Forms.Button showStateDiagramButton;
         private System.Windows.Forms.ComboBox robotConfigurationFileComboBox;
         private System.Windows.Forms.Button clearReportButton;
         private System.Windows.Forms.Button deleteTreeElementButton;
