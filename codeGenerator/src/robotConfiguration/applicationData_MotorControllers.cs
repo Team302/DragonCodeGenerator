@@ -2,13 +2,16 @@ using ApplicationData;
 using Configuration;
 using DataConfiguration;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using static ApplicationData.motorControlData;
 using static ApplicationData.MotorController;
@@ -113,6 +116,9 @@ namespace ApplicationData
             [DefaultValue(1.0)]
             [PhysicalUnitsFamily(physicalUnit.Family.length)]
             public doubleParameter diameter { get; set; }
+            public boolParameter isDistance { get; set; }
+            [DefaultValue(false)]
+
 
             public DistanceAngleCalcStruc()
             {
@@ -399,6 +405,7 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
     [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::configs::VoltageConfigs")]
 
     public class TalonFX : MotorController
     {
@@ -482,7 +489,7 @@ namespace ApplicationData
             public boolParameter reverseResetPosition { get; set; }
 
             [ConstantInMechInstance]
-            [PhysicalUnitsFamily(physicalUnit.Family.angle)] 
+            [PhysicalUnitsFamily(physicalUnit.Family.angle)]
             public doubleParameter reversePosition { get; set; }
 
             [ConstantInMechInstance]
@@ -577,8 +584,13 @@ namespace ApplicationData
 
                 initCode.Add("");
 
+                initCode.Add(@"VoltageConfigs voltageConfigs{};
+                voltageConfigs.PeakForwardVoltage = units::voltage::volt_t(11.0);
+                voltageConfigs.PeakReverseVoltage = units::voltage::volt_t(-11.0);
+                m_Climber->GetConfigurator().Apply(voltageConfigs);" );
 
-                if (voltageRamping.enableClosedLoop.value)                
+
+                if (voltageRamping.enableClosedLoop.value)
                     initCode.Add(string.Format(@" ClosedLoopRampsConfigs rampConfigs{{}};
                                                 rampConfigs.TorqueClosedLoopRampPeriod = {1}({2});
                                                 {0}->GetConfigurator().Apply(rampConfigs);",
@@ -665,7 +677,7 @@ namespace ApplicationData
                                                 theConfigMotorSettings.peakReverseDutyCycle.value,
                                                 theConfigMotorSettings.deadbandPercent.value));
 
-                
+
 
                 /*
                 initCode.Add(string.Format(@"{0}->SetRemoteSensor({1}, // canID
@@ -676,13 +688,13 @@ namespace ApplicationData
                                                 remoteSensor.Source
                                                 ));
                 */
-                
+
 
                 string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
                 {
-                    sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED 
-                        ? "FeedbackSensorSourceValue::FusedCANcoder" 
+                    sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED
+                        ? "FeedbackSensorSourceValue::FusedCANcoder"
                         : "FeedbackSensorSourceValue::SyncCANcoder";
                 }
 
@@ -692,12 +704,13 @@ namespace ApplicationData
                                     diameter.value
                                     ));
                 */
-                                
+                initCode.Add(Environment.NewLine);
+                initCode.Add("TalonFXConfiguration fxConfig{};");
+
                 CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
                 if (cc != null)
                 {
-                    initCode.Add(string.Format(@"   TalonFXConfiguration fxConfig{{}};
-                                                    fxConfig.Feedback.FeedbackRemoteSensorID = {1};
+                    initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
                                                     fxConfig.Feedback.FeedbackSensorSource = {2};
                                                     fxConfig.Feedback.SensorToMechanismRatio = {3};
                                                     fxConfig.Feedback.RotorToSensorRatio = {4};
@@ -712,9 +725,29 @@ namespace ApplicationData
                 {
                     LogProgress($"Can Coder was not set properly on {name}");
                 }
-                
+
+                if (remoteSensor.Source != RemoteSensorSource.Off)
+                {
+                    initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
+                                                    fxConfig.Feedback.FeedbackSensorSource = {2};
+                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                                                                        AsMemberVariableName(),
+                                                                        remoteSensor.CanID.value,
+                                                                        sensorSource));
+                }
+                else
+                {
+                    double SensorToMechanismRatio = theDistanceAngleCalcInfo.isDistance.value ? theDistanceAngleCalcInfo.gearRatio.value /(Math.PI * theDistanceAngleCalcInfo.diameter.value) : theDistanceAngleCalcInfo.gearRatio.value;
+                    initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue::RotorSensor;
+                                                    fxConfig.Feedback.SensorToMechanismRatio = {1};
+                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                                                    AsMemberVariableName(), SensorToMechanismRatio
+                                                    ));
+                }
+
                 if (enableFollowID.value)
                 {
+                    initCode.Add(Environment.NewLine);
                     initCode.Add(string.Format(@"   {0}->SetControl(ctre::phoenix6::controls::StrictFollower{{{1}}});",
                                     AsMemberVariableName(), followID.value));
 
@@ -793,14 +826,15 @@ namespace ApplicationData
                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
                 {
                     return string.Format("ctre::phoenix6::controls::DutyCycleOut {0}{{0.0}};", targetNameAsMemVar);
-                }else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
                 {
-                        return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+                    return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
                 }
 
                 if (!mcd.enableFOC.value)
                 {
-           
+
                     if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                     {
                         return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
@@ -812,7 +846,7 @@ namespace ApplicationData
                 }
                 else
                 {
-                  
+
                     if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                     {
                         return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
@@ -828,7 +862,7 @@ namespace ApplicationData
 
         override public string GenerateGenericTargetMemberVariable()
         {
-            if(!this.enableFollowID.value)
+            if (!this.enableFollowID.value)
                 return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", AsMemberVariableName());
             return "";
         }
@@ -861,7 +895,7 @@ namespace ApplicationData
                         generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theDistanceAngleCalcInfo.diameter.__units__), theDistanceAngleCalcInfo.diameter.value, theDistanceAngleCalcInfo.gearRatio));
                 }
             }
-            
+
             return output;
 
         }
@@ -1202,7 +1236,7 @@ namespace ApplicationData
                 initCode.Add(string.Format("{0}->SetNeutralMode(ctre::phoenix::motorcontrol::NeutralMode::{1});",
                                                                       AsMemberVariableName(),
                                                                       theConfigMotorSettings.mode.ToString()));
-               initCode.Add(string.Format("{0}->ConfigOpenloopRamp({1});",AsMemberVariableName(),voltageRamping.openLoopRampTime.value));
+                initCode.Add(string.Format("{0}->ConfigOpenloopRamp({1});", AsMemberVariableName(), voltageRamping.openLoopRampTime.value));
 
                 initCode.Add(Environment.NewLine);
 
@@ -1288,7 +1322,7 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});",AsMemberVariableName(),canID);
+            string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});", AsMemberVariableName(), canID);
 
             return new List<string>() { creation };
         }
@@ -1300,34 +1334,34 @@ namespace ApplicationData
             {
                 return string.Format("double  {0}ActiveTarget;", AsMemberVariableName());
             }
-           /* //TO DO if we need more than Percent Out implement below
+            /* //TO DO if we need more than Percent Out implement below
 
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-            {
-                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
-            }*/
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+             {
+                 return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
+             }
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+             {
+                 return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+             }*/
 
             return "";
         }
         override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
-             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}( {2})", this.name,mcd.name, value);
+                return string.Format("UpdateTarget{0}{1}( {2})", this.name, mcd.name, value);
             }
-           /*TO DO if we need more than Percent Out implement below
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-            }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-            {
-                return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-            }*/
+            /*TO DO if we need more than Percent Out implement below
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+             {
+                 return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+             }
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+             {
+                 return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+             }*/
 
             return "";
         }
