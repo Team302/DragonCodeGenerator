@@ -119,7 +119,6 @@ namespace ApplicationData
             public boolParameter isDistance { get; set; }
             [DefaultValue(false)]
 
-
             public DistanceAngleCalcStruc()
             {
                 defaultDisplayName = this.GetType().Name;
@@ -589,7 +588,6 @@ namespace ApplicationData
                 voltageConfigs.PeakReverseVoltage = units::voltage::volt_t(-11.0);
                 m_Climber->GetConfigurator().Apply(voltageConfigs);" );
 
-
                 if (voltageRamping.enableClosedLoop.value)
                     initCode.Add(string.Format(@" ClosedLoopRampsConfigs rampConfigs{{}};
                                                 rampConfigs.TorqueClosedLoopRampPeriod = {1}({2});
@@ -678,7 +676,6 @@ namespace ApplicationData
                                                 theConfigMotorSettings.deadbandPercent.value));
 
 
-
                 /*
                 initCode.Add(string.Format(@"{0}->SetRemoteSensor({1}, // canID
                                                                 {2}::{2}_{3} ); // ctre::phoenix::motorcontrol::RemoteSensorSource",
@@ -688,7 +685,6 @@ namespace ApplicationData
                                                 remoteSensor.Source
                                                 ));
                 */
-
 
                 string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
@@ -834,7 +830,6 @@ namespace ApplicationData
 
                 if (!mcd.enableFOC.value)
                 {
-
                     if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                     {
                         return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
@@ -846,7 +841,6 @@ namespace ApplicationData
                 }
                 else
                 {
-
                     if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                     {
                         return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
@@ -887,15 +881,13 @@ namespace ApplicationData
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position * {4}; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, this.theDistanceAngleCalcInfo.gearRatio));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t( (position/({4}({5}))).value() * {6} / std::numbers::pi); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar,
-                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theDistanceAngleCalcInfo.diameter.__units__), theDistanceAngleCalcInfo.diameter.value, theDistanceAngleCalcInfo.gearRatio));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
             }
-
             return output;
 
         }
