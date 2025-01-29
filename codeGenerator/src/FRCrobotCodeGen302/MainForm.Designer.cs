@@ -563,7 +563,7 @@ namespace FRCrobotCodeGen302
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
             this.buttonAndInputTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 35F));
-            this.buttonAndInputTableLayoutPanel.Size = new System.Drawing.Size(252, 175);
+            this.buttonAndInputTableLayoutPanel.Size = new System.Drawing.Size(252, 225);
             this.buttonAndInputTableLayoutPanel.TabIndex = 5;
             // 
             // tuningButton
