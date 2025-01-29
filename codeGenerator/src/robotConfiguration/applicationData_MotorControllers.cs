@@ -327,7 +327,7 @@ namespace ApplicationData
                         if (mcs.Count > 1)
                             throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
 
-                        sb.AppendLine(string.Format("else if ( MechanismConfigMgr::RobotIdentifier::{0}_{1} == m_activeRobotId )",
+                        sb.AppendLine(string.Format("else if ( RobotIdentifier::{0}_{1} == m_activeRobotId )",
                             ToUnderscoreCase(robot.name).ToUpper(), robot.robotID));
                         sb.AppendLine(string.Format("return {1}{0};", mcs[0].getImplementationName(), mcs[0].name));
                     }
@@ -754,7 +754,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1279,7 +1279,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1473,7 +1473,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
@@ -1622,7 +1622,7 @@ namespace ApplicationData
                 conditionalsSb.Append("if(");
                 foreach (applicationData r in robotsToCreateFor)
                 {
-                    conditionalsSb.Append("(MechanismConfigMgr::RobotIdentifier::");
+                    conditionalsSb.Append("(RobotIdentifier::");
                     conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
                     conditionalsSb.Append(" == m_activeRobotId)");
                     if (r != robotsToCreateFor.Last())
