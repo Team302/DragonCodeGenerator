@@ -48,15 +48,6 @@ namespace CoreCodeGenerator
             cdf = theToolConfiguration.getTemplateInfo("RobotConfigMgr_h");
             template = loadTemplate(cdf.templateFilePathName);
 
-            generatorContext.clear();
-            sb = new StringBuilder();
-            foreach (applicationData robot in theRobotConfiguration.theRobotVariants.Robots)
-            {
-                generatorContext.theRobot = robot;
-                sb.AppendLine(string.Format("{0} = {1},", ToUnderscoreDigit(ToUnderscoreCase(robot.getFullRobotName())).ToUpper(), robot.robotID.value));
-            }
-            template = template.Replace("$$_ROBOT_CONFIGURATIONS_NAMES_ENUMS_$$", sb.ToString().Trim());
-
             copyrightAndGenNoticeAndSave(getOutputFileFullPath(cdf.outputFilePathName), template);
             #endregion
         }

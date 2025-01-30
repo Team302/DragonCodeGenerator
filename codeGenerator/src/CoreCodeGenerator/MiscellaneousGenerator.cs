@@ -21,6 +21,7 @@ namespace CoreCodeGenerator
             addProgress((cleanMode ? "Erasing" : "Writing") + " general files...");
             generate_RobotElementNames();
             generate_MechanismNames();
+            generate_RobotIdentifiers();
         }
 
         internal void generate_RobotElementNames()
@@ -139,6 +140,22 @@ namespace CoreCodeGenerator
 
             template = template.Replace("$$_MECHANISM_NAMES_ENUMS_$$", ListToString(mechNames.Distinct().ToList(), ",").ToUpper());
 
+            copyrightAndGenNoticeAndSave(getOutputFileFullPath(cdf.outputFilePathName), template);
+        }
+
+        internal void generate_RobotIdentifiers()
+        {
+            addProgress("Writing identifier enum");
+            codeTemplateFile cdf = theToolConfiguration.getTemplateInfo("RobotIdentifier_h");
+            string template = loadTemplate(cdf.templateFilePathName);
+            generatorContext.clear();
+            StringBuilder sb = new StringBuilder();
+            foreach (applicationData robot in theRobotConfiguration.theRobotVariants.Robots)
+            {
+                generatorContext.theRobot = robot;
+                sb.AppendLine(string.Format("{0} = {1},", ToUnderscoreDigit(ToUnderscoreCase(robot.getFullRobotName())).ToUpper(), robot.robotID.value));
+            }
+            template = template.Replace("$$_ROBOT_CONFIGURATIONS_NAMES_ENUMS_$$", sb.ToString().Trim());
             copyrightAndGenNoticeAndSave(getOutputFileFullPath(cdf.outputFilePathName), template);
         }
 
