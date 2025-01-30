@@ -23,7 +23,7 @@ namespace CoreCodeGenerator
             setProgressCallback(displayProgress);
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.PERCENT_OUTPUT, "double");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT, "units::voltage::volt_t");
-            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::turn_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::degree_t");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_INCH, "units::length::inch_t");
         }
 
@@ -353,7 +353,7 @@ namespace CoreCodeGenerator
                                 foreach (motorTarget mT in s.motorTargets) {
                                     motorControlData mcd = mi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
                                     MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
-                                    if (mc != null && mcd != null)
+                                    if (mc != null && mcd != null && !mc.enableFollowID.value)
                                     {
                                         string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
                                         targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
