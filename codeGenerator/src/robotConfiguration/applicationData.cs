@@ -272,6 +272,14 @@ namespace ApplicationData
 
         public mechanism mechanism { get; set; }
 
+        public List<doubleParameterUserDefinedNonTunable> doubleParameter { get; set; }
+
+        public List<boolParameterUserDefinedNonTunable> boolParameter { get; set; }
+
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameter { get; set; }
+
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameter { get; set; }
+
         public mechanismInstance()
         {
             name = "mechanismInstanceName";

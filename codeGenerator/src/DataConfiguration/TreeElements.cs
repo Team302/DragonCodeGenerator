@@ -209,6 +209,23 @@ namespace DataConfiguration
             return getDisplayName(propertyName, value, out refresh);
         }
     }
+
+    [Serializable()]
+    public partial class constDoubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
+    {
+        [DefaultValue(0u)]
+        public double value { get; set; }
+        public constDoubleParameterUserDefinedNonTunable()
+        {
+            type = value.GetType().Name;
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
     [Serializable()]
     public partial class doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst : doubleParameterUserDefinedTunable
     {
@@ -477,6 +494,22 @@ namespace DataConfiguration
         [TunableParameter()]
         public bool value { get; set; } = false;
         public boolParameterUserDefinedTunable()
+        {
+            type = value.GetType().Name;
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
+    [Serializable()]
+    public partial class constBoolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
+    {
+        [DefaultValue(false)]
+        public bool value { get; set; } = false;
+        public constBoolParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
         }
