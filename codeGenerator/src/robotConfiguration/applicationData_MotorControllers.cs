@@ -661,7 +661,7 @@ namespace ApplicationData
                                                 theConfigMotorSettings.peakReverseDutyCycle.value,
                                                 theConfigMotorSettings.deadbandPercent.value));
 
-                string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
+                string sensorSource = "FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
                 {
                     sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED
