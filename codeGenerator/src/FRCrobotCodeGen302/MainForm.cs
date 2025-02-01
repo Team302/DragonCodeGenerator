@@ -1929,7 +1929,14 @@ namespace FRCrobotCodeGen302
                     mechanismGraph.NodeMap.Clear();
                     foreach (state s in m.states)
                     {
-                        mechanismGraph.AddNode(s.name).Attr.FillColor = Microsoft.Msagl.Drawing.Color.Green;
+                        //mechanismGraph.AddNode(s.name).Attr.FillColor = Microsoft.Msagl.Drawing.Color.Green;
+                        foreach (stringParameterConstInMechInstance t in s.transitionsTo)
+                        {
+                            mechanismGraph.AddNode(s.name).Attr.FillColor = Microsoft.Msagl.Drawing.Color.Green;
+                            mechanismGraph.AddEdge(s.name, null, t.value);
+                            //null automatically makes it "" in the function if you want a transition label use: s.name +" to " + t.value
+                        }
+
                     }
 
                     StateDiagramViewers[m.name].Graph = mechanismGraph;
