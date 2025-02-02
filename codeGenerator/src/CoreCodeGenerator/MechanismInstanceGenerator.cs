@@ -127,7 +127,7 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
 
 
-                        List<string> theUsings = generateMethod(mi, "generateUsings").Distinct().ToList();
+                        List<string> theUsings = generateMethod(mi, "generateUsings").Distinct().OrderBy(m=>m).ToList();
                         resultString = resultString.Replace("$$_USING_DIRECTIVES_$$", ListToString(theUsings, ";").Trim());
 
                         resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(mi.mechanism, "generateIncludes").Distinct().ToList()));
