@@ -988,7 +988,7 @@ namespace FRCrobotCodeGen302
 
                     mechanism m = ((nt.obj.GetType() == typeof(state)) ? ((nodeTag)e.Node.Parent.Parent.Tag).obj : ((nodeTag)e.Node.Parent.Tag).obj) as mechanism;
 
-                    ShowStateTable(nt, m, isInaMechanismInstance);
+                    ShowStateTable(nt, m, isPartOfAMechanismInaMechInstance(e.Node));
                 }
                 else
                 {
@@ -1227,8 +1227,6 @@ namespace FRCrobotCodeGen302
 
         private void ShowStateTable(nodeTag nt, mechanism mi, bool isInMechanismInstance)
         {
-            generatorContext.isInMechanismInstance = isInMechanismInstance;
-
             // sets editable columns depending on where mechanism is located
             editableColumnsStateDataGridView = isInMechanismInstance ? editableColumnsInMechanismInstance : editableColumnsInMechanism;
 
@@ -1437,7 +1435,7 @@ namespace FRCrobotCodeGen302
             if (e.ColumnIndex >= 0)
             {
                 // RowIndex == -1 means that it is the header row, don't allow popup when in mechanism instance
-                if ((e.RowIndex > -1) && (e.ColumnIndex == stateDataGridView.Columns["transitionTo"].Index) && !generatorContext.isInMechanismInstance)
+                if ((e.RowIndex > -1) && (e.ColumnIndex == stateDataGridView.Columns["transitionTo"].Index) && (editableColumnsStateDataGridView == editableColumnsInMechanism))
                 {
                     if (stateDataGridView.Rows[e.RowIndex].DataBoundItem is stateVisualization sv)
                     {

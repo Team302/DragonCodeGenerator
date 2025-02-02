@@ -1532,8 +1532,6 @@ namespace ApplicationData
         public static applicationData theRobot { get; set; }
         public static topLevelAppDataElement theRobotVariants { get; set; }
         public static toolConfiguration theGeneratorConfig { get; set; }
-        public static bool isInMechanismInstance { get; set; }
-
         public static void clear()
         {
             generationStage = GenerationStage.Unknown;
@@ -1541,7 +1539,6 @@ namespace ApplicationData
             theMechanismInstance = null;
             theRobot = null;
             stateIndex = 0;
-            isInMechanismInstance = false;
         }
     }
 
