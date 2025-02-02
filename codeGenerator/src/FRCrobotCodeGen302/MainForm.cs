@@ -988,7 +988,7 @@ namespace FRCrobotCodeGen302
 
                     mechanism m = ((nt.obj.GetType() == typeof(state)) ? ((nodeTag)e.Node.Parent.Parent.Tag).obj : ((nodeTag)e.Node.Parent.Tag).obj) as mechanism;
 
-                    ShowStateTable(nt, m);
+                    ShowStateTable(nt, m, isPartOfAMechanismInaMechInstance(e.Node));
                 }
                 else
                 {
@@ -1225,8 +1225,11 @@ namespace FRCrobotCodeGen302
             }
         }
 
-        private void ShowStateTable(nodeTag nt, mechanism mi)
+        private void ShowStateTable(nodeTag nt, mechanism mi, bool isInMechanismInstance)
         {
+            // sets editable columns depending on where mechanism is located
+            editableColumnsStateDataGridView = isInMechanismInstance ? editableColumnsInMechanismInstance : editableColumnsInMechanism;
+
             this.stateDataGridView.CellEndEdit -= stateDataGridView_CellEndEdit;
 
             stateVisualization.UpdateMechanismInstances = null;
@@ -1310,6 +1313,15 @@ namespace FRCrobotCodeGen302
                 stateDataGridView.Columns["TargetUnits"].ReadOnly = true;
                 stateDataGridView.Columns["transitionTo"].ReadOnly = true;
 
+                if (isInMechanismInstance)
+                {
+                    stateDataGridView.Columns["TargetEnabled"].ReadOnly = true;
+                }
+                else
+                {
+                    stateDataGridView.Columns["Target"].ReadOnly = true;
+                }
+
                 stateDataGridView.AllowUserToResizeColumns = true;
                 stateDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
 
@@ -1318,6 +1330,7 @@ namespace FRCrobotCodeGen302
                 {
                     int index = dgvCmb.Items.IndexOf(stateGridVisualization[row.Index].ControlData);
                     row.Cells[dgvCmb.Name].Value = index == -1 ? "" : stateGridVisualization[row.Index].ControlData;
+                    row.Cells[dgvCmb.Name].ReadOnly = isInMechanismInstance;
                 }
 
                 // set the column order
@@ -1355,15 +1368,21 @@ namespace FRCrobotCodeGen302
             return transitions;
         }
 
-        List<string> editableColumnsStateDataGridView = new List<string>()
-            {
-                "TargetEnabled",
-                "Target",
-                "transitionTo",
-                "cmbControlData"
-            };
+        private HashSet<string> editableColumnsStateDataGridView;
 
-        List<string> columnOrderStateDataGridView = new List<string>()
+        private readonly HashSet<string> editableColumnsInMechanism = new HashSet<string>()
+        {
+            "TargetEnabled",
+            "transitionTo",
+            "cmbControlData"
+        };
+
+        private readonly HashSet<string> editableColumnsInMechanismInstance = new HashSet<string>()
+        {
+            "Target"
+        };
+
+        private readonly List<string> columnOrderStateDataGridView = new List<string>()
             {
                 "StateName",
                 "transitionTo",
@@ -1380,7 +1399,7 @@ namespace FRCrobotCodeGen302
             if ((e.RowIndex == -1) && (e.ColumnIndex >= 0)) // RowIndex == -1 means that it is the header row. Column < 0  is the row selection margin
             {
                 int iconIndex = treeIconIndex_lockedPadlock;
-                if (editableColumnsStateDataGridView.Find(c => c == stateDataGridView.Columns[e.ColumnIndex].Name) != null)
+                if (editableColumnsStateDataGridView != null && editableColumnsStateDataGridView.Contains(stateDataGridView.Columns[e.ColumnIndex].Name))
                     iconIndex = treeIconIndex_unlockedPadlockNoShadow;
 
                 if (iconIndex == treeIconIndex_unlockedPadlockNoShadow) // so that we only draw the unlocked padlock... otherwise the header becomes a bit too crowded
@@ -1415,7 +1434,8 @@ namespace FRCrobotCodeGen302
         {
             if (e.ColumnIndex >= 0)
             {
-                if ((e.RowIndex > -1) && (e.ColumnIndex == stateDataGridView.Columns["transitionTo"].Index)) // RowIndex == -1 means that it is the header row
+                // RowIndex == -1 means that it is the header row, don't allow popup when in mechanism instance
+                if ((e.RowIndex > -1) && (e.ColumnIndex == stateDataGridView.Columns["transitionTo"].Index) && (editableColumnsStateDataGridView == editableColumnsInMechanism))
                 {
                     if (stateDataGridView.Rows[e.RowIndex].DataBoundItem is stateVisualization sv)
                     {
