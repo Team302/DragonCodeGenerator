@@ -44,6 +44,7 @@ namespace ApplicationData
 {
     [Serializable()]
     [XmlInclude(typeof(TalonFX))]
+    [XmlInclude(typeof(TalonFXS))]
     [XmlInclude(typeof(TalonSRX))]
     [XmlInclude(typeof(SparkMax))]
     [XmlInclude(typeof(SparkMaxMonitored))]
@@ -517,6 +518,7 @@ namespace ApplicationData
         }
     }
 
+    [Serializable]
     public class TalonBase : MotorController
     {
         public CurrentLimits theCurrentLimits { get; set; }
@@ -661,48 +663,51 @@ namespace ApplicationData
                 }
                 else
                 {
-                    initCode.Add("TalonFXConfiguration fxConfig{};");
-
-                    if (fusedSyncCANcoder.enable.value)
+                    if (GetType() != typeof(TalonFXS)) // figure out once TalonFXSes are available
                     {
-                        CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
-                        if (cc != null)
+                        initCode.Add("TalonFXConfiguration fxConfig{};");
+
+                        if (fusedSyncCANcoder.enable.value)
                         {
-                            initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
+                            CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
+                            if (cc != null)
+                            {
+                                initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
                                                     fxConfig.Feedback.FeedbackSensorSource = {2};
                                                     fxConfig.Feedback.SensorToMechanismRatio = {3};
                                                     fxConfig.Feedback.RotorToSensorRatio = {4};
                                                     {0}->GetConfigurator().Apply(fxConfig);",
-                                                            AsMemberVariableName(),
-                                                            cc.canID.value,
-                                                            sensorSource,
-                                                            fusedSyncCANcoder.sensorToMechanismRatio.value,
-                                                            fusedSyncCANcoder.rotorToSensorRatio.value));
+                                                                AsMemberVariableName(),
+                                                                cc.canID.value,
+                                                                sensorSource,
+                                                                fusedSyncCANcoder.sensorToMechanismRatio.value,
+                                                                fusedSyncCANcoder.rotorToSensorRatio.value));
+                            }
+                            else
+                            {
+                                LogProgress($"Can Coder was not set properly on {name}");
+                            }
                         }
-                        else
+                        else if (remoteSensor.Source != RemoteSensorSource.Off)
                         {
-                            LogProgress($"Can Coder was not set properly on {name}");
-                        }
-                    }
-                    else if (remoteSensor.Source != RemoteSensorSource.Off)
-                    {
-                        initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
+                            initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
                                                     fxConfig.Feedback.FeedbackSensorSource = {2};
                                                     fxConfig.Feedback.SensorToMechanismRatio = {3};
                                                     {0}->GetConfigurator().Apply(fxConfig);",
-                                                                            AsMemberVariableName(),
-                                                                            remoteSensor.CanID.value,
-                                                                            sensorSource,
-                                                                            remoteSensor.sensorToMechanismRatio));
-                    }
-                    else
-                    {
-                        double SensorToMechanismRatio = theDistanceAngleCalcInfo.isDistance.value ? theDistanceAngleCalcInfo.gearRatio.value / (Math.PI * theDistanceAngleCalcInfo.diameter.value) : theDistanceAngleCalcInfo.gearRatio.value;
-                        initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue::RotorSensor;
+                                                                                AsMemberVariableName(),
+                                                                                remoteSensor.CanID.value,
+                                                                                sensorSource,
+                                                                                remoteSensor.sensorToMechanismRatio));
+                        }
+                        else
+                        {
+                            double SensorToMechanismRatio = theDistanceAngleCalcInfo.isDistance.value ? theDistanceAngleCalcInfo.gearRatio.value / (Math.PI * theDistanceAngleCalcInfo.diameter.value) : theDistanceAngleCalcInfo.gearRatio.value;
+                            initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue::RotorSensor;
                                                     fxConfig.Feedback.SensorToMechanismRatio = {1};
                                                     {0}->GetConfigurator().Apply(fxConfig);",
-                                                        AsMemberVariableName(), SensorToMechanismRatio
-                                                        ));
+                                                            AsMemberVariableName(), SensorToMechanismRatio
+                                                            ));
+                        }
                     }
                 }
 
@@ -944,6 +949,34 @@ namespace ApplicationData
     public class TalonFX : TalonBase
     {
         public TalonFX()
+        {
+        }
+    }
+
+    [Serializable()]
+    [ImplementationName("ctre::phoenix6::hardware::TalonFXS")]
+    [UserIncludeFile("ctre/phoenix6/TalonFXS.hpp")]
+    [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
+    [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
+    [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
+    [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
+    [Using("ctre::phoenix6::signals::InvertedValue")]
+    [Using("ctre::phoenix6::signals::NeutralModeValue")]
+    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
+    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
+    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
+    [Using("ctre::phoenix6::configs::Slot0Configs")]
+    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::TalonFXSConfiguration")]
+    [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::configs::VoltageConfigs")]
+
+    public class TalonFXS : TalonBase
+    {
+        public TalonFXS()
         {
         }
     }
