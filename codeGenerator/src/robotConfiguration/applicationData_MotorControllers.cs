@@ -868,22 +868,7 @@ namespace ApplicationData
         {
             if (!this.enableFollowID.value)
             {
-                if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
-                {
-                    return string.Format("UpdateTarget{0}{1}({2}, {3})", this.name, mcd.name, value, mcd.enableFOC);
-                }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-                {
-                    return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-                }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-                {
-                    return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}))", this.name, mcd.name, value);
-                }
-                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
-                {
-                    return string.Format("UpdateTarget{0}{1}(units::length::inch_t({2}))", this.name, mcd.name, value);
-                }
+                return string.Format("UpdateTarget{0}{1}(m_{0}Target)", this.name, mcd.name);
             }
             return "";
         }
@@ -1316,18 +1301,8 @@ namespace ApplicationData
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}( {2})", this.name, mcd.name, value);
+                return string.Format("UpdateTarget{0}{1}(m_{0}Target)", this.name, mcd.name);
             }
-            /*TO DO if we need more than Percent Out implement below
-             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-             {
-                 return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-             }
-             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-             {
-                 return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
-             }*/
-
             return "";
         }
         override public string GenerateCyclicGenericTargetRefresh()
