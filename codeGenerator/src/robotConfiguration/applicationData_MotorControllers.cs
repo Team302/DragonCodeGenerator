@@ -231,7 +231,7 @@ namespace ApplicationData
             {
                 defaultDisplayName = this.GetType().Name;
             }
-            
+
             public doubleParameter sensorToMechanismRatio { get; set; }
         }
         public RemoteSensor remoteSensor { get; set; }
@@ -277,6 +277,17 @@ namespace ApplicationData
         {
             motorControllerType = this.GetType().Name;
         }
+        public override string AsMemberVariableName()
+        {
+            string motorTypeAdder = generatorContext.theMechanism.MotorControllers.Count(m => m.name == name) > 1 ? GetType().Name : "";
+            return string.Format("{0}", AsMemberVariableName(name + motorTypeAdder));
+        }
+
+        public override string ToUpperCamelCase()
+        {
+            string motorTypeAdder = generatorContext.theMechanism.MotorControllers.Count(m => m.name == name) > 1 ? GetType().Name : "";
+            return string.Format("{0}", ToUpperCamelCase(name + motorTypeAdder));
+        }
 
         public override List<string> generateInitialization()
         {
@@ -318,40 +329,7 @@ namespace ApplicationData
 
         override public List<string> generateDefinitionGetter()
         {
-            List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
-            if (mcs.Count == 1)
-                return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), name, AsMemberVariableName()) };
-            else
-            {
-                StringBuilder sb = new StringBuilder();
-
-
-                foreach (applicationData robot in generatorContext.theRobotVariants.Robots)
-                {
-                    mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
-                    if (mi != null) // are we using the same mechanism instance in this robot
-                    {
-                        mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name));
-                        if (mcs.Count > 1)
-                            throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
-
-                        sb.AppendLine(string.Format("else if ( RobotIdentifier::{0}_{1} == m_activeRobotId )",
-                            ToUnderscoreCase(robot.name).ToUpper(), robot.robotID));
-                        sb.AppendLine(string.Format("return {1}{0};", mcs[0].getImplementationName(), mcs[0].name));
-                    }
-                }
-                string temp = sb.ToString().Substring("else".Length).Trim();
-
-                sb.Clear();
-                sb.AppendLine(string.Format("IDragonMotorController* get{0}() const", name));
-                sb.AppendLine("{");
-                sb.AppendLine(temp);
-                sb.AppendLine("return nullptr;");
-                sb.AppendLine("}");
-
-
-                return new List<string> { sb.ToString() };
-            }
+            return new List<string> { string.Format("{0}* Get{1}() const {{return {2};}}", getImplementationName(), ToUpperCamelCase(), AsMemberVariableName()) };
         }
 
         virtual public string GenerateTargetMemberVariable(motorControlData mcd)
@@ -385,6 +363,27 @@ namespace ApplicationData
         virtual public string GeneratePIDSetFunctionCall(motorControlData mcd, mechanismInstance mi)
         {
             return "";
+        }
+        override public List<string> generateElementNames()
+        {
+            Type baseType = GetType();
+            while ((baseType.BaseType != typeof(object)) && (baseType.BaseType != typeof(baseRobotElementClass)))
+                baseType = baseType.BaseType;
+            if (generatorContext.theMechanismInstance != null)
+            {
+                int count = generatorContext.theMechanismInstance.mechanism.MotorControllers.FindAll(n => n.name == name).Count;
+                if (count > 1)
+                    return new List<string> { string.Format("{3}::{0}_{1}_{2}", ToUnderscoreCase(generatorContext.theMechanismInstance.name), ToUnderscoreCase(name), ToUnderscoreCase(this.GetType().Name), ToUnderscoreCase(baseType.Name)) };
+                return new List<string> { string.Format("{2}::{0}_{1}", ToUnderscoreCase(generatorContext.theMechanismInstance.name), ToUnderscoreCase(name), ToUnderscoreCase(baseType.Name)) };
+            }
+            else if (generatorContext.theMechanism != null)
+            {
+                return new List<string> { string.Format("{2}::{0}_{1}", ToUnderscoreCase(generatorContext.theMechanism.name), ToUnderscoreCase(name), ToUnderscoreCase(baseType.Name)) };
+            }
+            else if (generatorContext.theRobot != null)
+                return new List<string> { string.Format("{1}::{0}", ToUnderscoreCase(name), ToUnderscoreCase(baseType.Name)) };
+            else
+                return new List<string> { "generateElementNames got to the else statement...should not be here" };
         }
     }
 
@@ -721,36 +720,25 @@ namespace ApplicationData
         {
             List<applicationData> robotsToCreateFor = new List<applicationData>();
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
+            applicationData robot = generatorContext.theRobot;
+
             if (mcs.Count > 1)
             {
-                foreach (applicationData robot in generatorContext.theRobotVariants.Robots)
+                mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
+                if (mi != null) // are we using the same mechanism instance in this robot
                 {
-                    mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
-                    if (mi != null) // are we using the same mechanism instance in this robot
-                    {
-                        mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
-                        if (mcs.Count > 1)
-                            throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
-                        if (mcs.Count > 0)
-                            robotsToCreateFor.Add(robot);
-                    }
+                    mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
+                    if (mcs.Count > 1)
+                        throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
+                    if (mcs.Count > 0)
+                        robotsToCreateFor.Add(robot);
                 }
             }
+            else
+                robotsToCreateFor.Add(robot);
 
-            StringBuilder conditionalsSb = new StringBuilder();
-            if (robotsToCreateFor.Count > 0)
-            {
-                conditionalsSb.Append("if(");
-                foreach (applicationData r in robotsToCreateFor)
-                {
-                    conditionalsSb.Append("(RobotIdentifier::");
-                    conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
-                    conditionalsSb.Append(" == m_activeRobotId)");
-                    if (r != robotsToCreateFor.Last())
-                        conditionalsSb.Append(" || ");
-                }
-                conditionalsSb.Append(")");
-            }
+            if (robotsToCreateFor.Count == 0)
+                return new List<string>() { };
 
             string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
                 AsMemberVariableName(),
@@ -760,15 +748,7 @@ namespace ApplicationData
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
-            //sb.AppendLine(conditionalsSb.ToString());
-            //if (robotsToCreateFor.Count > 0)
-            //    sb.AppendLine("{");
-            //sb.AppendLine(theDistanceAngleCalcInfo.getDefinition(name));
             sb.AppendLine(creation);
-            //sb.AppendLine();
-            //sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
-            //if (robotsToCreateFor.Count > 0)
-            //    sb.AppendLine("}");
             sb.AppendLine();
 
             return new List<string>() { sb.ToString() };
@@ -826,26 +806,26 @@ namespace ApplicationData
             List<string> output = new List<string>();
 
             string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
-            string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
+            string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());
             if (!this.enableFollowID.value)
             {
                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                     output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                     output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
             }
             return output;
@@ -855,7 +835,7 @@ namespace ApplicationData
         {
             if (!this.enableFollowID.value)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{0}Target)", this.name, mcd.name);
+                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
             }
             return "";
         }
@@ -873,7 +853,7 @@ namespace ApplicationData
             else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", this.name, mcd.name, mi.name));
+                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name ));
                 sb.AppendLine("{");
                 sb.AppendLine("Slot0Configs slot0Configs{};");
                 sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
@@ -901,7 +881,7 @@ namespace ApplicationData
             }
             else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
-                return string.Format("void SetPID{0}{1}()", this.name, mcd.name, mi.name);
+                return string.Format("void SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name);
             }
 
             return "";
