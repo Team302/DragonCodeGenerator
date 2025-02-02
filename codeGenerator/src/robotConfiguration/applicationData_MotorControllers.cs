@@ -387,165 +387,147 @@ namespace ApplicationData
         }
     }
 
-    [Serializable()]
-    [ImplementationName("ctre::phoenix6::hardware::TalonFX")]
-    [UserIncludeFile("ctre/phoenix6/TalonFX.hpp")]
-    [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
-    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
-    [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
-    [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
-    [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
-    [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
-    [Using("ctre::phoenix6::signals::InvertedValue")]
-    [Using("ctre::phoenix6::signals::NeutralModeValue")]
-    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
-    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
-    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
-    [Using("ctre::phoenix6::configs::Slot0Configs")]
-    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
-    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
-    [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
-    [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
-    [Using("ctre::phoenix6::configs::VoltageConfigs")]
-
-    public class TalonFX : MotorController
+    [Serializable]
+    public class CurrentLimits : baseDataClass
     {
-        [Serializable]
-        public class CurrentLimits : baseDataClass
+        [DefaultValue(false)]
+        public boolParameter enableStatorCurrentLimit { get; set; }
+
+        [DefaultValue(0)]
+        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [PhysicalUnitsFamily(physicalUnit.Family.current)]
+        [ConstantInMechInstance]
+        public doubleParameter statorCurrentLimit { get; set; }
+
+        [DefaultValue(false)]
+        [ConstantInMechInstance]
+        public boolParameter enableSupplyCurrentLimit { get; set; }
+
+        [DefaultValue(0)]
+        [Range(typeof(double), "0", "70.0")] //todo choose a valid range
+        [PhysicalUnitsFamily(physicalUnit.Family.current)]
+        [ConstantInMechInstance]
+        public doubleParameter supplyCurrentLimit { get; set; }
+
+        [DefaultValue(0)]
+        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [PhysicalUnitsFamily(physicalUnit.Family.current)]
+        [ConstantInMechInstance]
+        public doubleParameter supplyCurrentThreshold { get; set; }
+
+        [DefaultValue(0)]
+        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [PhysicalUnitsFamily(physicalUnit.Family.time)]
+        [ConstantInMechInstance]
+        public doubleParameter supplyTimeThreshold { get; set; }
+
+        public CurrentLimits()
         {
-            [DefaultValue(false)]
-            public boolParameter enableStatorCurrentLimit { get; set; }
-
-            [DefaultValue(0)]
-            [Range(typeof(double), "0", "40.0")] //todo choose a valid range
-            [PhysicalUnitsFamily(physicalUnit.Family.current)]
-            [ConstantInMechInstance]
-            public doubleParameter statorCurrentLimit { get; set; }
-
-            [DefaultValue(false)]
-            [ConstantInMechInstance]
-            public boolParameter enableSupplyCurrentLimit { get; set; }
-
-            [DefaultValue(0)]
-            [Range(typeof(double), "0", "70.0")] //todo choose a valid range
-            [PhysicalUnitsFamily(physicalUnit.Family.current)]
-            [ConstantInMechInstance]
-            public doubleParameter supplyCurrentLimit { get; set; }
-
-            [DefaultValue(0)]
-            [Range(typeof(double), "0", "40.0")] //todo choose a valid range
-            [PhysicalUnitsFamily(physicalUnit.Family.current)]
-            [ConstantInMechInstance]
-            public doubleParameter supplyCurrentThreshold { get; set; }
-
-            [DefaultValue(0)]
-            [Range(typeof(double), "0", "40.0")] //todo choose a valid range
-            [PhysicalUnitsFamily(physicalUnit.Family.time)]
-            [ConstantInMechInstance]
-            public doubleParameter supplyTimeThreshold { get; set; }
-
-            public CurrentLimits()
-            {
-                defaultDisplayName = "CurrentLimits";
-            }
+            defaultDisplayName = "CurrentLimits";
         }
+    }
+
+    [Serializable]
+    public class ConfigHWLimitSW : baseDataClass
+    {
+        public enum ForwardLimitSourceValue { LimitSwitchPin }
+        public enum ForwardLimitTypeValue { NormallyOpen, NormallyClosed }
+        public enum ReverseLimitSourceValue { LimitSwitchPin }
+        public enum ReverseLimitTypeValue { NormallyOpen, NormallyClosed }
+
+        [ConstantInMechInstance]
+        public boolParameter enableForward { get; set; }
+
+        [ConstantInMechInstance]
+        public intParameter remoteForwardSensorID { get; set; }
+
+        [ConstantInMechInstance]
+        public boolParameter forwardResetPosition { get; set; }
+
+        [ConstantInMechInstance]
+        [PhysicalUnitsFamily(physicalUnit.Family.angle)]
+        public doubleParameter forwardPosition { get; set; }
+
+        [ConstantInMechInstance]
+        public ForwardLimitSourceValue forwardType { get; set; }
+
+        [ConstantInMechInstance]
+        public ForwardLimitTypeValue forwardOpenClose { get; set; }
+
+        [ConstantInMechInstance]
+        public boolParameter enableReverse { get; set; }
+
+        [ConstantInMechInstance]
+        public intParameter remoteReverseSensorID { get; set; }
+
+        [ConstantInMechInstance]
+        public boolParameter reverseResetPosition { get; set; }
+
+        [ConstantInMechInstance]
+        [PhysicalUnitsFamily(physicalUnit.Family.angle)]
+        public doubleParameter reversePosition { get; set; }
+
+        [ConstantInMechInstance]
+        public ReverseLimitSourceValue revType { get; set; }
+
+        [ConstantInMechInstance]
+        public ReverseLimitTypeValue revOpenClose { get; set; }
+
+        public ConfigHWLimitSW()
+        {
+            defaultDisplayName = "ConfigHWLimitSW";
+        }
+    }
+
+    [Serializable]
+    public class ConfigMotorSettings : baseDataClass
+    {
+        [DefaultValue(0)]
+        [Range(typeof(double), "0", "100")]
+        [PhysicalUnitsFamily(physicalUnit.Family.percent)]
+        [ConstantInMechInstance]
+        public doubleParameter deadbandPercent { get; set; }
+
+        [DefaultValue(1)]
+        [Range(typeof(double), "0", "1.0")]
+        [PhysicalUnitsFamily(physicalUnit.Family.none)]
+        [ConstantInMechInstance]
+        public doubleParameter peakForwardDutyCycle { get; set; }
+
+        [DefaultValue(-1)]
+        [Range(typeof(double), "-1.0", "0.0")]
+        [PhysicalUnitsFamily(physicalUnit.Family.none)]
+        [ConstantInMechInstance]
+        public doubleParameter peakReverseDutyCycle { get; set; }
+
+        [DefaultValue(InvertedValue.CounterClockwise_Positive)]
+        public InvertedValue inverted { get; set; }
+
+        [DefaultValue(NeutralModeValue.Coast)]
+        [ConstantInMechInstance]
+        public NeutralModeValue mode { get; set; }
+
+        public ConfigMotorSettings()
+        {
+            int index = this.GetType().Name.IndexOf("_");
+            if (index > 0)
+                defaultDisplayName = this.GetType().Name.Substring(0, index);
+            else
+                defaultDisplayName = this.GetType().Name;
+        }
+    }
+
+    public class TalonBase : MotorController
+    {
         public CurrentLimits theCurrentLimits { get; set; }
 
         public List<PIDFslot> PIDFs { get; set; }
 
-        [Serializable]
-        public class ConfigHWLimitSW : baseDataClass
-        {
-            public enum ForwardLimitSourceValue { LimitSwitchPin }
-            public enum ForwardLimitTypeValue { NormallyOpen, NormallyClosed }
-            public enum ReverseLimitSourceValue { LimitSwitchPin }
-            public enum ReverseLimitTypeValue { NormallyOpen, NormallyClosed }
-
-            [ConstantInMechInstance]
-            public boolParameter enableForward { get; set; }
-
-            [ConstantInMechInstance]
-            public intParameter remoteForwardSensorID { get; set; }
-
-            [ConstantInMechInstance]
-            public boolParameter forwardResetPosition { get; set; }
-
-            [ConstantInMechInstance]
-            [PhysicalUnitsFamily(physicalUnit.Family.angle)]
-            public doubleParameter forwardPosition { get; set; }
-
-            [ConstantInMechInstance]
-            public ForwardLimitSourceValue forwardType { get; set; }
-
-            [ConstantInMechInstance]
-            public ForwardLimitTypeValue forwardOpenClose { get; set; }
-
-            [ConstantInMechInstance]
-            public boolParameter enableReverse { get; set; }
-
-            [ConstantInMechInstance]
-            public intParameter remoteReverseSensorID { get; set; }
-
-            [ConstantInMechInstance]
-            public boolParameter reverseResetPosition { get; set; }
-
-            [ConstantInMechInstance]
-            [PhysicalUnitsFamily(physicalUnit.Family.angle)]
-            public doubleParameter reversePosition { get; set; }
-
-            [ConstantInMechInstance]
-            public ReverseLimitSourceValue revType { get; set; }
-
-            [ConstantInMechInstance]
-            public ReverseLimitTypeValue revOpenClose { get; set; }
-
-            public ConfigHWLimitSW()
-            {
-                defaultDisplayName = "ConfigHWLimitSW";
-            }
-        }
         public ConfigHWLimitSW theConfigHWLimitSW { get; set; }
 
-        [Serializable]
-        public class ConfigMotorSettings : baseDataClass
-        {
-            [DefaultValue(0)]
-            [Range(typeof(double), "0", "100")]
-            [PhysicalUnitsFamily(physicalUnit.Family.percent)]
-            [ConstantInMechInstance]
-            public doubleParameter deadbandPercent { get; set; }
-
-            [DefaultValue(1)]
-            [Range(typeof(double), "0", "1.0")]
-            [PhysicalUnitsFamily(physicalUnit.Family.none)]
-            [ConstantInMechInstance]
-            public doubleParameter peakForwardDutyCycle { get; set; }
-
-            [DefaultValue(-1)]
-            [Range(typeof(double), "-1.0", "0.0")]
-            [PhysicalUnitsFamily(physicalUnit.Family.none)]
-            [ConstantInMechInstance]
-            public doubleParameter peakReverseDutyCycle { get; set; }
-
-            [DefaultValue(InvertedValue.CounterClockwise_Positive)]
-            public InvertedValue inverted { get; set; }
-
-            [DefaultValue(NeutralModeValue.Coast)]
-            [ConstantInMechInstance]
-            public NeutralModeValue mode { get; set; }
-
-            public ConfigMotorSettings()
-            {
-                int index = this.GetType().Name.IndexOf("_");
-                if (index > 0)
-                    defaultDisplayName = this.GetType().Name.Substring(0, index);
-                else
-                    defaultDisplayName = this.GetType().Name;
-            }
-        }
         public ConfigMotorSettings theConfigMotorSettings { get; set; }
 
-        public TalonFX()
+        public TalonBase()
         {
         }
 
@@ -933,6 +915,36 @@ namespace ApplicationData
         {
             if (enableFollowID.value) return "";
             return string.Format("{0}->SetControl(*{0}ActiveTarget);", AsMemberVariableName());
+        }
+    }
+
+
+
+    [Serializable()]
+    [ImplementationName("ctre::phoenix6::hardware::TalonFX")]
+    [UserIncludeFile("ctre/phoenix6/TalonFX.hpp")]
+    [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
+    [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
+    [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
+    [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
+    [Using("ctre::phoenix6::signals::InvertedValue")]
+    [Using("ctre::phoenix6::signals::NeutralModeValue")]
+    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
+    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
+    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
+    [Using("ctre::phoenix6::configs::Slot0Configs")]
+    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
+    [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::configs::VoltageConfigs")]
+
+    public class TalonFX : TalonBase
+    {
+        public TalonFX()
+        {
         }
     }
 
