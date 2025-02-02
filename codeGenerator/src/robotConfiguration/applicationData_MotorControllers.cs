@@ -812,12 +812,12 @@ namespace ApplicationData
                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", this.name, mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
@@ -853,7 +853,7 @@ namespace ApplicationData
             else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name ));
+                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name));
                 sb.AppendLine("{");
                 sb.AppendLine("Slot0Configs slot0Configs{};");
                 sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
@@ -1238,7 +1238,7 @@ namespace ApplicationData
             List<string> output = new List<string>();
 
             string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
-            string activeTargetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}ActiveTarget", this.name));
+            string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());
 
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
@@ -1266,40 +1266,36 @@ namespace ApplicationData
         {
             List<applicationData> robotsToCreateFor = new List<applicationData>();
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
+            applicationData robot = generatorContext.theRobot;
             if (mcs.Count > 1)
             {
-                foreach (applicationData robot in generatorContext.theRobotVariants.Robots)
+                mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
+                if (mi != null) // are we using the same mechanism instance in this robot
                 {
-                    mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
-                    if (mi != null) // are we using the same mechanism instance in this robot
-                    {
-                        mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
-                        if (mcs.Count > 1)
-                            throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
-                        if (mcs.Count > 0)
-                            robotsToCreateFor.Add(robot);
-                    }
+                    mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
+                    if (mcs.Count > 1)
+                        throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
+                    if (mcs.Count > 0)
+                        robotsToCreateFor.Add(robot);
                 }
             }
+            else
+                robotsToCreateFor.Add(robot);
 
-            StringBuilder conditionalsSb = new StringBuilder();
-            if (robotsToCreateFor.Count > 0)
-            {
-                conditionalsSb.Append("if(");
-                foreach (applicationData r in robotsToCreateFor)
-                {
-                    conditionalsSb.Append("(RobotIdentifier::");
-                    conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
-                    conditionalsSb.Append(" == m_activeRobotId)");
-                    if (r != robotsToCreateFor.Last())
-                        conditionalsSb.Append(" || ");
-                }
-                conditionalsSb.Append(")");
-            }
+            if (robotsToCreateFor.Count == 0)
+                return new List<string>() { };
 
-            string creation = string.Format("{0} = new ctre::phoenix::motorcontrol::can::TalonSRX({1});", AsMemberVariableName(), canID);
+            string creation = string.Format("{0} = new {1}({2});",
+                AsMemberVariableName(),
+                getImplementationName(),
+                canID.value.ToString());
 
-            return new List<string>() { creation };
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine(creation);
+            sb.AppendLine();
+
+            return new List<string>() { sb.ToString() };
         }
         override public string GenerateTargetMemberVariable(motorControlData mcd)
         {
