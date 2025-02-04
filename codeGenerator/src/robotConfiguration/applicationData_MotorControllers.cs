@@ -398,15 +398,10 @@ namespace ApplicationData
     [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
     [Using("ctre::phoenix6::signals::InvertedValue")]
     [Using("ctre::phoenix6::signals::NeutralModeValue")]
-    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
-    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
-    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
     [Using("ctre::phoenix6::configs::Slot0Configs")]
-    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
-    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
-    [Using("ctre::phoenix6::configs::VoltageConfigs")]
 
     public class TalonFX : MotorController
     {
@@ -591,7 +586,7 @@ namespace ApplicationData
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.closedLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
                 else
                     initCode.Add(string.Format(@"   configs.OpenLoopRamps.VoltageOpenLoopRampPeriod = {0}({1});",
-                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.openLoopRampTime.value));
 
                 initCode.Add(string.Format(@"	configs.HardwareLimitSwitch.ForwardLimitEnable = {0};
 	                                            configs.HardwareLimitSwitch.ForwardLimitRemoteSensorID = {1};
@@ -647,7 +642,7 @@ namespace ApplicationData
 
 
 
-                string sensorSource = "signals::FeedbackSensorSourceValue::RemoteCANcoder";
+                string sensorSource = "FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
                 {
                     sensorSource = fusedSyncCANcoder.fusedSyncChoice == FusedSyncChoice.FUSED
@@ -660,6 +655,22 @@ namespace ApplicationData
                 if (enableFollowID.value)
                 {
                     initCode.Add(Environment.NewLine);
+
+                    initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
+                                                for(int i = 0; i < 5; ++i)
+                                                {{
+                                                    status = {0}->GetConfigurator().Apply(configs, units::time::second_t(0.25));
+                                                    if (status.IsOK())
+                                                        break;
+                                                }}
+                                                if (!status.IsOK())
+                                                    Logger::GetLogger()->LogData(LOGGER_LEVEL::ERROR, ""{0}"",""{0} Status"", status.GetName());
+                                                ",
+
+                                                    AsMemberVariableName()));
+
+                    initCode.Add(Environment.NewLine);
+
                     initCode.Add(string.Format(@"   {0}->SetControl(ctre::phoenix6::controls::StrictFollower{{{1}}});",
                                     AsMemberVariableName(), followID.value));
                 }
@@ -702,21 +713,21 @@ namespace ApplicationData
                                                         SensorToMechanismRatio
                                                         ));
                     }
-                }
+                    initCode.Add(Environment.NewLine);
 
-                initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
+                    initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
                                                 for(int i = 0; i < 5; ++i)
-                                                {
-                                                    status = {0}->GetConfigurator().Apply(configs, units::time::seconds_t(0.25));
+                                                {{
+                                                    status = {0}->GetConfigurator().Apply(configs, units::time::second_t(0.25));
                                                     if (status.IsOK())
                                                         break;
-                                                }
+                                                }}
                                                 if (!status.IsOK())
-                                                {
-                                                    Logger::GetLogger()->LogData(LOGGER_LEVEL::ERROR, ""{0}"", ""{0} Status"", status.GetName());
-                                                }",
+                                                    Logger::GetLogger()->LogData(LOGGER_LEVEL::ERROR, ""{0}"",""{0} Status"", status.GetName());
+                                                ",
 
-                                                AsMemberVariableName()));
+                                                    AsMemberVariableName()));
+                }
 
                 initCode.Add("}");
             }
