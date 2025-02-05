@@ -9,6 +9,7 @@
 /codeGenerator/src/*/obj/Release
 /codeGenerator/src/*/obj
 /codeGenerator/src/*/src
+*.dtbcache.json
 /codeGenerator/src/packages
 /codeGenerator/tool/*.exe
 /codeGenerator/tool/*.dll
