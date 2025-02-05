@@ -394,31 +394,26 @@ namespace ApplicationData
         public boolParameter enableStatorCurrentLimit { get; set; }
 
         [DefaultValue(0)]
-        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [Range(typeof(double), "0", "120.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
-        [ConstantInMechInstance]
         public doubleParameter statorCurrentLimit { get; set; }
 
         [DefaultValue(false)]
-        [ConstantInMechInstance]
         public boolParameter enableSupplyCurrentLimit { get; set; }
 
         [DefaultValue(0)]
         [Range(typeof(double), "0", "70.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
-        [ConstantInMechInstance]
         public doubleParameter supplyCurrentLimit { get; set; }
 
         [DefaultValue(0)]
         [Range(typeof(double), "0", "40.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
-        [ConstantInMechInstance]
         public doubleParameter supplyCurrentThreshold { get; set; }
 
         [DefaultValue(0)]
         [Range(typeof(double), "0", "40.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.time)]
-        [ConstantInMechInstance]
         public doubleParameter supplyTimeThreshold { get; set; }
 
         public CurrentLimits()
