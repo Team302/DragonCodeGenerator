@@ -547,16 +547,14 @@ namespace ApplicationData
                 initCode.Add("{");
 
 
-                initCode.Add(string.Format(@"   CurrentLimitsConfigs currconfigs{{}};
-                                                currconfigs.StatorCurrentLimit = {1}({2});
-                                                currconfigs.StatorCurrentLimitEnable = {3};
-                                                currconfigs.SupplyCurrentLimit = {4}({5});
-                                                currconfigs.SupplyCurrentLimitEnable = {6};
-                                                currconfigs.SupplyCurrentLowerLimit = {7}({8});
-                                                currconfigs.SupplyCurrentLowerTime = {9}({10});
-                                                {0}->GetConfigurator().Apply(currconfigs);",
+                initCode.Add(string.Format(@"   {10}Configuration configs{{}};
+                                                configs.CurrentLimits.StatorCurrentLimit = {0}({1});
+                                                configs.CurrentLimits.StatorCurrentLimitEnable = {2};
+                                                configs.CurrentLimits.SupplyCurrentLimit = {3}({4});
+                                                configs.CurrentLimits.SupplyCurrentLimitEnable = {5};
+                                                configs.CurrentLimits.SupplyCurrentLowerLimit = {6}({7});
+                                                configs.CurrentLimits.SupplyCurrentLowerTime = {8}({9});",
 
-                                                AsMemberVariableName(),
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.statorCurrentLimit.__units__), theCurrentLimits.statorCurrentLimit.value,
                                                 theCurrentLimits.enableStatorCurrentLimit.value.ToString().ToLower(),
 
@@ -564,46 +562,36 @@ namespace ApplicationData
                                                 theCurrentLimits.enableSupplyCurrentLimit.value.ToString().ToLower(),
 
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.supplyCurrentThreshold.__units__), theCurrentLimits.supplyCurrentThreshold.value,
-                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.supplyTimeThreshold.__units__), theCurrentLimits.supplyTimeThreshold.value));
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theCurrentLimits.supplyTimeThreshold.__units__), theCurrentLimits.supplyTimeThreshold.value,
+                                                GetType().Name));
 
                 initCode.Add("");
 
-                initCode.Add(string.Format(@" VoltageConfigs voltageConfigs{{}};
-                voltageConfigs.PeakForwardVoltage = units::voltage::volt_t(11.0);
-                voltageConfigs.PeakReverseVoltage = units::voltage::volt_t(-11.0);
-                {0}->GetConfigurator().Apply(voltageConfigs);", AsMemberVariableName()));
+                initCode.Add(string.Format(@"   configs.Voltage.PeakForwardVoltage = units::voltage::volt_t(11.0);
+                                            configs.Voltage.PeakReverseVoltage = units::voltage::volt_t(-11.0);"));
 
                 if (voltageRamping.enableClosedLoop.value)
-                    initCode.Add(string.Format(@" ClosedLoopRampsConfigs rampConfigs{{}};
-                                                rampConfigs.TorqueClosedLoopRampPeriod = {1}({2});
-                                                {0}->GetConfigurator().Apply(rampConfigs);",
-                                                AsMemberVariableName(),
+                    initCode.Add(string.Format(@"   configs.ClosedLoopRamps.TorqueClosedLoopRampPeriod = {0}({1});",
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.closedLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
                 else
-                    initCode.Add(string.Format(@" OpenLoopRampsConfigs rampConfigs{{}};
-                                                rampConfigs.VoltageOpenLoopRampPeriod = {1}({2});
-                                                {0}->GetConfigurator().Apply(rampConfigs);",
-                                                AsMemberVariableName(),
-                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.closedLoopRampTime.value));
+                    initCode.Add(string.Format(@"   configs.OpenLoopRamps.VoltageOpenLoopRampPeriod = {0}({1});",
+                                                generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.openLoopRampTime.value));
 
-                initCode.Add(string.Format(@"	HardwareLimitSwitchConfigs hwswitch{{}};
-	                                            hwswitch.ForwardLimitEnable = {1};
-	                                            hwswitch.ForwardLimitRemoteSensorID = {2};
-	                                            hwswitch.ForwardLimitAutosetPositionEnable = {3};
-	                                            hwswitch.ForwardLimitAutosetPositionValue = {17}({4});
+                initCode.Add(string.Format(@"	configs.HardwareLimitSwitch.ForwardLimitEnable = {0};
+	                                            configs.HardwareLimitSwitch.ForwardLimitRemoteSensorID = {1};
+	                                            configs.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = {2};
+	                                            configs.HardwareLimitSwitch.ForwardLimitAutosetPositionValue = {16}({3});
 
-	                                            hwswitch.ForwardLimitSource = {5}::{6};
-	                                            hwswitch.ForwardLimitType = {7}::{8};
-                                                
-	                                            hwswitch.ReverseLimitEnable = {9};
-	                                            hwswitch.ReverseLimitRemoteSensorID = {10};
-	                                            hwswitch.ReverseLimitAutosetPositionEnable = {11};
-	                                            hwswitch.ReverseLimitAutosetPositionValue = {18}({12});
-	                                            hwswitch.ReverseLimitSource = {13}::{14};
-	                                            hwswitch.ReverseLimitType = {15}::{16};
-	                                            {0}->GetConfigurator().Apply(hwswitch);"
-                                                ,
-                                                AsMemberVariableName(),
+	                                            configs.HardwareLimitSwitch.ForwardLimitSource = {4}::{5};
+	                                            configs.HardwareLimitSwitch.ForwardLimitType = {6}::{7};
+
+	                                            configs.HardwareLimitSwitch.ReverseLimitEnable = {8};
+	                                            configs.HardwareLimitSwitch.ReverseLimitRemoteSensorID = {9};
+	                                            configs.HardwareLimitSwitch.ReverseLimitAutosetPositionEnable = {10};
+	                                            configs.HardwareLimitSwitch.ReverseLimitAutosetPositionValue = {17}({11});
+	                                            configs.HardwareLimitSwitch.ReverseLimitSource = {12}::{13};
+	                                            configs.HardwareLimitSwitch.ReverseLimitType = {14}::{15};",
+
                                                 theConfigHWLimitSW.enableForward.value.ToString().ToLower(),
                                                 theConfigHWLimitSW.remoteForwardSensorID.value,
                                                 theConfigHWLimitSW.forwardResetPosition.value.ToString().ToLower(),
@@ -629,15 +617,12 @@ namespace ApplicationData
                 initCode.Add("");
 
 
-                initCode.Add(string.Format(@"	MotorOutputConfigs motorconfig{{}};
-                                                motorconfig.Inverted = {1}::{2};
-                                                motorconfig.NeutralMode = {3}::{4};
-                                                motorconfig.PeakForwardDutyCycle = {5};
-                                                motorconfig.PeakReverseDutyCycle = {6};
-                                                motorconfig.DutyCycleNeutralDeadband = {7};
-                                                {0}->GetConfigurator().Apply(motorconfig);",
+                initCode.Add(string.Format(@"   configs.MotorOutput.Inverted = {0}::{1};
+                                                configs.MotorOutput.NeutralMode = {2}::{3};
+                                                configs.MotorOutput.PeakForwardDutyCycle = {4};
+                                                configs.MotorOutput.PeakReverseDutyCycle = {5};
+                                                configs.MotorOutput.DutyCycleNeutralDeadband = {6};",
 
-                                                AsMemberVariableName(),
                                                 theConfigMotorSettings.inverted.GetType().Name, theConfigMotorSettings.inverted,
                                                 theConfigMotorSettings.mode.GetType().Name, theConfigMotorSettings.mode,
                                                 theConfigMotorSettings.peakForwardDutyCycle.value,
@@ -657,6 +642,22 @@ namespace ApplicationData
                 if (enableFollowID.value)
                 {
                     initCode.Add(Environment.NewLine);
+
+                    initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
+                                                for(int i = 0; i < 5; ++i)
+                                                {{
+                                                    status = {0}->GetConfigurator().Apply(configs, units::time::second_t(0.25));
+                                                    if (status.IsOK())
+                                                        break;
+                                                }}
+                                                if (!status.IsOK())
+                                                    Logger::GetLogger()->LogData(LOGGER_LEVEL::ERROR, ""{0}"",""{0} Status"", status.GetName());
+                                                ",
+
+                                                    AsMemberVariableName()));
+
+                    initCode.Add(Environment.NewLine);
+
                     initCode.Add(string.Format(@"   {0}->SetControl(ctre::phoenix6::controls::StrictFollower{{{1}}});",
                                     AsMemberVariableName(), followID.value));
                 }
@@ -664,18 +665,15 @@ namespace ApplicationData
                 {
                     if (GetType() != typeof(TalonFXS)) // figure out once TalonFXSes are available
                     {
-                        initCode.Add("TalonFXConfiguration fxConfig{};");
-
                         if (fusedSyncCANcoder.enable.value)
                         {
                             CANcoder cc = generatorContext.theMechanismInstance.mechanism.cancoder.Find(c => c.name == this.fusedSyncCANcoder.fusedCANcoder.name);
                             if (cc != null)
                             {
-                                initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
-                                                    fxConfig.Feedback.FeedbackSensorSource = {2};
-                                                    fxConfig.Feedback.SensorToMechanismRatio = {3};
-                                                    fxConfig.Feedback.RotorToSensorRatio = {4};
-                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                                initCode.Add(string.Format(@"   configs.Feedback.FeedbackRemoteSensorID = {1};
+                                                    configs.Feedback.FeedbackSensorSource = {2};
+                                                    configs.Feedback.SensorToMechanismRatio = {3};
+                                                    configs.Feedback.RotorToSensorRatio = {4};",
                                                                 AsMemberVariableName(),
                                                                 cc.canID.value,
                                                                 sensorSource,
@@ -689,10 +687,9 @@ namespace ApplicationData
                         }
                         else if (remoteSensor.Source != RemoteSensorSource.Off)
                         {
-                            initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackRemoteSensorID = {1};
-                                                    fxConfig.Feedback.FeedbackSensorSource = {2};
-                                                    fxConfig.Feedback.SensorToMechanismRatio = {3};
-                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                            initCode.Add(string.Format(@"   configs.Feedback.FeedbackRemoteSensorID = {1};
+                                                    configs.Feedback.FeedbackSensorSource = {2};
+                                                    configs.Feedback.SensorToMechanismRatio = {3};",
                                                                                 AsMemberVariableName(),
                                                                                 remoteSensor.CanID.value,
                                                                                 sensorSource,
@@ -701,13 +698,26 @@ namespace ApplicationData
                         else
                         {
                             double SensorToMechanismRatio = theDistanceAngleCalcInfo.isDistance.value ? theDistanceAngleCalcInfo.gearRatio.value / (Math.PI * theDistanceAngleCalcInfo.diameter.value) : theDistanceAngleCalcInfo.gearRatio.value;
-                            initCode.Add(string.Format(@"   fxConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue::RotorSensor;
-                                                    fxConfig.Feedback.SensorToMechanismRatio = {1};
-                                                    {0}->GetConfigurator().Apply(fxConfig);",
+                            initCode.Add(string.Format(@"   configs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue::RotorSensor;
+                                                    configs.Feedback.SensorToMechanismRatio = {1};",
                                                             AsMemberVariableName(), SensorToMechanismRatio
                                                             ));
                         }
                     }
+                    initCode.Add(Environment.NewLine);
+
+                    initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
+                                                for(int i = 0; i < 5; ++i)
+                                                {{
+                                                    status = {0}->GetConfigurator().Apply(configs, units::time::second_t(0.25));
+                                                    if (status.IsOK())
+                                                        break;
+                                                }}
+                                                if (!status.IsOK())
+                                                    Logger::GetLogger()->LogData(LOGGER_LEVEL::ERROR, ""{0}"",""{0} Status"", status.GetName());
+                                                ",
+
+                                                    AsMemberVariableName()));
                 }
 
                 initCode.Add("}");
@@ -916,16 +926,10 @@ namespace ApplicationData
     [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
     [Using("ctre::phoenix6::signals::InvertedValue")]
     [Using("ctre::phoenix6::signals::NeutralModeValue")]
-    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
-    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
-    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
     [Using("ctre::phoenix6::configs::Slot0Configs")]
-    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
-    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
-    [Using("ctre::phoenix6::configs::VoltageConfigs")]
-
     public class TalonFX : TalonBase
     {
         public TalonFX()
@@ -944,16 +948,10 @@ namespace ApplicationData
     [Using("ctre::phoenix6::signals::ReverseLimitTypeValue")]
     [Using("ctre::phoenix6::signals::InvertedValue")]
     [Using("ctre::phoenix6::signals::NeutralModeValue")]
-    [Using("ctre::phoenix6::configs::HardwareLimitSwitchConfigs")]
-    [Using("ctre::phoenix6::configs::CurrentLimitsConfigs")]
-    [Using("ctre::phoenix6::configs::MotorOutputConfigs")]
     [Using("ctre::phoenix6::configs::Slot0Configs")]
-    [Using("ctre::phoenix6::configs::ClosedLoopRampsConfigs")]
-    [Using("ctre::phoenix6::configs::OpenLoopRampsConfigs")]
+    [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXSConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
-    [Using("ctre::phoenix6::configs::VoltageConfigs")]
-
     public class TalonFXS : TalonBase
     {
         public TalonFXS()
@@ -1322,8 +1320,19 @@ namespace ApplicationData
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{0}Target)", this.name, mcd.name);
+                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
             }
+
+            /*TO DO if we need more than Percent Out implement below
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+             {
+                 return string.Format("UpdateTarget{0}{1}(units::voltage::volt_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+             }
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+             {
+                 return string.Format("UpdateTarget{0}{1}(units::angle::turn_t({2}), {3})", this.name, mcd.name, value, mcd.enableFOC);
+             }*/
+
             return "";
         }
         override public string GenerateCyclicGenericTargetRefresh()
