@@ -162,16 +162,13 @@ namespace ApplicationData
         {
             [DefaultValue(0)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
-            [ConstantInMechInstance]
             public doubleParameter openLoopRampTime { get; set; }
 
             [DefaultValue(0)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
-            [ConstantInMechInstance]
             public doubleParameter closedLoopRampTime { get; set; }
 
             [DefaultValue(false)]
-            [ConstantInMechInstance]
             public boolParameter enableClosedLoop { get; set; }
 
             public VoltageRamping()
