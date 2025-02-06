@@ -23,7 +23,7 @@ namespace CoreCodeGenerator
             setProgressCallback(displayProgress);
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.PERCENT_OUTPUT, "double");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT, "units::voltage::volt_t");
-            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::turn_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::degree_t");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_INCH, "units::length::inch_t");
         }
 
@@ -127,7 +127,7 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
 
 
-                        List<string> theUsings = generateMethod(mi, "generateUsings").Distinct().ToList();
+                        List<string> theUsings = generateMethod(mi, "generateUsings").Distinct().OrderBy(m => m).ToList();
                         resultString = resultString.Replace("$$_USING_DIRECTIVES_$$", ListToString(theUsings, ";").Trim());
 
                         resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(mi.mechanism, "generateIncludes").Distinct().ToList()));
@@ -147,11 +147,14 @@ namespace CoreCodeGenerator
                             foreach (motorTarget mt in s.motorTargets)
                             {
                                 motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
-                                MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
-                                if ((mcd != null) && (mc != null))
+                                List<MotorController> mcs = mi.mechanism.MotorControllers.FindAll(m => m.name == mt.motorName);
+                                if (mcd != null)
                                 {
-                                    pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
-                                    pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
+                                    foreach (MotorController mc in mcs)
+                                    {
+                                        pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
+                                        pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
+                                    }
                                 }
                             }
                         }
@@ -206,7 +209,8 @@ namespace CoreCodeGenerator
                         List<string> targetRefreshCalls = new List<string>();
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
-                            targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                            if (mc.ControllerEnabled == MotorController.Enabled.Yes)
+                                targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
                         }
                         resultString = resultString.Replace("$$_CYCLIC_GENERIC_TARGET_REFRESH_$$", ListToString(targetRefreshCalls, ";"));
 
@@ -296,12 +300,15 @@ namespace CoreCodeGenerator
                             foreach (motorTarget mt in s.motorTargets)
                             {
                                 motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
-                                MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mt.motorName);
-                                if (mcd != null && mc != null)
+                                List<MotorController> mcs = mi.mechanism.MotorControllers.FindAll(m => m.name == mt.motorName);
+                                foreach (MotorController mc in mcs)
                                 {
-                                    targetUpdateFunctions.AddRange(mc.GenerateTargetUpdateFunctions(mcd));
-                                    targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
-                                    genericTargetVariables.Add(mc.GenerateGenericTargetMemberVariable());
+                                    if (mcd != null && mc != null)
+                                    {
+                                        targetUpdateFunctions.AddRange(mc.GenerateTargetUpdateFunctions(mcd));
+                                        targetVariables.Add(mc.GenerateTargetMemberVariable(mcd));
+                                        genericTargetVariables.Add(mc.GenerateGenericTargetMemberVariable());
+                                    }
                                 }
                             }
                         }
@@ -348,12 +355,13 @@ namespace CoreCodeGenerator
                                 resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                                 resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                                 resultString = resultString.Replace("$$_STATE_NAME_$$", s.name);
-                                
+
                                 StringBuilder targetConstants = new StringBuilder();
-                                foreach (motorTarget mT in s.motorTargets) {
+                                foreach (motorTarget mT in s.motorTargets)
+                                {
                                     motorControlData mcd = mi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
                                     MotorController mc = mi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
-                                    if (mc != null && mcd != null)
+                                    if (mc != null && mcd != null && !mc.enableFollowID.value)
                                     {
                                         string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
                                         targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
@@ -475,7 +483,7 @@ namespace CoreCodeGenerator
                                             if (mT.Enabled.value == true)
                                             {
                                                 motorControlData mcd = theMi.mechanism.stateMotorControlData.Find(cd => cd.name == mT.controlDataName);
-                                                MotorController mc = theMi.mechanism.MotorControllers.Find(m => m.name == mT.motorName);
+                                                MotorController mc = theMi.mechanism.MotorControllers.Find(m => (m.name == mT.motorName) && (m.ControllerEnabled == MotorController.Enabled.Yes));
                                                 if (mc == null)
                                                     addProgress(string.Format("In mechanism {0}, cannot find a Motor controller called {1}, referenced in state {2}, target {3}", theMi.name, mT.motorName, s.name, mT.name));
                                                 else if (mcd == null)
@@ -485,7 +493,7 @@ namespace CoreCodeGenerator
                                                     string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
                                                     if (!string.IsNullOrEmpty(PidSetCall))
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
-                                                    if(!mc.enableFollowID.value)
+                                                    if (!mc.enableFollowID.value)
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
                                                 }
                                             }
@@ -493,10 +501,10 @@ namespace CoreCodeGenerator
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();
 
-                                        resultString = resultString.Replace("$$_STATE_INIT_FUNCTION_CALLS_$$", setTargetFunctionCalls.ToString().Trim().Substring(5));
-                                        resultString = resultString.Replace("$$_STATE_INIT_FUNCTIONS_$$", setTargetFunctionDefinitions.ToString().Trim());
                                     }
                                 }
+                                resultString = resultString.Replace("$$_STATE_INIT_FUNCTION_CALLS_$$", setTargetFunctionCalls.ToString().Trim().Substring(5));
+                                resultString = resultString.Replace("$$_STATE_INIT_FUNCTIONS_$$", setTargetFunctionDefinitions.ToString().Trim());
 
                                 filePathName = getMechanismFullFilePathName(mechanismName,
                                                                             cdf.outputFilePathName.Replace("MECHANISM_INSTANCE_NAME", mechanismName).Replace("STATE_NAME", s.name)
@@ -616,9 +624,11 @@ namespace CoreCodeGenerator
             List<string> createDeclarationCode = new List<string>();
             foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
             {
+                generatorContext.theRobot = r;
                 mechanismInstance mis = r.mechanismInstances.Find(m => m.name == mi.name);
                 if (mis != null)
                 {
+                    generatorContext.theMechanismInstance = mis;
                     string temp = createFunctionTemplate;
                     temp = temp.Replace("$$_OBJECT_CREATION_$$", ListToString(generateMethod(mis, "generateIndexedObjectCreation")));
                     temp = temp.Replace("$$_ROBOT_FULL_NAME_$$", r.getFullRobotName());

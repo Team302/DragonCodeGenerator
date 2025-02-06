@@ -1354,7 +1354,7 @@ namespace ApplicationData
 
         virtual public string AsMemberVariableName()
         {
-            return string.Format("{0}", AsMemberVariableName(name));
+            return AsMemberVariableName(name);
         }
 
         virtual public string AsMemberVariableName(string n)
@@ -1364,6 +1364,19 @@ namespace ApplicationData
                 formattedName = char.ToUpper(n[0]) + n.Substring(1);
 
             return string.Format("m_{0}", formattedName);
+        }
+
+        virtual public string ToUpperCamelCase()
+        {
+            return ToUpperCamelCase(name);
+        }
+        virtual public string ToUpperCamelCase(string n)
+        {
+            string formattedName = "NameCannotBeAnEmptyString";
+            if (!string.IsNullOrEmpty(n))
+                formattedName = char.ToUpper(n[0]) + n.Substring(1);
+
+            return formattedName;
         }
 
         virtual public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
@@ -1540,7 +1553,6 @@ namespace ApplicationData
         public static applicationData theRobot { get; set; }
         public static topLevelAppDataElement theRobotVariants { get; set; }
         public static toolConfiguration theGeneratorConfig { get; set; }
-
         public static void clear()
         {
             generationStage = GenerationStage.Unknown;
