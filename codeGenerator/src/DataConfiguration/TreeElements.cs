@@ -89,6 +89,10 @@ namespace DataConfiguration
             helperFunctions.initializeDefaultValues(this);
         }
 
+        virtual public string GenerateDefinition()
+        {
+            return "";
+        }
         virtual public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             refresh = helperFunctions.RefreshLevel.none;
@@ -218,6 +222,10 @@ namespace DataConfiguration
         public constDoubleParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
+        }
+        public override string GenerateDefinition()
+        {
+            return string.Format(@"const {0} {1};", "double", name);
         }
 
         override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
@@ -514,6 +522,10 @@ namespace DataConfiguration
             type = value.GetType().Name;
         }
 
+        public override string GenerateDefinition()
+        {
+            return string.Format(@"const {0} {1};", "double", name);
+        }
         override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             return getDisplayName(propertyName, value, out refresh);

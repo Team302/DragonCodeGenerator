@@ -1,6 +1,7 @@
 using Configuration;
 using DataConfiguration;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -272,14 +273,6 @@ namespace ApplicationData
 
         public mechanism mechanism { get; set; }
 
-        public List<doubleParameterUserDefinedNonTunable> doubleParameter { get; set; }
-
-        public List<boolParameterUserDefinedNonTunable> boolParameter { get; set; }
-
-        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameter { get; set; }
-
-        public List<constBoolParameterUserDefinedNonTunable> constBoolParameter { get; set; }
-
         public mechanismInstance()
         {
             name = "mechanismInstanceName";
@@ -349,17 +342,23 @@ namespace ApplicationData
 
         private List<string> generate(object obj, string generateFunctionName, int currentIndex)
         {
-            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
-            ParameterInfo[] pi = mi.GetParameters();
-
-            if (pi.Length == 0)
-                return (List<string>)mi.Invoke(obj, new object[] { });
-            else if (pi.Length == 1)
+            if (obj.GetType() == typeof(baseRobotElementClass))
             {
-                object[] parameters = new object[] { currentIndex };
-                return (List<string>)mi.Invoke(obj, parameters);
-            }
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                ParameterInfo[] pi = mi.GetParameters();
 
+                if (pi.Length == 0)
+                    return (List<string>)mi.Invoke(obj, new object[] { });
+                else if (pi.Length == 1)
+                {
+                    object[] parameters = new object[] { currentIndex };
+                    return (List<string>)mi.Invoke(obj, parameters);
+                }
+            }
+            else if(obj.GetType() == typeof(parameter))
+            {
+
+            }
             return new List<string>();
         }
         private List<string> generate(object obj, string generateFunctionName)
@@ -506,6 +505,13 @@ namespace ApplicationData
 
         public List<motorControlData> stateMotorControlData { get; set; }
         public List<state> states { get; set; }
+        public List<doubleParameterUserDefinedNonTunable> doubleParameter { get; set; }
+
+        public List<boolParameterUserDefinedNonTunable> boolParameter { get; set; }
+
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameter { get; set; }
+
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameter { get; set; }
 
         public mechanism()
         {
@@ -566,17 +572,29 @@ namespace ApplicationData
 
         private List<string> generate(object obj, string generateFunctionName, int currentIndex)
         {
-            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
-            ParameterInfo[] pi = mi.GetParameters();
-
-            if (pi.Length == 0)
-                return (List<string>)mi.Invoke(obj, new object[] { });
-            else if (pi.Length == 2)
+            if (obj is baseRobotElementClass)
             {
-                object[] parameters = new object[] { currentIndex };
-                return (List<string>)mi.Invoke(obj, parameters);
-            }
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                ParameterInfo[] pi = mi.GetParameters();
 
+                if (pi.Length == 0)
+                    return (List<string>)mi.Invoke(obj, new object[] { });
+                else if (pi.Length == 2)
+                {
+                    object[] parameters = new object[] { currentIndex };
+                    return (List<string>)mi.Invoke(obj, parameters);
+                }
+            }
+            else if(obj is parameter)
+            {
+                MethodInfo mi = obj.GetType().GetMethod("GenerateDefinition");
+                string s = (string)mi.Invoke(obj, new object[] { });
+                return
+                new List<string>()
+                {
+                    s
+                };
+            }
             return new List<string>();
         }
 
