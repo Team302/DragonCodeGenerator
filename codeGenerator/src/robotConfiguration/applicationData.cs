@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using static ApplicationData.motorControlData;
 
@@ -379,14 +380,16 @@ namespace ApplicationData
 
             var mySerializer = new XmlSerializer(typeof(MechanismParameters));
 
-            string controlDataAsString = "";
-            using (StringWriter textWriter = new StringWriter())
+            XmlWriterSettings settings = new XmlWriterSettings
             {
-                mySerializer.Serialize(textWriter, new MechanismParameters(mechanism));
-                controlDataAsString = textWriter.ToString();
-            }
+                Encoding = new UTF8Encoding(false),
+                Indent = true
+            };
 
-            File.WriteAllText(fullFilePath, controlDataAsString);
+            using(var writer = XmlWriter.Create(fullFilePath, settings))
+            {
+                mySerializer.Serialize(writer, new MechanismParameters(mechanism));
+            }
 
             return fullFilePath;
         }
@@ -468,6 +471,9 @@ namespace ApplicationData
             iGain = mcd.PID.iGain.value;
             dGain = mcd.PID.dGain.value;
             fGain = mcd.PID.fGain.value;
+            sGain = mcd.PID.sGain.value;
+            vGain = mcd.PID.vGain.value;
+            aGain = mcd.PID.aGain.value;
             iZone = mcd.PID.iZone.value;
             peakValue = mcd.peakValue.value;
             nominalValue = mcd.nominalValue.value;
