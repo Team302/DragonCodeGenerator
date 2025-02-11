@@ -431,6 +431,15 @@ namespace ApplicationData
         public double fGain { get; set; }
         [XmlAttribute]
         public double iZone { get; set; }
+
+        [XmlAttribute]
+        public double sGain { get; set; }
+        [XmlAttribute]
+        public double vGain { get; set; }
+        [XmlAttribute]
+        public double aGain { get; set; }
+
+
         [XmlAttribute]
         public double peakValue { get; set; }
         [XmlAttribute]
@@ -619,7 +628,7 @@ namespace ApplicationData
     public class PIDF : PID
     {
         [DefaultValue(0D)]
-        [DataDescription("The feed forward gain of the PIDF controller.")]
+        [DataDescription("The feed forward (or gravity) gain of the PIDF controller.")]
         [TunableParameter()]
         public doubleParameter fGain { get; set; }
 
@@ -629,7 +638,7 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    public class PIDFslot : PIDF
+    public class PIDFslot : PIDFZ
     {
 
         [DefaultValue(0D)]
@@ -646,8 +655,24 @@ namespace ApplicationData
     public class PIDFZ : PIDF
     {
         [DefaultValue(0D)]
+        [DataDescription("The iZone of the PID controller.")]
         [TunableParameter()]
         public doubleParameter iZone { get; set; }
+
+        [DefaultValue(0D)]
+        [DataDescription("The feedforward gain to overcome static friction  of the PID controller.")]
+        [TunableParameter()]
+        public doubleParameter sGain { get; set; }
+
+        [DefaultValue(0D)]
+        [DataDescription("The velocity feedforward gain of the PID controller.")]
+        [TunableParameter()]
+        public doubleParameter vGain { get; set; }
+
+        [DefaultValue(0D)]
+        [DataDescription("The acceleration feedforward gain of the PID controller.")]
+        [TunableParameter()]
+        public doubleParameter aGain { get; set; }
 
         public PIDFZ()
         {
@@ -1676,13 +1701,17 @@ namespace ApplicationData
                                                             {5}, // double integral
                                                             {6}, // double derivative
                                                             {7}, // double feedforward
-                                                            ControlData::FEEDFORWARD_TYPE::{8}, // FEEDFORWARD_TYPE feedforwadType
-                                                            {9}, // double integralZone
-                                                            {10}, // double maxAcceleration
-                                                            {11}, // double cruiseVelocity
-                                                            {12}, // double peakValue
-                                                            {13}, // double nominalValue
-                                                            {14}  // bool enableFOC
+                                                            {8},  //double velocityGain
+                                                            {9},  //double accelartionGain
+                                                            {10}, //double staticFrictionGain,
+
+                                                            ControlData::FEEDFORWARD_TYPE::{11}, // FEEDFORWARD_TYPE feedforwadType
+                                                            {12}, // double integralZone
+                                                            {13}, // double maxAcceleration
+                                                            {14}, // double cruiseVelocity
+                                                            {15}, // double peakValue
+                                                            {16}, // double nominalValue
+                                                            {17}  // bool enableFOC
                 );",
             AsMemberVariableName(),
                 getImplementationName(),
@@ -1692,6 +1721,9 @@ namespace ApplicationData
                 PID.iGain.value,
                 PID.dGain.value,
                 PID.fGain.value,
+                PID.vGain.value,
+                PID.aGain.value,
+                PID.sGain.value,
                 feedForwardType,
                 PID.iZone.value,
                 maxAcceleration.value,

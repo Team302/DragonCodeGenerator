@@ -861,6 +861,14 @@ namespace ApplicationData
                 sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
                 sb.AppendLine(string.Format("slot0Configs.kI = {0}->GetI();", mcd.AsMemberVariableName()));
                 sb.AppendLine(string.Format("slot0Configs.kD = {0}->GetD();", mcd.AsMemberVariableName()));
+
+                sb.AppendLine(string.Format("slot0Configs.kG = {0}->GetF();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kS = {0}->GetS();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kV = {0}->GetV();", mcd.AsMemberVariableName()));
+                sb.AppendLine(string.Format("slot0Configs.kA = {0}->GetA();", mcd.AsMemberVariableName()));
+               // slot0Configs.GravityType = ctre::phoenix6::signals::GravityTypeValue::Arm_Cosine;
+               // slot0Configs.StaticFeedforwardSign = ctre::phoenix6::signals::StaticFeedforwardSignValue(0); // uses Velcoity Sign
+
                 sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);", AsMemberVariableName()));
                 sb.AppendLine("}");
 
@@ -977,7 +985,7 @@ namespace ApplicationData
             /**
              * Quadrature encoder
              */
-            QuadEncoder = 0,
+                QuadEncoder = 0,
             //1
             /**
              * Analog potentiometer/encoder
