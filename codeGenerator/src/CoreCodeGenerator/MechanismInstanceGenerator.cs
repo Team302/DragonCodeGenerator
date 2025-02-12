@@ -316,8 +316,12 @@ namespace CoreCodeGenerator
                         if (targetVariables.Count > 0)
                             targetVariables.AddRange(genericTargetVariables.Distinct());
 
+                        List<string> loggingVariables = generateMethod(mi.mechanism, "generateLoggingObjects");
+
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_LOGGING_OBJECTS_$$", ListToString(loggingVariables.Distinct().ToList()));
+
 
                         //closed loop parameters
                         string allParameters = "";

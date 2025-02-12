@@ -957,6 +957,7 @@ namespace ApplicationData
     [ImplementationName("frc::DigitalInput")]
     [SystemIncludeFile("frc/DigitalInput.h")]
     [SystemIncludeFile("frc/filter/Debouncer.h")]
+    [UserIncludeFile("utils/logging/DragonDataLogger.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -1012,6 +1013,12 @@ namespace ApplicationData
             };
 
             return initCode;
+        }
+        override public List<string> generateLoggingObjects()
+        {
+            List<string> output = new List<string>();
+            output.Add(string.Format("wpi::log::BooleanLogEntry {0}LogEntry;", AsMemberVariableName()));
+            return output;
         }
         override public List<string> generateDefinitionGetter()
         {
@@ -1471,6 +1478,10 @@ namespace ApplicationData
         virtual public List<string> generateInitialization()
         {
             return new List<string> { "baseRobotElementClass.generateInitialization needs to be overridden" };
+        }
+        virtual public List<string> generateLoggingObjects()
+        {
+            return new List<string>();
         }
         virtual public List<string> generateObjectCreation()
         {

@@ -337,6 +337,7 @@ namespace ApplicationData
         {
             return "";
         }
+
         virtual public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
         {
             return new List<string>();
@@ -801,6 +802,15 @@ namespace ApplicationData
             if (!this.enableFollowID.value)
                 return string.Format("ctre::phoenix6::controls::ControlRequest *{0}ActiveTarget;", AsMemberVariableName());
             return "";
+        }
+
+        override public List<string> generateLoggingObjects()
+        {
+            List<string> output = new List<string>();
+
+            output.Add(string.Format("wpi::log::DoubleLogEntry {0}LogEntry;", AsMemberVariableName()));
+            output.Add(string.Format("wpi::log::DoubleLogEntry {0}TargetLogEntry;", AsMemberVariableName()));
+            return output;
         }
 
         override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
