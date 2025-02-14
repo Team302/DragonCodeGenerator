@@ -505,13 +505,13 @@ namespace ApplicationData
 
         public List<motorControlData> stateMotorControlData { get; set; }
         public List<state> states { get; set; }
-        public List<doubleParameterUserDefinedNonTunable> doubleParameter { get; set; }
+        public List<doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> doubleParameters { get; set; }
 
-        public List<boolParameterUserDefinedNonTunable> boolParameter { get; set; }
+        public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
+                    
+        public List<constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> constDoubleParameters { get; set; }
 
-        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameter { get; set; }
-
-        public List<constBoolParameterUserDefinedNonTunable> constBoolParameter { get; set; }
+        public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
 
         public mechanism()
         {
@@ -587,13 +587,8 @@ namespace ApplicationData
             }
             else if(obj is parameter)
             {
-                MethodInfo mi = obj.GetType().GetMethod("GenerateDefinition");
-                string s = (string)mi.Invoke(obj, new object[] { });
-                return
-                new List<string>()
-                {
-                    s
-                };
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                return (List<string>)mi.Invoke(obj, new object[] { });
             }
             return new List<string>();
         }
