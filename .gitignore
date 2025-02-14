@@ -13,4 +13,5 @@
 /codeGenerator/src/packages
 /codeGenerator/tool/*.exe
 /codeGenerator/tool/*.dll
+/codeGenerator/tool/*.exe.config
 !/codeGenerator/tool/AStyle32*.dll
