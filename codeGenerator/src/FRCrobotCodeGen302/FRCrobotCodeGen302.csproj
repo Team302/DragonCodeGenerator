@@ -162,6 +162,7 @@
     <PostBuildEvent>if exist $(SolutionDir)\..\tool\ (
 copy $(TargetPath) $(SolutionDir)\..\tool\
 copy $(TargetDir)\*.dll $(SolutionDir)\..\tool\
+copy $(TargetDir)\*.exe.config $(SolutionDir)\..\tool\
 
 copy $(SolutionDir)\..\tool\AStyle32*.dll $(TargetDir)
 )
