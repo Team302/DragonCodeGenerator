@@ -248,7 +248,7 @@ namespace FRCrobotCodeGen302
 
                     string unitsAsString = "";
                     Family unitsFamily = Family.none;
-                    DataConfiguration.valueRange range = null;
+                    ApplicationData.valueRange range = null;
                     bool isConstantLocal = false;
                     bool isConstantInAMechInstanceLocal = false;
                     bool isTunable = false;

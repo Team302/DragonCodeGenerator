@@ -8,7 +8,7 @@ public class AStyleInterface
 {   // Dll name
     // Windows will NOT attach an extension to a filename containing dots (.).
 #if (DEBUG)
-    private const string dllName = "astyle32d.dll";
+    private const string dllName = "astyle32.dll";
 #else
     private const string dllName = "astyle32.dll";
 #endif
