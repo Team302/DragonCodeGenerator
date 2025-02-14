@@ -204,6 +204,69 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_READ_TUNABLE_PARAMETERS_$$", allParameterReading);
                         resultString = resultString.Replace("$$_PUSH_TUNABLE_PARAMETERS_$$", allParameterWriting);
 
+                        List<string> loggingInitialization = new List<string>();
+                        List<string> loggingMethodDefinitions = new List<string>();
+                        foreach (MotorController mc in mi.mechanism.MotorControllers)
+                        {
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(0.0);", mc.name));
+
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name)); 
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry.Append(0.0);", mc.name));               //Move these all to a function outside of this later
+
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(double value)
+                                                                         {{
+                                                                             static double currentValue = 0;
+	                                                                         if (currentValue != value)
+	                                                                         {{
+	                                                                     	currentValue = value;
+	                                                                     	m_{1}LogEntry.Append(value);
+	                                                                         }}                           
+                                                                         }}"
+                                                                                        , mi.name, mc.name));
+
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}Target(double value)
+                                                                         {{
+                                                                             static double currentValue = 0;
+	                                                                         if (currentValue != value)
+	                                                                         {{
+	                                                                     	    currentValue = value;
+	                                                                     	    m_{1}TargetLogEntry.Append(value);
+	                                                                         }}                            
+                                                                         }}", mi.name, mc.name)); 
+                        }
+                        foreach (digitalInput di in mi.mechanism.digitalInput)
+                        {
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::BooleanLogEntry(log, \"mechanisms/{1}/{0}\");", di.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));                 
+                            loggingInitialization.Add("");
+
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(bool value)               
+                                                                         {{
+                                                                            static bool currentValue = 0;
+	                                                                        if (currentValue != value)
+	                                                                        {{
+	                                                                        	currentValue = value;
+	                                                                        	m_{1}LogEntry.Append(value);
+	                                                                        }}                            
+                                                                         }}", mi.name, di.name));                       //move all of these too
+                        }
+                        loggingInitialization.Add(string.Format("m_{0}StateLogEntry = wpi::log::IntegerLogEntry(log, \"mechanisms/{0}/{1}\");", mi.name, "State"));
+                        loggingInitialization.Add(string.Format("m_{0}StateLogEntry.Append(0);", mi.name));
+
+                        loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{0}State(int value)               
+                                                                         {{
+                                                                            static int currentValue = 0;
+	                                                                        if (currentValue != value)
+	                                                                        {{
+	                                                                        	currentValue = value;
+	                                                                        	m_{0}StateLogEntry.Append(value);
+	                                                                        }}                            
+                                                                         }}", mi.name));
+
+                        resultString = resultString.Replace("$$_DATA_LOGGING_INITIALIZATION_$$", ListToString(loggingInitialization.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_LOGGING_METHOD_DEFINITIONS_$$", ListToString(loggingMethodDefinitions.Distinct().ToList()));
+
                         #endregion
 
                         List<string> targetRefreshCalls = new List<string>();
@@ -317,11 +380,16 @@ namespace CoreCodeGenerator
                             targetVariables.AddRange(genericTargetVariables.Distinct());
 
                         List<string> loggingVariables = generateMethod(mi.mechanism, "generateLoggingObjects");
+                        loggingVariables.Add(string.Format("wpi::log::IntegerLogEntry m_{0}StateLogEntry;", mi.name));
+
+
+                        List<string> loggingMethods = generateMethod(mi.mechanism, "generateLoggingMethods");
+                        loggingMethods.Add(string.Format("void Log{0}State(int value);", mi.name));
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
                         resultString = resultString.Replace("$$_LOGGING_OBJECTS_$$", ListToString(loggingVariables.Distinct().ToList()));
-
+                        resultString = resultString.Replace("$$_LOGGING_FUNCTIONS_$$", ListToString(loggingMethods.Distinct().ToList()));
 
                         //closed loop parameters
                         string allParameters = "";

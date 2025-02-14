@@ -813,6 +813,14 @@ namespace ApplicationData
             return output;
         }
 
+        override public List<string> generateLoggingMethods()
+        {
+            List<string> output = new List<string>();
+            output.Add(string.Format("void Log{0}(double value);", name));
+            output.Add(string.Format("void LogTarget{0}(double value);", name));
+            return output;
+        }
+
         override public List<string> GenerateTargetUpdateFunctions(motorControlData mcd)
         {
             List<string> output = new List<string>();

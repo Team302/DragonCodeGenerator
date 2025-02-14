@@ -1020,6 +1020,14 @@ namespace ApplicationData
             output.Add(string.Format("wpi::log::BooleanLogEntry {0}LogEntry;", AsMemberVariableName()));
             return output;
         }
+
+        override public List<string> generateLoggingMethods()
+        {
+            List<string> output = new List<string>();
+            output.Add(string.Format("void Log{0}(bool value);", name));
+            return output;
+        }
+
         override public List<string> generateDefinitionGetter()
         {
             if(debouncetime.value != 0)
@@ -1483,6 +1491,18 @@ namespace ApplicationData
         {
             return new List<string>();
         }
+
+        virtual public List<string> generateLoggingMethods()
+        {
+             return new List<string>();
+        }
+
+        virtual public List<string> generateLoggingInitialization()
+        { 
+            return new List<string>(); 
+        }
+
+
         virtual public List<string> generateObjectCreation()
         {
             return new List<string> { "baseRobotElementClass.generateObjectCreation needs to be overridden" };
