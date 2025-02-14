@@ -56,6 +56,14 @@ namespace Configuration
 
             return "";
         }
+        public string getWPIphysicalUnitIncludeFile(string unitShortName)
+        {
+            physicalUnit pu = physicalUnits.Find(u => u.shortName == unitShortName);
+            if (pu != null)
+                return $"{pu.family}.h";
+
+            return "";
+        }
 
         string rootOutputFolder_temp;
         string robotConfiguration_temp;
