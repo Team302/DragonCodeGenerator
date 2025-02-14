@@ -352,7 +352,7 @@ namespace ApplicationData
             if (unitsFamily != physicalUnit.Family.none)
                 units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() { string.Format(@"{0} {1};", units, AsMemberVariableName(name))  };
+            return new List<string>() { string.Format(@"{0} {1} = {2};", units, AsMemberVariableName(name), value.ToString())  };
         }
 
         override public List<string> generateDefinitionGetter()
@@ -676,7 +676,7 @@ namespace ApplicationData
             if (unitsFamily != physicalUnit.Family.none)
                 units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() { string.Format(@"const {0} {1} = {2};", units, AsMemberVariableName(name), value.ToString()) };
+            return new List<string>() { string.Format(@"const {0} {1} = {2};", units, AsMemberVariableName(name), value.ToString().ToLower()) };
         }
 
         override public List<string> generateDefinitionGetter()
@@ -709,7 +709,7 @@ namespace ApplicationData
             if (unitsFamily != physicalUnit.Family.none)
                 units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() { string.Format(@"{0} {1};", units, AsMemberVariableName(name)) };
+            return new List<string>() { string.Format(@"{0} {1} = {2};", units, AsMemberVariableName(name), value.ToString().ToLower()) };
         }
 
         override public List<string> generateDefinitionGetter()
