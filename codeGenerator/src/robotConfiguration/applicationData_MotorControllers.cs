@@ -422,9 +422,9 @@ namespace ApplicationData
     [Serializable]
     public class ConfigHWLimitSW : baseDataClass
     {
-        public enum ForwardLimitSourceValue { LimitSwitchPin }
+        public enum ForwardLimitSourceValue { LimitSwitchPin, RemoteCANdiS1, RemoteCANdiS2 }
         public enum ForwardLimitTypeValue { NormallyOpen, NormallyClosed }
-        public enum ReverseLimitSourceValue { LimitSwitchPin }
+        public enum ReverseLimitSourceValue { LimitSwitchPin, RemoteCANdiS1, RemoteCANdiS2 }
         public enum ReverseLimitTypeValue { NormallyOpen, NormallyClosed }
 
         [ConstantInMechInstance]
