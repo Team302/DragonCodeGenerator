@@ -343,7 +343,7 @@ namespace ApplicationData
 
         private List<string> generate(object obj, string generateFunctionName, int currentIndex)
         {
-            if (obj.GetType() == typeof(baseRobotElementClass))
+            if (obj is baseRobotElementClass)
             {
                 MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
                 ParameterInfo[] pi = mi.GetParameters();
@@ -356,7 +356,7 @@ namespace ApplicationData
                     return (List<string>)mi.Invoke(obj, parameters);
                 }
             }
-            else if(obj.GetType() == typeof(parameter))
+            else if(obj is parameter)
             {
 
             }
