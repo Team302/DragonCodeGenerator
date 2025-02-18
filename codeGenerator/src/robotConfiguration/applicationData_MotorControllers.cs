@@ -816,8 +816,8 @@ namespace ApplicationData
         override public List<string> generateLoggingMethods()
         {
             List<string> output = new List<string>();
-            output.Add(string.Format("void Log{0}(double value);", name));
-            output.Add(string.Format("void LogTarget{0}(double value);", name));
+            output.Add(string.Format("void Log{0}(uint64_t timestamp, double value);", name));
+            output.Add(string.Format("void LogTarget{0}(uint64_t timestamp, double value);", name));
             return output;
         }
 

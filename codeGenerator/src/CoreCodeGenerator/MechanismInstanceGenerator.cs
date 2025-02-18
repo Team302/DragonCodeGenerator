@@ -214,26 +214,18 @@ namespace CoreCodeGenerator
                             loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name)); 
                             loggingInitialization.Add(string.Format("m_{0}TargetLogEntry.Append(0.0);", mc.name));               //Move these all to a function outside of this later
 
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(double value)
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, double value)
                                                                          {{
-                                                                             static double currentValue = 0;
-	                                                                         if (currentValue != value)
-	                                                                         {{
-	                                                                     	currentValue = value;
-	                                                                     	m_{1}LogEntry.Append(value);
-	                                                                         }}                           
-                                                                         }}"
+	                                                                     	m_{1}LogEntry.Update(timestamp, value);                          
+                                                                         }}
+                                                                           "
                                                                                         , mi.name, mc.name));
 
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}Target(double value)
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::LogTarget{1}(uint64_t timestamp, double value)
                                                                          {{
-                                                                             static double currentValue = 0;
-	                                                                         if (currentValue != value)
-	                                                                         {{
-	                                                                     	    currentValue = value;
-	                                                                     	    m_{1}TargetLogEntry.Append(value);
-	                                                                         }}                            
-                                                                         }}", mi.name, mc.name)); 
+	                                                                        m_{1}TargetLogEntry.Update(timestamp, value);                        
+                                                                         }}
+                                                                            ", mi.name, mc.name)); 
                         }
                         foreach (digitalInput di in mi.mechanism.digitalInput)
                         {
@@ -241,28 +233,20 @@ namespace CoreCodeGenerator
                             loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));                 
                             loggingInitialization.Add("");
 
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(bool value)               
+                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, bool value)               
                                                                          {{
-                                                                            static bool currentValue = 0;
-	                                                                        if (currentValue != value)
-	                                                                        {{
-	                                                                        	currentValue = value;
-	                                                                        	m_{1}LogEntry.Append(value);
-	                                                                        }}                            
-                                                                         }}", mi.name, di.name));                       //move all of these too
+	                                                                        m_{1}LogEntry.Update(timestamp, value);                          
+                                                                         }}
+                                                                            ", mi.name, di.name));                       //move all of these too
                         }
                         loggingInitialization.Add(string.Format("m_{0}StateLogEntry = wpi::log::IntegerLogEntry(log, \"mechanisms/{0}/{1}\");", mi.name, "State"));
                         loggingInitialization.Add(string.Format("m_{0}StateLogEntry.Append(0);", mi.name));
 
-                        loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{0}State(int value)               
+                        loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{0}State(uint64_t timestamp, int value)               
                                                                          {{
-                                                                            static int currentValue = 0;
-	                                                                        if (currentValue != value)
-	                                                                        {{
-	                                                                        	currentValue = value;
-	                                                                        	m_{0}StateLogEntry.Append(value);
-	                                                                        }}                            
-                                                                         }}", mi.name));
+	                                                                        m_{0}StateLogEntry.Update(timestamp, value);                        
+                                                                         }}
+                                                                            ", mi.name));
 
                         resultString = resultString.Replace("$$_DATA_LOGGING_INITIALIZATION_$$", ListToString(loggingInitialization.Distinct().ToList()));
                         resultString = resultString.Replace("$$_LOGGING_METHOD_DEFINITIONS_$$", ListToString(loggingMethodDefinitions.Distinct().ToList()));
@@ -384,7 +368,7 @@ namespace CoreCodeGenerator
 
 
                         List<string> loggingMethods = generateMethod(mi.mechanism, "generateLoggingMethods");
-                        loggingMethods.Add(string.Format("void Log{0}State(int value);", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}State(uint64_t timestamp, int value);", mi.name));
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
