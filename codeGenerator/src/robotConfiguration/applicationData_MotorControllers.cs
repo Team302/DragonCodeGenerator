@@ -510,6 +510,32 @@ namespace ApplicationData
     }
 
     [Serializable]
+    public class ConfigMotionMagic : baseDataClass
+    {
+        public enum MotionMagicMode { Disabled, Normal, Dynamic };
+
+        [DefaultValue(MotionMagicMode.Disabled)]
+        public MotionMagicMode Mode { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularVelocity)]
+        public doubleParameter CruiseVelocity { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularAcceleration)]
+        public doubleParameter Acceleration { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularJerk)]
+        public doubleParameter Jerk { get; set; }
+
+        public ConfigMotionMagic()
+        {
+            defaultDisplayName = "MotionMagic";
+        }
+    }
+
+    [Serializable]
     public class TalonBase : MotorController
     {
         public CurrentLimits theCurrentLimits { get; set; }
@@ -519,6 +545,8 @@ namespace ApplicationData
         public ConfigHWLimitSW theConfigHWLimitSW { get; set; }
 
         public ConfigMotorSettings theConfigMotorSettings { get; set; }
+
+        public ConfigMotionMagic MotionMagicSettings { get; set; }
 
         public TalonBase()
         {
@@ -620,6 +648,15 @@ namespace ApplicationData
                                                 theConfigMotorSettings.peakForwardDutyCycle.value,
                                                 theConfigMotorSettings.peakReverseDutyCycle.value,
                                                 theConfigMotorSettings.deadbandPercent.value));
+
+                initCode.Add("");
+
+                if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Normal)
+                {
+                    initCode.Add($"configs.MotionMagic.MotionMagicCruiseVelocity = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.CruiseVelocity.__units__)}({MotionMagicSettings.CruiseVelocity.value});");
+                    initCode.Add($"configs.MotionMagic.MotionMagicAcceleration = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Acceleration.__units__)}({MotionMagicSettings.Acceleration.value});");
+                    initCode.Add($"configs.MotionMagic.MotionMagicJerk = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Jerk.__units__)}({MotionMagicSettings.Jerk.value});");
+                }
 
                 string sensorSource = "FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
@@ -866,8 +903,8 @@ namespace ApplicationData
                 sb.AppendLine(string.Format("slot0Configs.kS = {0}->GetS();", mcd.AsMemberVariableName()));
                 sb.AppendLine(string.Format("slot0Configs.kV = {0}->GetV();", mcd.AsMemberVariableName()));
                 sb.AppendLine(string.Format("slot0Configs.kA = {0}->GetA();", mcd.AsMemberVariableName()));
-               // slot0Configs.GravityType = ctre::phoenix6::signals::GravityTypeValue::Arm_Cosine;
-               // slot0Configs.StaticFeedforwardSign = ctre::phoenix6::signals::StaticFeedforwardSignValue(0); // uses Velcoity Sign
+                // slot0Configs.GravityType = ctre::phoenix6::signals::GravityTypeValue::Arm_Cosine;
+                // slot0Configs.StaticFeedforwardSign = ctre::phoenix6::signals::StaticFeedforwardSignValue(0); // uses Velcoity Sign
 
                 sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);", AsMemberVariableName()));
                 sb.AppendLine("}");
@@ -985,7 +1022,7 @@ namespace ApplicationData
             /**
              * Quadrature encoder
              */
-                QuadEncoder = 0,
+            QuadEncoder = 0,
             //1
             /**
              * Analog potentiometer/encoder
