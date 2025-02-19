@@ -422,47 +422,35 @@ namespace ApplicationData
     [Serializable]
     public class ConfigHWLimitSW : baseDataClass
     {
-        public enum ForwardLimitSourceValue { LimitSwitchPin }
+        public enum ForwardLimitSourceValue { LimitSwitchPin, RemoteCANdiS1, RemoteCANdiS2 }
         public enum ForwardLimitTypeValue { NormallyOpen, NormallyClosed }
-        public enum ReverseLimitSourceValue { LimitSwitchPin }
+        public enum ReverseLimitSourceValue { LimitSwitchPin, RemoteCANdiS1, RemoteCANdiS2 }
         public enum ReverseLimitTypeValue { NormallyOpen, NormallyClosed }
 
-        [ConstantInMechInstance]
         public boolParameter enableForward { get; set; }
 
-        [ConstantInMechInstance]
         public intParameter remoteForwardSensorID { get; set; }
 
-        [ConstantInMechInstance]
         public boolParameter forwardResetPosition { get; set; }
 
-        [ConstantInMechInstance]
         [PhysicalUnitsFamily(physicalUnit.Family.angle)]
         public doubleParameter forwardPosition { get; set; }
 
-        [ConstantInMechInstance]
         public ForwardLimitSourceValue forwardType { get; set; }
 
-        [ConstantInMechInstance]
         public ForwardLimitTypeValue forwardOpenClose { get; set; }
 
-        [ConstantInMechInstance]
         public boolParameter enableReverse { get; set; }
 
-        [ConstantInMechInstance]
         public intParameter remoteReverseSensorID { get; set; }
 
-        [ConstantInMechInstance]
         public boolParameter reverseResetPosition { get; set; }
 
-        [ConstantInMechInstance]
         [PhysicalUnitsFamily(physicalUnit.Family.angle)]
         public doubleParameter reversePosition { get; set; }
 
-        [ConstantInMechInstance]
         public ReverseLimitSourceValue revType { get; set; }
 
-        [ConstantInMechInstance]
         public ReverseLimitTypeValue revOpenClose { get; set; }
 
         public ConfigHWLimitSW()
@@ -568,12 +556,13 @@ namespace ApplicationData
                 else
                     initCode.Add(string.Format(@"   configs.OpenLoopRamps.VoltageOpenLoopRampPeriod = {0}({1});",
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.openLoopRampTime.value));
+                
+                initCode.Add(Environment.NewLine);
 
                 initCode.Add(string.Format(@"	configs.HardwareLimitSwitch.ForwardLimitEnable = {0};
 	                                            configs.HardwareLimitSwitch.ForwardLimitRemoteSensorID = {1};
 	                                            configs.HardwareLimitSwitch.ForwardLimitAutosetPositionEnable = {2};
 	                                            configs.HardwareLimitSwitch.ForwardLimitAutosetPositionValue = {16}({3});
-
 	                                            configs.HardwareLimitSwitch.ForwardLimitSource = {4}::{5};
 	                                            configs.HardwareLimitSwitch.ForwardLimitType = {6}::{7};
 
