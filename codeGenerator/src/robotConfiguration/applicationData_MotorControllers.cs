@@ -584,7 +584,7 @@ namespace ApplicationData
                 else
                     initCode.Add(string.Format(@"   configs.OpenLoopRamps.VoltageOpenLoopRampPeriod = {0}({1});",
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.openLoopRampTime.value));
-                
+
                 initCode.Add(Environment.NewLine);
 
                 initCode.Add(string.Format(@"	configs.HardwareLimitSwitch.ForwardLimitEnable = {0};
@@ -646,6 +646,9 @@ namespace ApplicationData
                     initCode.Add($"configs.MotionMagic.MotionMagicAcceleration = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Acceleration.__units__)}({MotionMagicSettings.Acceleration.value});");
                     initCode.Add($"configs.MotionMagic.MotionMagicJerk = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Jerk.__units__)}({MotionMagicSettings.Jerk.value});");
                 }
+
+                if (this is TalonFXS)
+                    initCode.Add($"configs.Commutation.MotorArrangement = MotorArrangementValue::{((TalonFXS)this).MotorArrangementValue};");
 
                 string sensorSource = "FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
@@ -980,6 +983,18 @@ namespace ApplicationData
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
     public class TalonFXS : TalonBase
     {
+        public enum MotorArrangement
+        {
+            Disabled = 0, //Motor is not selected.
+            Minion_JST = 1, //CTR Electronics Minion® brushless three phase motor.
+            Brushed_DC = 2, //Third party brushed DC motor with two leads.
+            NEO_JST = 5, //Third party NEO brushless three phase motor(~6000 RPM at 12V).
+            NEO550_JST = 6, //Third party NEO550 brushless three phase motor(~11000 RPM at 12V).
+            VORTEX_JST = 7 //Third party VORTEX brushless three phase motor.
+        }
+
+        [DefaultValue(MotorArrangement.Disabled)]
+        public MotorArrangement MotorArrangementValue { get; set; }
         public TalonFXS()
         {
         }
