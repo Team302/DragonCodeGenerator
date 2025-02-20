@@ -194,7 +194,6 @@ namespace ApplicationData
         public uintParameter canID { get; set; }
 
         [DefaultValue(CAN_BUS.rio)]
-        [ConstantInMechInstance]
         public CAN_BUS canBusName { get; set; }
 
         [DefaultValue(0u)]
@@ -981,6 +980,7 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXSConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::signals::MotorArrangementValue")]
     public class TalonFXS : TalonBase
     {
         public enum MotorArrangement
