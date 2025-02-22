@@ -248,10 +248,8 @@ namespace ApplicationData
             [ConstantInMechInstance]
             public CANcoderInstance fusedCANcoder { get; set; }
 
-            [ConstantInMechInstance]
             public doubleParameter sensorToMechanismRatio { get; set; }
 
-            [ConstantInMechInstance]
             public doubleParameter rotorToSensorRatio { get; set; }
 
             [ConstantInMechInstance]
@@ -513,17 +511,14 @@ namespace ApplicationData
 
         [DefaultValue(0)]
         [PhysicalUnitsFamily(physicalUnit.Family.angularVelocity)]
-        [ConstantInMechInstance]
         public doubleParameter CruiseVelocity { get; set; }
 
         [DefaultValue(0)]
         [PhysicalUnitsFamily(physicalUnit.Family.angularAcceleration)]
-        [ConstantInMechInstance] 
         public doubleParameter Acceleration { get; set; }
 
         [DefaultValue(0)]
         [PhysicalUnitsFamily(physicalUnit.Family.angularJerk)]
-        [ConstantInMechInstance] 
         public doubleParameter Jerk { get; set; }
 
         public ConfigMotionMagic()
@@ -912,7 +907,8 @@ namespace ApplicationData
         {
             List<string> output = new List<string>();
 
-            output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();");
+             if( (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES) || (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
+                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();");
 
             //string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
             //string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());
