@@ -3,6 +3,7 @@ using Configuration;
 using DataConfiguration;
 using System;
 using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -352,7 +353,7 @@ namespace ApplicationData
         {
             return "";
         }
-        virtual public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        virtual public string GeneratePIDSetFunction(motorControlData mcd)
         {
             return "";
         }
@@ -731,6 +732,24 @@ namespace ApplicationData
                     }
                     initCode.Add(Environment.NewLine);
 
+                    // this is a bit convoluted because the control constatns are not part of the motors .... change this for next year
+                    List<string> slotInits = new List<string>();
+                    foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
+                    {
+                        motorTarget mt = s.motorTargets.Find(t => t.motorName == this.name);
+                        if (mt != null)
+                        {
+                            motorControlData mcd = generatorContext.theMechanismInstance.mechanism.stateMotorControlData.Find(cd => cd.name == mt.controlDataName);
+                            if (mcd != null)
+                            {
+                                slotInits.Add(GeneratePIDSetFunction(mcd));
+                            }
+                        }
+                    }
+                    initCode.Add(string.Join(Environment.NewLine, slotInits.Distinct().ToList()));
+
+                    initCode.Add(Environment.NewLine);
+
                     initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
                                                 for(int i = 0; i < 5; ++i)
                                                 {{
@@ -946,7 +965,7 @@ namespace ApplicationData
             return "";
         }
 
-        override public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        override public string GeneratePIDSetFunction(motorControlData mcd)
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
@@ -959,26 +978,18 @@ namespace ApplicationData
             else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name));
-                sb.AppendLine("{");
-                sb.AppendLine("Slot0Configs slot0Configs{};");
-                sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kI = {0}->GetI();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kD = {0}->GetD();", mcd.AsMemberVariableName()));
-
-                sb.AppendLine(string.Format("slot0Configs.kG = {0}->GetF();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kS = {0}->GetS();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kV = {0}->GetV();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kA = {0}->GetA();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.GravityType = {0}->GetGravityType();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.StaticFeedforwardSign = {0}->GetStaticFeedforwardSign();", mcd.AsMemberVariableName()));
-
-                sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);", AsMemberVariableName()));
-                sb.AppendLine("}");
+                sb.AppendLine(string.Format("configs.Slot{1}.kP = {0}->GetP();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kI = {0}->GetI();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kD = {0}->GetD();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kG = {0}->GetF();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kS = {0}->GetS();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kV = {0}->GetV();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kA = {0}->GetA();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.GravityType = {0}->GetGravityType();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.StaticFeedforwardSign = {0}->GetStaticFeedforwardSign();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
 
                 return sb.ToString();
             }
-
 
             return "";
         }

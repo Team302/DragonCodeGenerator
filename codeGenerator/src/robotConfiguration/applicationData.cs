@@ -848,7 +848,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Analog inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -1029,7 +1028,7 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Digital inputs do not have initialization needs", name)
+                string.Format("", name)
             };
 
             return initCode;
@@ -1164,7 +1163,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : CANcoder inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -1250,7 +1248,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Solenoids do not have initialization needs", name)
             };
 
             return initCode;
@@ -1308,7 +1305,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Servos do not have initialization needs", name)
             };
 
             return initCode;
@@ -1707,6 +1703,9 @@ namespace ApplicationData
         
         public PIDFZ PID { get; set; }
 
+        [DefaultValue(0)]
+        [Range(0,3)]
+        public intParameter SlotIndex { get; set; }
         [DefaultValue(0)]
         public doubleParameter peakValue { get; set; }
         [DefaultValue(0)]

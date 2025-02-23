@@ -111,13 +111,14 @@ namespace CoreCodeGenerator
                             resultString = Remove(resultString, "_STATE_MANAGER_START_", "_STATE_MANAGER_END_");
                         #endregion
 
+                        string createFunctionDeclarations;
+                        resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
+
                         resultString = CleanMotorMechanismCode(mi, resultString);
                         resultString = CleanSolenoidMechanismCode(mi, resultString);
                         resultString = CleanServoMechanismCode(mi, resultString);
                         resultString = CleanNtTuningMechanismCode(mi, resultString);
 
-                        string createFunctionDeclarations;
-                        resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
                         string publicInitializationFunctionDeclarations;
                         string privateInitializationFunctionDeclarations;
                         resultString = resultString.Replace("$$_INITIALZATION_FUNCTIONS_$$", GenerateInitializationFunctions(mi, out publicInitializationFunctionDeclarations, out privateInitializationFunctionDeclarations));
@@ -139,28 +140,6 @@ namespace CoreCodeGenerator
                             enumMapList.Add(String.Format("{{\"STATE_{0}\", {1}::STATE_NAMES::STATE_{0}}}", ToUnderscoreCase(s.name).ToUpper(), mi.name));
                         }
                         resultString = resultString.Replace("$$_STATE_MAP_$$", ListToString(enumMapList, ",").Trim());
-
-                        #region Create the functions which update the PIDs in the motor controllers 
-                        List<string> pidUpdateFunctions = new List<string>();
-                        List<string> pidUpdateFunctionDeclarations = new List<string>();
-                        foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
-                        {
-                            foreach (motorTarget mt in s.motorTargets)
-                            {
-                                motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
-                                List<MotorController> mcs = mi.mechanism.MotorControllers.FindAll(m => m.name == mt.motorName);
-                                if (mcd != null)
-                                {
-                                    foreach (MotorController mc in mcs)
-                                    {
-                                        pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
-                                        pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
-                                    }
-                                }
-                            }
-                        }
-                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTION_$$", ListToString(pidUpdateFunctions.Distinct().ToList()));
-                        #endregion
 
                         #region Tunable Parameters
                         string allParameterReading = "";
@@ -283,8 +262,6 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
-
-                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTIONS_$$", ListToString(pidUpdateFunctionDeclarations.Distinct().ToList(), ";"));
 
                         //=============== generate the mechanism member variables
                         List<string> mechElements = generateMethod(mi.mechanism, "generateDefinition").FindAll(me => !me.StartsWith("state* "));
@@ -637,9 +614,11 @@ namespace CoreCodeGenerator
                                     
                                     ReadConstants(""$$_MECHANISM_INSTANCE_NAME_$$.xml"", $$_ROBOT_ID_$$);
 
+                                    _NT_TUNING_FUNCTION_CALLS_START_
                                     m_table = nt::NetworkTableInstance::GetDefault().GetTable(m_ntName);
                                     m_tuningIsEnabledStr = ""Enable Tuning for "" + m_ntName; // since this string is used every loop, we do not want to create the string every time
                                     m_table.get()->PutBoolean(m_tuningIsEnabledStr, m_tuning);
+                                    _NT_TUNING_FUNCTION_CALLS_END_
                                 }";
 
             string createFunctionDeclarationTemplate = "void Create$$_ROBOT_FULL_NAME_$$()";
@@ -689,6 +668,8 @@ namespace CoreCodeGenerator
                 if (mis != null)
                 {
                     string temp = createFunctionTemplate;
+
+                    generatorContext.theMechanismInstance = mis;
 
                     List<string> initFunctions = generateMethod(mis, "generateInitialization");
                     List<string> initFunctionCalls = initFunctions.FindAll(s => s.StartsWith("CALL:"));
