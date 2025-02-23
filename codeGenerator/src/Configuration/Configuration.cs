@@ -229,7 +229,7 @@ namespace Configuration
     [Serializable]
     public class physicalUnit
     {
-        public enum Family { none, all, angle, angularAcceleration, angularVelocity, length, mass, current, voltage, acceleration, percent, power, pressure, time, velocity }
+        public enum Family { none, all, angle, angularAcceleration, angularVelocity, angularJerk, length, mass, current, voltage, acceleration, percent, power, pressure, time, velocity }
         public string shortName { get; set; }
         public string longName { get; set; }
         public Family family { get; set; }
