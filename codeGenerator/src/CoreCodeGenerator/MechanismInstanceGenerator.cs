@@ -114,6 +114,7 @@ namespace CoreCodeGenerator
                         resultString = CleanMotorMechanismCode(mi, resultString);
                         resultString = CleanSolenoidMechanismCode(mi, resultString);
                         resultString = CleanServoMechanismCode(mi, resultString);
+                        resultString = CleanNtTuningMechanismCode(mi, resultString);
 
                         string createFunctionDeclarations;
                         resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
@@ -271,6 +272,7 @@ namespace CoreCodeGenerator
                         resultString = CleanMotorMechanismCode(mi, resultString);
                         resultString = CleanSolenoidMechanismCode(mi, resultString);
                         resultString = CleanServoMechanismCode(mi, resultString);
+                        resultString = CleanNtTuningMechanismCode(mi, resultString);
 
                         resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(mi.mechanism, "generateIncludes").Distinct().ToList()));
 
@@ -549,6 +551,28 @@ namespace CoreCodeGenerator
                 resultString = Remove(resultString, startStr, endStr);
             else
             {
+                resultString = resultString.Replace(startStr, "");
+                resultString = resultString.Replace(endStr, "");
+            }
+
+            return resultString;
+        }
+        private string CleanNtTuningMechanismCode(mechanismInstance mi, string resultString)
+        {
+            string startCallsStr = "_NT_TUNING_FUNCTION_CALLS_START_";
+            string endCallsStr = "_NT_TUNING_FUNCTION_CALLS_END_";
+            string startStr = "_NT_TUNING_FUNCTIONS_START_";
+            string endStr = "_NT_TUNING_FUNCTIONS_END_";
+
+            if (true)
+            {
+                resultString = Remove(resultString, startCallsStr, endCallsStr);
+                resultString = Remove(resultString, startStr, endStr);
+            }
+            else
+            {
+                resultString = resultString.Replace(startCallsStr, "");
+                resultString = resultString.Replace(endCallsStr, "");
                 resultString = resultString.Replace(startStr, "");
                 resultString = resultString.Replace(endStr, "");
             }
