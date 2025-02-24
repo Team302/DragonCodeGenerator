@@ -1,6 +1,7 @@
 using Configuration;
 using DataConfiguration;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -342,17 +343,23 @@ namespace ApplicationData
 
         private List<string> generate(object obj, string generateFunctionName, int currentIndex)
         {
-            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
-            ParameterInfo[] pi = mi.GetParameters();
-
-            if (pi.Length == 0)
-                return (List<string>)mi.Invoke(obj, new object[] { });
-            else if (pi.Length == 1)
+            if (obj is baseRobotElementClass)
             {
-                object[] parameters = new object[] { currentIndex };
-                return (List<string>)mi.Invoke(obj, parameters);
-            }
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                ParameterInfo[] pi = mi.GetParameters();
 
+                if (pi.Length == 0)
+                    return (List<string>)mi.Invoke(obj, new object[] { });
+                else if (pi.Length == 1)
+                {
+                    object[] parameters = new object[] { currentIndex };
+                    return (List<string>)mi.Invoke(obj, parameters);
+                }
+            }
+            else if(obj is parameter)
+            {
+
+            }
             return new List<string>();
         }
         private List<string> generate(object obj, string generateFunctionName)
@@ -513,6 +520,13 @@ namespace ApplicationData
 
         public List<motorControlData> stateMotorControlData { get; set; }
         public List<state> states { get; set; }
+        public List<doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> doubleParameters { get; set; }
+
+        public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
+                    
+        public List<constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> constDoubleParameters { get; set; }
+
+        public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
 
         public mechanism()
         {
@@ -573,17 +587,24 @@ namespace ApplicationData
 
         private List<string> generate(object obj, string generateFunctionName, int currentIndex)
         {
-            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
-            ParameterInfo[] pi = mi.GetParameters();
-
-            if (pi.Length == 0)
-                return (List<string>)mi.Invoke(obj, new object[] { });
-            else if (pi.Length == 2)
+            if (obj is baseRobotElementClass)
             {
-                object[] parameters = new object[] { currentIndex };
-                return (List<string>)mi.Invoke(obj, parameters);
-            }
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                ParameterInfo[] pi = mi.GetParameters();
 
+                if (pi.Length == 0)
+                    return (List<string>)mi.Invoke(obj, new object[] { });
+                else if (pi.Length == 2)
+                {
+                    object[] parameters = new object[] { currentIndex };
+                    return (List<string>)mi.Invoke(obj, parameters);
+                }
+            }
+            else if(obj is parameter)
+            {
+                MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+                return (List<string>)mi.Invoke(obj, new object[] { });
+            }
             return new List<string>();
         }
 

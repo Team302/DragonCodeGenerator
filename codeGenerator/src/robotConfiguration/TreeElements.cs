@@ -1,10 +1,15 @@
-﻿using Configuration;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Configuration;
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
+using DataConfiguration;
 
-namespace DataConfiguration
+
+namespace ApplicationData
 {
     // =================================== Rules =====================================
     // A property named __units__ will be converted to the list of physical units
@@ -89,10 +94,21 @@ namespace DataConfiguration
             helperFunctions.initializeDefaultValues(this);
         }
 
-        virtual public string GenerateDefinition()
+        virtual public List<string> generateDefinition()
         {
-            return "";
+            return new List<string>() { };
         }
+
+        virtual public List<string> generateDefinitionGetter()
+        {
+            return new List<string>() { };
+        }
+
+        virtual public List<string> generateIncludes()
+        {
+            return new List<string>() { };
+        }
+
         virtual public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             refresh = helperFunctions.RefreshLevel.none;
@@ -103,6 +119,33 @@ namespace DataConfiguration
                 return string.Format("{0} ({1})", propertyName, type);
 
             return null;
+        }
+
+        virtual public string AsMemberVariableName()
+        {
+            return AsMemberVariableName(name);
+        }
+
+        virtual public string AsMemberVariableName(string n)
+        {
+            string formattedName = "NameCannotBeAnEmptyString";
+            if (!string.IsNullOrEmpty(n))
+                formattedName = char.ToUpper(n[0]) + n.Substring(1);
+
+            return string.Format("m_{0}", formattedName);
+        }
+
+        virtual public string ToUpperCamelCase()
+        {
+            return ToUpperCamelCase(name);
+        }
+        virtual public string ToUpperCamelCase(string n)
+        {
+            string formattedName = "NameCannotBeAnEmptyString";
+            if (!string.IsNullOrEmpty(n))
+                formattedName = char.ToUpper(n[0]) + n.Substring(1);
+
+            return formattedName;
         }
     }
 
@@ -223,14 +266,63 @@ namespace DataConfiguration
         {
             type = value.GetType().Name;
         }
-        public override string GenerateDefinition()
+        public override List<string> generateDefinition()
         {
-            return string.Format(@"const {0} {1};", "double", name);
+            return new List<string>() { string.Format(@"const {0} {1};", "double", name) };
         }
 
         override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
+    [Serializable()]
+    public partial class constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst : constDoubleParameterUserDefinedNonTunable
+    {
+        [ConstantInMechInstance]
+        new public physicalUnit.Family unitsFamily
+        {
+            get => base.unitsFamily;
+            set => base.unitsFamily = value;
+        }
+        [ConstantInMechInstance]
+        new public string name
+        {
+            get => base.name;
+            set => base.name = value;
+        }
+        public constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst()
+        {
+            type = value.GetType().Name;
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "double";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"{0} {1} = {0}({2});", units, AsMemberVariableName(name), value.ToString()) };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            string units = "double";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() {
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+            };
+        }
+
+        override public List<string> generateIncludes()
+        {
+            if (unitsFamily == physicalUnit.Family.none)
+                return new List<string>() { };
+            else
+                return new List<string>() { $"#include \"units/{unitsFamily}.h\"" };
         }
     }
 
@@ -252,6 +344,35 @@ namespace DataConfiguration
         public doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst()
         {
             type = value.GetType().Name;
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "double";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"{0} {1} = {0}({2});", units, AsMemberVariableName(name), value.ToString())  };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            string units = "double";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { 
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+                string.Format(@"void Set{1}({0} value) {{{2} = value;}}", units, ToUpperCamelCase(), AsMemberVariableName())
+            };
+        }
+
+        override public List<string> generateIncludes()
+        {
+            if (unitsFamily == physicalUnit.Family.none)
+                return new List<string>() { };
+            else
+                return new List<string>() { $"#include \"units/{unitsFamily}.h\"" };
         }
     }
     #endregion
@@ -311,7 +432,7 @@ namespace DataConfiguration
     }
 
     [Serializable()]
-    public partial class intParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
+    public partial class intParameterUserDefinedNonTunable : intParameterUserDefinedBase
     {
         [DefaultValue(0u)]
         public int value { get; set; } = 0;
@@ -327,7 +448,7 @@ namespace DataConfiguration
     }
 
     [Serializable()]
-    public partial class intParameterUserDefinedTunable : doubleParameterUserDefinedBase
+    public partial class intParameterUserDefinedTunable : intParameterUserDefinedBase
     {
         [DefaultValue(0u)]
         [TunableParameter()]
@@ -463,6 +584,7 @@ namespace DataConfiguration
         [Constant]
         new public physicalUnit.Family unitsFamily { get; set; }
 
+
         protected string getDisplayName(string propertyName, bool value, out helperFunctions.RefreshLevel refresh)
         {
             refresh = helperFunctions.RefreshLevel.none;
@@ -484,6 +606,7 @@ namespace DataConfiguration
     {
         [DefaultValue(false)]
         public bool value { get; set; } = false;
+
         public boolParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
@@ -501,6 +624,7 @@ namespace DataConfiguration
         [DefaultValue(0u)]
         [TunableParameter()]
         public bool value { get; set; } = false;
+
         public boolParameterUserDefinedTunable()
         {
             type = value.GetType().Name;
@@ -517,18 +641,51 @@ namespace DataConfiguration
     {
         [DefaultValue(false)]
         public bool value { get; set; } = false;
+
         public constBoolParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
         }
-
-        public override string GenerateDefinition()
+        public override List<string> generateDefinition()
         {
-            return string.Format(@"const {0} {1};", "double", name);
+            return new List<string>() { string.Format(@"const {0} {1};", "double", name) };
         }
         override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
         {
             return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
+    [Serializable()]
+    public partial class constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst : constBoolParameterUserDefinedNonTunable
+    {
+        [ConstantInMechInstance]
+        new public string name
+        {
+            get => base.name;
+            set => base.name = value;
+        }
+
+        public constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst()
+        {
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "bool";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"const {0} {1} = {2};", units, AsMemberVariableName(name), value.ToString().ToLower()) };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            string units = "bool";
+
+            return new List<string>() {
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+            };
         }
     }
 
@@ -541,9 +698,28 @@ namespace DataConfiguration
             get => base.name;
             set => base.name = value;
         }
+
         public boolParameterUserDefinedTunableOnlyValueChangeableInMechInst()
         {
-            type = value.GetType().Name;
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "bool";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"{0} {1} = {2};", units, AsMemberVariableName(name), value.ToString().ToLower()) };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            string units = "bool";
+
+            return new List<string>() {
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+                string.Format(@"void Set{1}({0} value) {{{2} = value;}}", units, ToUpperCamelCase(), AsMemberVariableName())
+            };
         }
     }
     #endregion
