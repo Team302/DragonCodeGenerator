@@ -204,6 +204,9 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_READ_TUNABLE_PARAMETERS_$$", allParameterReading);
                         resultString = resultString.Replace("$$_PUSH_TUNABLE_PARAMETERS_$$", allParameterWriting);
 
+
+                        #endregion
+
                         List<string> loggingInitialization = new List<string>();
                         List<string> loggingMethodDefinitions = new List<string>();
                         List<string> DataLogDefinition = new List<string>();
@@ -212,7 +215,7 @@ namespace CoreCodeGenerator
                             loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(0.0);", mc.name));
 
-                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name)); 
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}TargetLogEntry.Append(0.0);", mc.name));               //Move these all to a function outside of this later
                                                                                                                                  //and make the method definitions inline methods in the .h
                             loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, double value)
@@ -233,7 +236,7 @@ namespace CoreCodeGenerator
                         foreach (digitalInput di in mi.mechanism.digitalInput)
                         {
                             loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::BooleanLogEntry(log, \"mechanisms/{1}/{0}\");", di.name, mi.name));
-                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));                 
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));
                             loggingInitialization.Add("");
 
                             loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, bool value)               
@@ -258,8 +261,6 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_LOGGING_METHOD_DEFINITIONS_$$", ListToString(loggingMethodDefinitions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_DATALOG_METHOD_$$", ListToString(DataLogDefinition.Distinct().ToList()));
 
-
-                        #endregion
 
                         List<string> targetRefreshCalls = new List<string>();
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
