@@ -128,6 +128,9 @@ namespace ApplicationData
 
         virtual public string AsMemberVariableName(string n)
         {
+            if (n.StartsWith("m_"))
+                return n;
+
             string formattedName = "NameCannotBeAnEmptyString";
             if (!string.IsNullOrEmpty(n))
                 formattedName = char.ToUpper(n[0]) + n.Substring(1);
@@ -261,25 +264,9 @@ namespace ApplicationData
     public partial class constDoubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
     {
         [DefaultValue(0u)]
-        public double value { get; set; }
-        public constDoubleParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-        public override List<string> generateDefinition()
-        {
-            return new List<string>() { string.Format(@"const {0} {1};", "double", name) };
-        }
+        [ConstantInMechInstance]
+        new public double value { get; set; }
 
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
-        }
-    }
-
-    [Serializable()]
-    public partial class constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst : constDoubleParameterUserDefinedNonTunable
-    {
         [ConstantInMechInstance]
         new public physicalUnit.Family unitsFamily
         {
@@ -292,10 +279,14 @@ namespace ApplicationData
             get => base.name;
             set => base.name = value;
         }
-        public constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst()
+        public constDoubleParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
         }
+
+        [DefaultValue(false)]
+        [ConstantInMechInstance]
+        public bool AddGetter { get; set; }
 
         public override List<string> generateDefinition()
         {
@@ -303,18 +294,23 @@ namespace ApplicationData
             if (unitsFamily != physicalUnit.Family.none)
                 units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() { string.Format(@"{0} {1} = {0}({2});", units, AsMemberVariableName(name), value.ToString()) };
+            return new List<string>() { string.Format(@"const {0} {1} = {0}({2});", units, AsMemberVariableName(name), value.ToString()) };
         }
 
         override public List<string> generateDefinitionGetter()
         {
-            string units = "double";
-            if (unitsFamily != physicalUnit.Family.none)
-                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+            if (AddGetter)
+            {
+                string units = "double";
+                if (unitsFamily != physicalUnit.Family.none)
+                    units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() {
+                return new List<string>() {
                 string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
             };
+            }
+
+            return new List<string>() { };
         }
 
         override public List<string> generateIncludes()
@@ -323,6 +319,11 @@ namespace ApplicationData
                 return new List<string>() { };
             else
                 return new List<string>() { $"#include \"units/{unitsFamily}.h\"" };
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
         }
     }
 

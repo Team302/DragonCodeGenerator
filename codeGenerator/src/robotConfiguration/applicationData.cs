@@ -524,7 +524,7 @@ namespace ApplicationData
 
         public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
                     
-        public List<constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> constDoubleParameters { get; set; }
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
 
         public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
 
