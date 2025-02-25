@@ -3,6 +3,7 @@ using Configuration;
 using DataConfiguration;
 using System;
 using System.CodeDom;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -194,7 +195,6 @@ namespace ApplicationData
         public uintParameter canID { get; set; }
 
         [DefaultValue(CAN_BUS.rio)]
-        [ConstantInMechInstance]
         public CAN_BUS canBusName { get; set; }
 
         [DefaultValue(0u)]
@@ -249,10 +249,8 @@ namespace ApplicationData
             [ConstantInMechInstance]
             public CANcoderInstance fusedCANcoder { get; set; }
 
-            [ConstantInMechInstance]
             public doubleParameter sensorToMechanismRatio { get; set; }
 
-            [ConstantInMechInstance]
             public doubleParameter rotorToSensorRatio { get; set; }
 
             [ConstantInMechInstance]
@@ -342,6 +340,12 @@ namespace ApplicationData
         {
             return new List<string>();
         }
+
+        virtual public List<string> GenerateTargetInitialization(motorControlData mcd)
+        { 
+            return new List<string>(); 
+        }
+
         virtual public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
             return "";
@@ -350,7 +354,7 @@ namespace ApplicationData
         {
             return "";
         }
-        virtual public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        virtual public string GeneratePIDSetFunction(motorControlData mcd)
         {
             return "";
         }
@@ -499,6 +503,33 @@ namespace ApplicationData
     }
 
     [Serializable]
+    public class ConfigMotionMagic : baseDataClass
+    {
+        public enum MotionMagicMode { Disabled, Normal, Dynamic };
+
+        [DefaultValue(MotionMagicMode.Disabled)]
+        [ConstantInMechInstance]
+        public MotionMagicMode Mode { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularVelocity)]
+        public doubleParameter CruiseVelocity { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularAcceleration)]
+        public doubleParameter Acceleration { get; set; }
+
+        [DefaultValue(0)]
+        [PhysicalUnitsFamily(physicalUnit.Family.angularJerk)]
+        public doubleParameter Jerk { get; set; }
+
+        public ConfigMotionMagic()
+        {
+            defaultDisplayName = "MotionMagic";
+        }
+    }
+
+    [Serializable]
     public class TalonBase : MotorController
     {
         public CurrentLimits theCurrentLimits { get; set; }
@@ -508,6 +539,8 @@ namespace ApplicationData
         public ConfigHWLimitSW theConfigHWLimitSW { get; set; }
 
         public ConfigMotorSettings theConfigMotorSettings { get; set; }
+
+        public ConfigMotionMagic MotionMagicSettings { get; set; }
 
         public TalonBase()
         {
@@ -557,7 +590,7 @@ namespace ApplicationData
                 else
                     initCode.Add(string.Format(@"   configs.OpenLoopRamps.VoltageOpenLoopRampPeriod = {0}({1});",
                                                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(voltageRamping.openLoopRampTime.__units__), voltageRamping.openLoopRampTime.value));
-                
+
                 initCode.Add(Environment.NewLine);
 
                 initCode.Add(string.Format(@"	configs.HardwareLimitSwitch.ForwardLimitEnable = {0};
@@ -610,6 +643,18 @@ namespace ApplicationData
                                                 theConfigMotorSettings.peakForwardDutyCycle.value,
                                                 theConfigMotorSettings.peakReverseDutyCycle.value,
                                                 theConfigMotorSettings.deadbandPercent.value));
+
+                initCode.Add("");
+
+                if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Normal)
+                {
+                    initCode.Add($"configs.MotionMagic.MotionMagicCruiseVelocity = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.CruiseVelocity.__units__)}({MotionMagicSettings.CruiseVelocity.value});");
+                    initCode.Add($"configs.MotionMagic.MotionMagicAcceleration = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Acceleration.__units__)}({MotionMagicSettings.Acceleration.value});");
+                    initCode.Add($"configs.MotionMagic.MotionMagicJerk = {generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Jerk.__units__)}({MotionMagicSettings.Jerk.value});");
+                }
+
+                if (this is TalonFXS)
+                    initCode.Add($"configs.Commutation.MotorArrangement = MotorArrangementValue::{((TalonFXS)this).MotorArrangementValue};");
 
                 string sensorSource = "FeedbackSensorSourceValue::RemoteCANcoder";
                 if (fusedSyncCANcoder.enable.value == true)
@@ -688,6 +733,24 @@ namespace ApplicationData
                     }
                     initCode.Add(Environment.NewLine);
 
+                    // this is a bit convoluted because the control constatns are not part of the motors .... change this for next year
+                    List<string> slotInits = new List<string>();
+                    foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
+                    {
+                        motorTarget mt = s.motorTargets.Find(t => t.motorName == this.name);
+                        if (mt != null)
+                        {
+                            motorControlData mcd = generatorContext.theMechanismInstance.mechanism.stateMotorControlData.Find(cd => cd.name == mt.controlDataName);
+                            if (mcd != null)
+                            {
+                                slotInits.Add(GeneratePIDSetFunction(mcd));
+                            }
+                        }
+                    }
+                    initCode.Add(string.Join(Environment.NewLine, slotInits.Distinct().ToList()));
+
+                    initCode.Add(Environment.NewLine);
+
                     initCode.Add(string.Format(@"   ctre::phoenix::StatusCode status = ctre::phoenix::StatusCode::StatusCodeNotInitialized;                                     
                                                 for(int i = 0; i < 5; ++i)
                                                 {{
@@ -700,6 +763,26 @@ namespace ApplicationData
                                                 ",
 
                                                     AsMemberVariableName()));
+                }
+
+                if (MotionMagicSettings.Mode != ConfigMotionMagic.MotionMagicMode.Disabled)
+                {
+                    List<string> inits = new List<string>();
+                    foreach(state s in generatorContext.theMechanismInstance.mechanism.states)
+                    {
+                        motorTarget mt = s.motorTargets.Find(t => t.motorName == this.name);
+                        if (mt != null)
+                        {
+                            motorControlData mcd = generatorContext.theMechanismInstance.mechanism.stateMotorControlData.Find(cd => cd.name == mt.controlDataName);
+                            if (mcd != null)
+                            {
+                                inits.AddRange(GenerateTargetInitialization(mcd));
+                            }
+                        }
+                    }
+                    
+                    initCode.Add(Environment.NewLine);
+                    initCode.Add(string.Join(Environment.NewLine, inits.Distinct().ToList()));
                 }
 
                 initCode.Add("}");
@@ -759,27 +842,46 @@ namespace ApplicationData
                 {
                     return string.Format("ctre::phoenix6::controls::VoltageOut {0}{{units::voltage::volt_t(0.0)}};", targetNameAsMemVar);
                 }
-
-                if (!mcd.enableFOC.value)
-                {
-                    if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
-                    {
-                        return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
-                    }
-                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
-                    {
-                        return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
-                    }
-                }
                 else
                 {
-                    if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                    if (this.MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Disabled)
                     {
-                        return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                        if (!mcd.enableFOC.value)
+                        {
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                        }
+                        else
+                        {
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                        }
                     }
-                    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                    else
                     {
-                        return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                        if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Normal)
+                        {
+                            return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                        }
+                        else if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Dynamic)
+                        {
+                            return string.Format("ctre::phoenix6::controls::DynamicMotionMagicVoltage {0}{{units::angle::turn_t(0.0), {1}({2}), {3}({4}), {5}({6})}};", targetNameAsMemVar,
+                                            generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.CruiseVelocity.__units__), MotionMagicSettings.CruiseVelocity.value,
+                                            generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Acceleration.__units__), MotionMagicSettings.Acceleration.value,
+                                            generatorContext.theGeneratorConfig.getWPIphysicalUnitType(MotionMagicSettings.Jerk.__units__), MotionMagicSettings.Jerk.value);
+                        }
                     }
                 }
             }
@@ -821,12 +923,10 @@ namespace ApplicationData
                 if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
@@ -840,6 +940,40 @@ namespace ApplicationData
             return output;
 
         }
+        override public List<string> GenerateTargetInitialization(motorControlData mcd)
+        {
+            List<string> output = new List<string>();
+
+             if( (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES) || (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
+                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();");
+
+            //string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
+            //string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());
+            //if (!this.enableFollowID.value)
+            //{
+            //    if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            //    {
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut) {{ {2}.Output = percentOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut, bool enableFOC) {{ {2}.Output = percentOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //    }
+            //    else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+            //    {
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut) {{ {2}.Output = voltageOut; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(units::voltage::volt_t voltageOut, bool enableFOC) {{ {2}.Output = voltageOut; {2}.EnableFOC = enableFOC; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //    }
+            //    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+            //    {
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //    }
+            //    else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+            //    {
+            //        output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+            //    }
+            //}
+            return output;
+
+        }
+
         override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
         {
             if (!this.enableFollowID.value)
@@ -849,7 +983,7 @@ namespace ApplicationData
             return "";
         }
 
-        override public string GeneratePIDSetFunction(motorControlData mcd, mechanismInstance mi)
+        override public string GeneratePIDSetFunction(motorControlData mcd)
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
@@ -862,26 +996,18 @@ namespace ApplicationData
             else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine(string.Format("void {2}::SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name));
-                sb.AppendLine("{");
-                sb.AppendLine("Slot0Configs slot0Configs{};");
-                sb.AppendLine(string.Format("slot0Configs.kP = {0}->GetP();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kI = {0}->GetI();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kD = {0}->GetD();", mcd.AsMemberVariableName()));
-
-                sb.AppendLine(string.Format("slot0Configs.kG = {0}->GetF();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kS = {0}->GetS();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kV = {0}->GetV();", mcd.AsMemberVariableName()));
-                sb.AppendLine(string.Format("slot0Configs.kA = {0}->GetA();", mcd.AsMemberVariableName()));
-               // slot0Configs.GravityType = ctre::phoenix6::signals::GravityTypeValue::Arm_Cosine;
-               // slot0Configs.StaticFeedforwardSign = ctre::phoenix6::signals::StaticFeedforwardSignValue(0); // uses Velcoity Sign
-
-                sb.AppendLine(string.Format("{0}->GetConfigurator().Apply(slot0Configs);", AsMemberVariableName()));
-                sb.AppendLine("}");
+                sb.AppendLine(string.Format("configs.Slot{1}.kP = {0}->GetP();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kI = {0}->GetI();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kD = {0}->GetD();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kG = {0}->GetF();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kS = {0}->GetS();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kV = {0}->GetV();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kA = {0}->GetA();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.GravityType = {0}->GetGravityType();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.StaticFeedforwardSign = {0}->GetStaticFeedforwardSign();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
 
                 return sb.ToString();
             }
-
 
             return "";
         }
@@ -937,6 +1063,8 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::signals::StaticFeedforwardSignValue")]
+    [Using("ctre::phoenix6::signals::GravityTypeValue")]
     public class TalonFX : TalonBase
     {
         public TalonFX()
@@ -959,8 +1087,23 @@ namespace ApplicationData
     [Using("ctre::phoenix6::configs::Slot1Configs")]
     [Using("ctre::phoenix6::configs::TalonFXSConfiguration")]
     [Using("ctre::phoenix6::signals::FeedbackSensorSourceValue")]
+    [Using("ctre::phoenix6::signals::MotorArrangementValue")]
+    [Using("ctre::phoenix6::signals::StaticFeedforwardSignValue")]
+    [Using("ctre::phoenix6::signals::GravityTypeValue")]
     public class TalonFXS : TalonBase
     {
+        public enum MotorArrangement
+        {
+            Disabled = 0, //Motor is not selected.
+            Minion_JST = 1, //CTR Electronics Minion® brushless three phase motor.
+            Brushed_DC = 2, //Third party brushed DC motor with two leads.
+            NEO_JST = 5, //Third party NEO brushless three phase motor(~6000 RPM at 12V).
+            NEO550_JST = 6, //Third party NEO550 brushless three phase motor(~11000 RPM at 12V).
+            VORTEX_JST = 7 //Third party VORTEX brushless three phase motor.
+        }
+
+        [DefaultValue(MotorArrangement.Disabled)]
+        public MotorArrangement MotorArrangementValue { get; set; }
         public TalonFXS()
         {
         }
@@ -992,7 +1135,7 @@ namespace ApplicationData
             /**
              * Quadrature encoder
              */
-                QuadEncoder = 0,
+            QuadEncoder = 0,
             //1
             /**
              * Analog potentiometer/encoder
@@ -1247,7 +1390,7 @@ namespace ApplicationData
 
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut)  {{{2} = percentOut;}}", this.name, mcd.name, activeTargetNameAsMemVar));
+                output.Add(string.Format("void UpdateTarget{0}{1}(double percentOut)  {{{2} = percentOut;}}", ToUpperCamelCase(), mcd.name, activeTargetNameAsMemVar));
             }/*TO DO if we use SRX for mor than Percent Out
             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {

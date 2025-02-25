@@ -524,7 +524,7 @@ namespace ApplicationData
 
         public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
                     
-        public List<constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> constDoubleParameters { get; set; }
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
 
         public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
 
@@ -848,7 +848,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Analog inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -1030,7 +1029,7 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Digital inputs do not have initialization needs", name)
+                string.Format("", name)
             };
 
             return initCode;
@@ -1056,7 +1055,31 @@ namespace ApplicationData
                 return new List<string> { string.Format("bool Get{1}State() const {{return {3}Debouncer->Calculate({2}{3}->Get());}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
 
             }
- 
+
+            // this disabled code is to handle different polatity of digital inputs
+            //List<Tuple<string, bool>> sameDigitalInput = new List<Tuple<string, bool>>(); 
+            //foreach( applicationData r in generatorContext.theRobotVariants.Robots)
+            //{
+            //    mechanismInstance mechInst = r.mechanismInstances.Find(m => m.mechanism.name == generatorContext.theMechanismInstance.mechanism.name);
+            //    if(mechInst != null)
+            //    {
+            //        digitalInput dis = mechInst.mechanism.digitalInput.Find(d => d.name == name);
+            //        if (dis != null)
+            //            sameDigitalInput.Add(new Tuple<string, bool>(r.name, dis.reversed.value));
+            //    }
+
+            //}
+            //if(sameDigitalInput.Count == 2)
+            //{
+            //    List<string> logic = new List<string>();
+            //    foreach(Tuple<string, bool> t in sameDigitalInput)
+            //    {
+
+            //    }
+
+            //    string l = 
+            //}
+            // Todo implement if we have more than 2 robots
             return new List<string> { string.Format("bool Get{1}State() const {{return {2}{3}->Get();}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
         }
     }
@@ -1155,7 +1178,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : CANcoder inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -1241,7 +1263,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Solenoids do not have initialization needs", name)
             };
 
             return initCode;
@@ -1299,7 +1320,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Servos do not have initialization needs", name)
             };
 
             return initCode;
@@ -1700,8 +1720,23 @@ namespace ApplicationData
             DUTY_CYCLE
         };
 
+        public enum GravityTypeValue
+        {
+            Elevator_Static = 0, 
+            Arm_Cosine = 1
+        };
+
+        public enum StaticFeedforwardSignValue
+        {
+            UseVelocitySign = 0,
+            UseClosedLoopSign = 1
+        };
+        
         public PIDFZ PID { get; set; }
 
+        [DefaultValue(0)]
+        [Range(0,3)]
+        public intParameter SlotIndex { get; set; }
         [DefaultValue(0)]
         public doubleParameter peakValue { get; set; }
         [DefaultValue(0)]
@@ -1724,6 +1759,14 @@ namespace ApplicationData
 
         [DefaultValue(CONTROL_RUN_LOCS.MOTOR_CONTROLLER)]
         public CONTROL_RUN_LOCS controlLoopLocation { get; set; }
+
+        [DefaultValue(GravityTypeValue.Elevator_Static)]
+        public GravityTypeValue GravityType { get; set; }
+
+        [DefaultValue(StaticFeedforwardSignValue.UseVelocitySign)]
+        public StaticFeedforwardSignValue StaticFeedforwardSign {  get; set; }
+
+
         public motorControlData()
         {
             name = GetType().Name;
@@ -1769,7 +1812,9 @@ namespace ApplicationData
                                                             {14}, // double cruiseVelocity
                                                             {15}, // double peakValue
                                                             {16}, // double nominalValue
-                                                            {17}  // bool enableFOC
+                                                            {17}, // bool enableFOC
+                                                            ControlData::GravityTypeValue::{18}, // Gravity type
+                                                            ControlData::StaticFeedforwardSignValue::{19}  // Static feedforward sign
                 );",
             AsMemberVariableName(),
                 getImplementationName(),
@@ -1788,7 +1833,9 @@ namespace ApplicationData
                 cruiseVelocity.value,
                 peakValue.value,
                 nominalValue.value,
-                enableFOC.value.ToString().ToLower()
+                enableFOC.value.ToString().ToLower(),
+                GravityType.ToString(),
+                StaticFeedforwardSign.ToString()
                 /*
                 utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
                 Id.value,
@@ -1797,6 +1844,7 @@ namespace ApplicationData
                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(maxAngle.__units__),
                 maxAngle.value*/
                 );
+            ;
 
             return new List<string> { creation };
         }
