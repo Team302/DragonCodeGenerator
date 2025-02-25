@@ -1902,6 +1902,10 @@ namespace ApplicationData
         [ConstantInMechInstance()]
         public List<stringParameterConstInMechInstance> transitionsTo { get; set; }
 
+        public List<DoubleParameterUserDefinedNonTunable> doubleParameters { get; set; }
+
+        public List<BoolParameterUserDefinedNonTunable> boolParameters { get; set; }
+
         public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
 
         public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }

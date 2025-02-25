@@ -237,22 +237,6 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    public partial class doubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
-    {
-        [DefaultValue(0u)]
-        public double value { get; set; }
-        public doubleParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
-        }
-    }
-
-    [Serializable()]
     public partial class doubleParameterUserDefinedTunable : doubleParameterUserDefinedBase
     {
         [DefaultValue(0u)]
@@ -667,23 +651,6 @@ namespace ApplicationData
             }
 
             return base.getDisplayName(propertyName, out refresh);
-        }
-    }
-
-    [Serializable()]
-    public partial class boolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
-    {
-        [DefaultValue(false)]
-        public bool value { get; set; } = false;
-
-        public boolParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
         }
     }
 

@@ -351,6 +351,8 @@ namespace CoreCodeGenerator
                                 List<string> stateElements = generateMethod(s, "generateDefinition");
                                 resultString = resultString.Replace("$$_USER_VALUE_CONSTANT_$$", ListToString(stateElements));
 
+                                resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(s, "generateIncludes").Distinct().ToList()));
+
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
                                 {
