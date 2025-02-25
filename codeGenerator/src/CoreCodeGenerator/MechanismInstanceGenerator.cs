@@ -348,6 +348,9 @@ namespace CoreCodeGenerator
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
 
+                                List<string> stateElements = generateMethod(s, "generateDefinition");
+                                resultString = resultString.Replace("$$_USER_VALUE_CONSTANT_$$", ListToString(stateElements));
+
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
                                 {

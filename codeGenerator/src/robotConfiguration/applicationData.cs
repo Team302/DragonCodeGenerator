@@ -520,13 +520,13 @@ namespace ApplicationData
 
         public List<motorControlData> stateMotorControlData { get; set; }
         public List<state> states { get; set; }
-        public List<doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> doubleParameters { get; set; }
+        public List<DoubleParameterUserDefinedNonTunable> doubleParameters { get; set; }
 
-        public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
+        public List<BoolParameterUserDefinedNonTunable> boolParameters { get; set; }
                     
         public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
 
-        public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public mechanism()
         {
@@ -1880,6 +1880,11 @@ namespace ApplicationData
             controlDataName = "theControlData";
         }
 
+        public override List<string> generateDefinition()
+        {
+            return new List<string>() {};
+        }
+
         public string GenerateControlDataVariable(string stateName)
         {
             return string.Format("ControlData* {0}{1}{2};", AsMemberVariableName(motorName), controlDataName, stateName);
@@ -1896,6 +1901,10 @@ namespace ApplicationData
     {
         [ConstantInMechInstance()]
         public List<stringParameterConstInMechInstance> transitionsTo { get; set; }
+
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
+
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public List<motorTarget> motorTargets { get; set; }
 
@@ -1918,6 +1927,54 @@ namespace ApplicationData
 
             return sb;
         }
+        public List<string> generate(string generateFunctionName)
+        {
+            List<string> sb = new List<string>();
+
+            PropertyInfo[] propertyInfos = this.GetType().GetProperties();
+            foreach (PropertyInfo pi in propertyInfos) // add its children
+            {
+                if (baseDataConfiguration.isACollection(pi.PropertyType))
+                {
+                    object theObject = pi.GetValue(this);
+                    if (theObject != null)
+                    {
+                        Type elementType = theObject.GetType().GetGenericArguments().Single();
+                        ICollection ic = theObject as ICollection;
+                        int index = 0;
+                        foreach (var v in ic)
+                        {
+                            if (v != null)
+                            {
+                                sb.AddRange(generate(v, generateFunctionName));
+                            }
+                            index++;
+                        }
+                    }
+                }
+                else
+                {
+                    object theObject = pi.GetValue(this);
+                    if (theObject != null)
+                        sb.AddRange(generate(theObject, generateFunctionName));
+                }
+            }
+
+            return sb;
+        }
+
+        private List<string> generate(object obj, string generateFunctionName)
+        {
+            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+            if (mi != null)
+            {
+                object[] parameters = new object[] { };
+                return (List<string>)mi.Invoke(obj, parameters);
+            }
+
+            return new List<string>();
+        }
+
         public override List<string> generateIndexedObjectCreation(int index)
         {
             if (generatorContext.theMechanismInstance != null)
@@ -2017,18 +2074,6 @@ namespace ApplicationData
             name = GetType().Name;
         }
     }
-    [Serializable()]
-    public class state_
-    {
-        public string name { get; set; }
 
-        public List<controlData> controlData { get; set; }
-
-        public state_()
-        {
-            name = GetType().Name;
-            controlData = new List<controlData>();
-        }
-    }
 
 }
