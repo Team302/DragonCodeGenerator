@@ -1044,7 +1044,7 @@ namespace ApplicationData
         override public List<string> generateLoggingMethods()
         {
             List<string> output = new List<string>();
-            output.Add(string.Format("void Log{0}(uint64_t timestamp, bool value);", name));
+            output.Add(string.Format("void Log{0}(uint64_t timestamp, bool value) {{return m_{0}LogEntry.Update(value, timestamp);}}", name));
             return output;
         }
 

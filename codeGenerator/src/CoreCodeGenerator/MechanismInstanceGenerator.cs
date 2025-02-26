@@ -189,9 +189,16 @@ namespace CoreCodeGenerator
 
                         #region Data Logging
                         List<string> loggingInitialization = new List<string>();
-                        List<string> loggingMethodDefinitions = new List<string>();
                         List<string> DataLogDefinition = new List<string>();
+
+
                         DataLogDefinition.Add("auto currTime = m_powerTimer.Get();");
+                        loggingInitialization.Add(string.Format("m_{0}TotalEnergyLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{0}/TotalEnergy\");", mi.name));
+                        loggingInitialization.Add(string.Format("m_{0}TotalEnergyLogEntry.Append(0.0);", mi.name));
+
+                        loggingInitialization.Add(string.Format("m_{0}TotalWattHoursLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{0}/TotalWattHours\");", mi.name));
+                        loggingInitialization.Add(string.Format("m_{0}TotalWattHoursLogEntry.Append(0.0);", mi.name));
+
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
                             loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}\");", mc.name, mi.name));
@@ -202,45 +209,20 @@ namespace CoreCodeGenerator
 
                             loggingInitialization.Add(string.Format("m_{0}PowerLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Power\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}PowerLogEntry.Append(0.0);", mc.name));                        //Move these all to a function outside of this later
-                                                                                                                                         //and make the method definitions inline methods in the .h
+                                                                                                                                        
                             loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Energy\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry.Append(0.0);", mc.name));
 
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, double value)
-                                                                         {{
-	                                                                     	m_{1}LogEntry.Update(timestamp, value);                          
-                                                                         }}
-                                                                           "
-                                                                                        , mi.name, mc.name));
 
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::LogTarget{1}(uint64_t timestamp, double value)
-                                                                         {{
-	                                                                        m_{1}TargetLogEntry.Update(timestamp, value);                        
-                                                                         }}
-                                                                            ", mi.name, mc.name));
-
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}Power(uint64_t timestamp, double value)
-                                                                         {{
-	                                                                     	m_{1}PowerLogEntry.Update(timestamp, value);                          
-                                                                         }}
-                                                                           "
-                                                                             , mi.name, mc.name));
-
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}Energy(uint64_t timestamp, double value)
-                                                                         {{
-	                                                                     	m_{1}EnergyLogEntry.Update(timestamp, value);                          
-                                                                         }}
-                                                                           "
-                                                                             , mi.name, mc.name));
 
                             DataLogDefinition.Add(string.Format("Log{0}(timestamp, m_{0}->GetPosition().GetValueAsDouble());", mc.name));
 
                             DataLogDefinition.Add(string.Format("auto {0}Power = DragonPower::CalcPowerEnergy(currTime, m_{0}->GetSupplyVoltage().GetValueAsDouble(), m_{0}->GetSupplyCurrent().GetValueAsDouble());", mc.name));
-                            DataLogDefinition.Add(string.Format("power = get<0>({0}Power);", mc.name));
-                            DataLogDefinition.Add(string.Format("energy = get<1>({0}Power);", mc.name));
-
-                            DataLogDefinition.Add(string.Format("Log{0}Power(timestamp, power);", mc.name));
-                            DataLogDefinition.Add(string.Format("Log{0}Energy(timestamp, energy);", mc.name));
+                            DataLogDefinition.Add(string.Format("m_power = get<0>({0}Power);", mc.name));
+                            DataLogDefinition.Add(string.Format("m_energy = get<1>({0}Power);", mc.name));
+                            DataLogDefinition.Add("m_totalEnergy += m_energy;");
+                            DataLogDefinition.Add(string.Format("Log{0}Power(timestamp, m_power);", mc.name));
+                            DataLogDefinition.Add(string.Format("Log{0}Energy(timestamp, m_energy);", mc.name));
 
                         }
                         foreach (digitalInput di in mi.mechanism.digitalInput)
@@ -248,28 +230,21 @@ namespace CoreCodeGenerator
                             loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::BooleanLogEntry(log, \"mechanisms/{1}/{0}\");", di.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));
                             loggingInitialization.Add("");
-
-                            loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{1}(uint64_t timestamp, bool value)               
-                                                                         {{
-	                                                                        m_{1}LogEntry.Update(timestamp, value);                          
-                                                                         }}
-                                                                            ", mi.name, di.name));                       //move all of these too 
-                            DataLogDefinition.Add(string.Format("Log{0}(timestamp, Get{0}());", di.name));              //and make the method definitions inline methods in the.h
+                                                                                                                                             //move all of these too 
+                            DataLogDefinition.Add(string.Format("Log{0}(timestamp, Get{0}());", di.name));              
                         }
                         loggingInitialization.Add(string.Format("m_{0}StateLogEntry = wpi::log::IntegerLogEntry(log, \"mechanisms/{0}/{1}\");", mi.name, "State"));
                         loggingInitialization.Add(string.Format("m_{0}StateLogEntry.Append(0);", mi.name));
 
-                        loggingMethodDefinitions.Add(string.Format(@"void {0}::Log{0}State(uint64_t timestamp, int value)               
-                                                                         {{
-	                                                                        m_{0}StateLogEntry.Update(timestamp, value);                        
-                                                                         }}
-                                                                            ", mi.name));
-
                         DataLogDefinition.Add(string.Format("Log{0}State(timestamp, GetCurrentState());", mi.name));
+                        DataLogDefinition.Add("m_totalWattHours += DragonPower::ConvertEnergyToWattHours(m_totalEnergy);");
+                        DataLogDefinition.Add(string.Format("Log{0}TotalEnergy(timestamp, m_totalEnergy);", mi.name));
+                        DataLogDefinition.Add(string.Format("Log{0}TotalWattHours(timestamp, m_totalWattHours);", mi.name));
+                        DataLogDefinition.Add("m_powerTimer.Reset();");
+                        DataLogDefinition.Add("m_powerTimer.Start();");
 
                         resultString = resultString.Replace("$$_DATA_LOGGING_INITIALIZATION_$$", ListToString(loggingInitialization.Distinct().ToList()));
-                        resultString = resultString.Replace("$$_LOGGING_METHOD_DEFINITIONS_$$", ListToString(loggingMethodDefinitions.Distinct().ToList()));
-                        resultString = resultString.Replace("$$_DATALOG_METHOD_$$", ListToString(DataLogDefinition.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_DATALOG_METHOD_$$", ListToString(DataLogDefinition.ToList()));
 
                         #endregion
 
@@ -381,14 +356,28 @@ namespace CoreCodeGenerator
 
                         if (targetVariables.Count > 0)
                             targetVariables.AddRange(genericTargetVariables.Distinct());
-
+                        
                         List<string> loggingVariables = generateMethod(mi.mechanism, "generateLoggingObjects");
+                        foreach (MotorController mc in mi.mechanism.MotorControllers)
+                        {
+                            loggingVariables.Add(string.Format("wpi::log::DoubleLogEntry m_{0}PowerLogEntry;", mc.name));
+                            loggingVariables.Add(string.Format("wpi::log::DoubleLogEntry m_{0}EnergyLogEntry;", mc.name));
+                        }
+                        loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalEnergyLogEntry;", mi.name));
+                        loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalWattHoursLogEntry;", mi.name));
                         loggingVariables.Add(string.Format("wpi::log::IntegerLogEntry m_{0}StateLogEntry;", mi.name));
                         loggingVariables.Add("frc::Timer m_powerTimer;");
+                        loggingVariables.Add("double m_power = 0.0;");
+                        loggingVariables.Add("double m_energy = 0.0;");
+                        loggingVariables.Add("double m_totalEnergy = 0.0;");
+                        loggingVariables.Add("double m_totalWattHours = 0.0;");
 
 
                         List<string> loggingMethods = generateMethod(mi.mechanism, "generateLoggingMethods");
-                        loggingMethods.Add(string.Format("void Log{0}State(uint64_t timestamp, int value);", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}TotalEnergy(uint64_t timestamp, int value) {{return m_{0}TotalEnergyLogEntry.Update(value, timestamp);}}", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}TotalWattHours(uint64_t timestamp, int value) {{return m_{0}TotalWattHoursLogEntry.Update(value, timestamp);}}", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}State(uint64_t timestamp, int value) {{return m_{0}StateLogEntry.Update(value, timestamp);}}", mi.name));
+                        
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
