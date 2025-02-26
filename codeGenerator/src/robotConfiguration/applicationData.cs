@@ -985,29 +985,34 @@ namespace ApplicationData
         public uintParameter digitalId { get; set; }
 
         [DefaultValue(false)]
-        [ConstantInMechInstance]
         public boolParameter reversed { get; set; }
 
         [DefaultValue(0D)]
         [PhysicalUnitsFamily(physicalUnit.Family.time)]
-        [ConstantInMechInstance]
         public doubleParameter debouncetime { get; set; }
 
         public digitalInput()
         {
         }
 
+        private string GetIsInvertedVariableName()
+        {
+            return AsMemberVariableName(name + "IsInverted");
+        }
+
         public override List<string> generateIndexedObjectCreation(int index)
         {
+            string inverted = $"bool {GetIsInvertedVariableName()} = {this.reversed.value.ToString().ToLower()};";
+
             string digitalInput = string.Format("{0} = new frc::DigitalInput({1});", AsMemberVariableName(), digitalId.value);
             string debouncer;
             if (debouncetime.value != 0)
             {
                 debouncer = string.Format("{0}Debouncer = new frc::Debouncer({2}({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value, generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__));
-                return new List<string> { digitalInput, debouncer };
+                return new List<string> { digitalInput, debouncer, inverted };
             }
  
-            return new List<string> {digitalInput};
+            return new List<string> {digitalInput, inverted};
         }
         override public List<string> generateDefinition()
         {
@@ -1016,6 +1021,9 @@ namespace ApplicationData
             {
                 create.Add(string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName()));
             }
+
+            create.Add($"bool {GetIsInvertedVariableName()};");
+
             return create;
         }
 
@@ -1037,35 +1045,10 @@ namespace ApplicationData
         {
             if(debouncetime.value != 0)
             {
-                return new List<string> { string.Format("bool Get{1}State() const {{return {3}Debouncer->Calculate({2}{3}->Get());}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
-
+                return new List<string> { string.Format("bool Get{1}State() const {{return {3}?!{2}Debouncer->Calculate({2}->Get()):{2}Debouncer->Calculate({2}->Get());}}", getImplementationName(), name, AsMemberVariableName(), GetIsInvertedVariableName()) };
             }
 
-            // this disabled code is to handle different polatity of digital inputs
-            //List<Tuple<string, bool>> sameDigitalInput = new List<Tuple<string, bool>>(); 
-            //foreach( applicationData r in generatorContext.theRobotVariants.Robots)
-            //{
-            //    mechanismInstance mechInst = r.mechanismInstances.Find(m => m.mechanism.name == generatorContext.theMechanismInstance.mechanism.name);
-            //    if(mechInst != null)
-            //    {
-            //        digitalInput dis = mechInst.mechanism.digitalInput.Find(d => d.name == name);
-            //        if (dis != null)
-            //            sameDigitalInput.Add(new Tuple<string, bool>(r.name, dis.reversed.value));
-            //    }
-
-            //}
-            //if(sameDigitalInput.Count == 2)
-            //{
-            //    List<string> logic = new List<string>();
-            //    foreach(Tuple<string, bool> t in sameDigitalInput)
-            //    {
-
-            //    }
-
-            //    string l = 
-            //}
-            // Todo implement if we have more than 2 robots
-            return new List<string> { string.Format("bool Get{1}State() const {{return {2}{3}->Get();}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
+            return new List<string> { string.Format("bool Get{1}State() const {{return {3}?!{2}->Get():{2}->Get();}}", getImplementationName(), name, AsMemberVariableName(), GetIsInvertedVariableName()) };
         }
     }
 
