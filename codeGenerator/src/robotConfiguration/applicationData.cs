@@ -1002,7 +1002,7 @@ namespace ApplicationData
 
         public override List<string> generateIndexedObjectCreation(int index)
         {
-            string inverted = $"bool {GetIsInvertedVariableName()} = {this.reversed.value.ToString().ToLower()};";
+            string inverted = $"{GetIsInvertedVariableName()} = {this.reversed.value.ToString().ToLower()};";
 
             string digitalInput = string.Format("{0} = new frc::DigitalInput({1});", AsMemberVariableName(), digitalId.value);
             string debouncer;
