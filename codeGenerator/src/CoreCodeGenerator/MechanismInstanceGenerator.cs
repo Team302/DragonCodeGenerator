@@ -201,22 +201,19 @@ namespace CoreCodeGenerator
 
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
-                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Position\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(0.0);", mc.name));
 
-                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Power\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}TargetLogEntry.Append(0.0);", mc.name));
 
                             loggingInitialization.Add(string.Format("m_{0}PowerLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Power\");", mc.name, mi.name));
-                            loggingInitialization.Add(string.Format("m_{0}PowerLogEntry.Append(0.0);", mc.name));                        //Move these all to a function outside of this later
+                            loggingInitialization.Add(string.Format("m_{0}PowerLogEntry.Append(0.0);", mc.name));                                                                      //Move these all to a function outside of this later
                                                                                                                                         
                             loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Energy\");", mc.name, mi.name));
                             loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry.Append(0.0);", mc.name));
 
-
-
                             DataLogDefinition.Add(string.Format("Log{0}(timestamp, m_{0}->GetPosition().GetValueAsDouble());", mc.name));
-
                             DataLogDefinition.Add(string.Format("auto {0}Power = DragonPower::CalcPowerEnergy(currTime, m_{0}->GetSupplyVoltage().GetValueAsDouble(), m_{0}->GetSupplyCurrent().GetValueAsDouble());", mc.name));
                             DataLogDefinition.Add(string.Format("m_power = get<0>({0}Power);", mc.name));
                             DataLogDefinition.Add(string.Format("m_energy = get<1>({0}Power);", mc.name));
@@ -358,11 +355,6 @@ namespace CoreCodeGenerator
                             targetVariables.AddRange(genericTargetVariables.Distinct());
                         
                         List<string> loggingVariables = generateMethod(mi.mechanism, "generateLoggingObjects");
-                        foreach (MotorController mc in mi.mechanism.MotorControllers)
-                        {
-                            loggingVariables.Add(string.Format("wpi::log::DoubleLogEntry m_{0}PowerLogEntry;", mc.name));
-                            loggingVariables.Add(string.Format("wpi::log::DoubleLogEntry m_{0}EnergyLogEntry;", mc.name));
-                        }
                         loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalEnergyLogEntry;", mi.name));
                         loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalWattHoursLogEntry;", mi.name));
                         loggingVariables.Add(string.Format("wpi::log::IntegerLogEntry m_{0}StateLogEntry;", mi.name));

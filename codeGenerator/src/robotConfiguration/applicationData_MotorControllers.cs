@@ -901,6 +901,8 @@ namespace ApplicationData
 
             output.Add(string.Format("wpi::log::DoubleLogEntry {0}LogEntry;", AsMemberVariableName()));
             output.Add(string.Format("wpi::log::DoubleLogEntry {0}TargetLogEntry;", AsMemberVariableName()));
+            output.Add(string.Format("wpi::log::DoubleLogEntry {0}PowerLogEntry;", AsMemberVariableName()));
+            output.Add(string.Format("wpi::log::DoubleLogEntry {0}EnergyLogEntry;", AsMemberVariableName()));
             return output;
         }
 
