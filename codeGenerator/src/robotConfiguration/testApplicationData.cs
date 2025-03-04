@@ -248,7 +248,7 @@ namespace ApplicationData
         [TunableParameter()]
         public doubleParameter anotherDouble { get; set; }
 
-        public List<doubleParameterUserDefinedNonTunable> aListOfDoubles { get; set; }
+        public List<DoubleParameterUserDefinedNonTunable> aListOfDoubles { get; set; }
 
         [TunableParameter()]
         public List<doubleParameterUserDefinedTunable> aListOfTunableDoubles { get; set; }
@@ -288,7 +288,7 @@ namespace ApplicationData
         [TunableParameter]
         public boolParameter aTunableBool { get; set; }
 
-        public List<boolParameterUserDefinedNonTunable> aListOfNonTunableBools { get; set; }
+        public List<BoolParameterUserDefinedNonTunable> aListOfNonTunableBools { get; set; }
         public List<boolParameterUserDefinedTunable> aListOfTunableBools { get; set; }
 
 
@@ -296,7 +296,7 @@ namespace ApplicationData
         {
             aDouble = new doubleParameter();
             anotherDouble = new doubleParameter();
-            aListOfDoubles = new List<doubleParameterUserDefinedNonTunable>();
+            aListOfDoubles = new List<DoubleParameterUserDefinedNonTunable>();
             aListOfTunableDoubles = new List<doubleParameterUserDefinedTunable>();
             myDoubleTunable = new doubleParameterUserDefinedTunable();
 
@@ -312,7 +312,7 @@ namespace ApplicationData
 
             aBool = new boolParameter();
             aTunableBool = new boolParameter();
-            aListOfNonTunableBools = new List<boolParameterUserDefinedNonTunable>();
+            aListOfNonTunableBools = new List<BoolParameterUserDefinedNonTunable>();
             aListOfTunableBools = new List<boolParameterUserDefinedTunable>();
 
             name = this.GetType().Name;

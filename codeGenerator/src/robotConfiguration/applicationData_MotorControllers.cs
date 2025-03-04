@@ -409,7 +409,7 @@ namespace ApplicationData
         public doubleParameter supplyCurrentLimit { get; set; }
 
         [DefaultValue(0)]
-        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [Range(typeof(double), "0", "70.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
         public doubleParameter supplyCurrentThreshold { get; set; }
 

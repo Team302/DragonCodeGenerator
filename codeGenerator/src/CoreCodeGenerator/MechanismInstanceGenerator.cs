@@ -248,8 +248,38 @@ namespace CoreCodeGenerator
                         List<string> targetRefreshCalls = new List<string>();
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
-                            if (mc.ControllerEnabled == MotorController.Enabled.Yes)
-                                targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                            //if (mc.ControllerEnabled == MotorController.Enabled.Yes)
+                            {
+                                List<string> robotsWithMotorControllerEnabled = new List<string>();
+                                List<string> robotsWithMotorControllerDisabled = new List<string>();
+
+                                #region check if the motor is disabled in another robot
+                                foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
+                                {
+                                    mechanismInstance mechanismInstance = r.mechanismInstances.Find(i => i.mechanism.GUID == mi.mechanism.GUID);
+                                    if (mechanismInstance != null)
+                                    {
+                                        MotorController motorCtrl = mechanismInstance.mechanism.MotorControllers.Find((m => (m.name == mc.name) && (m.motorControllerType == mc.motorControllerType) ));
+                                        if (motorCtrl != null)
+                                        {
+                                            if (motorCtrl.ControllerEnabled == MotorController.Enabled.Yes)
+                                                robotsWithMotorControllerEnabled.Add(ToUnderscoreDigit(ToUnderscoreCase(r.getFullRobotName())).ToUpper());
+                                            else
+                                                robotsWithMotorControllerDisabled.Add(ToUnderscoreDigit(ToUnderscoreCase(r.getFullRobotName())).ToUpper());
+                                        }
+                                    }
+                                }
+                                #endregion
+
+                                
+                                if (robotsWithMotorControllerDisabled.Count() > 0)
+                                {
+                                    foreach(string s in robotsWithMotorControllerEnabled)
+                                        targetRefreshCalls.Add($"if (m_activeRobotId == RobotIdentifier::{s}) {Environment.NewLine}{mc.GenerateCyclicGenericTargetRefresh()}");
+                                }
+                                else if (robotsWithMotorControllerEnabled.Count() > 0)
+                                    targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                            }
                         }
                         resultString = resultString.Replace("$$_CYCLIC_GENERIC_TARGET_REFRESH_$$", ListToString(targetRefreshCalls, ";"));
 
@@ -425,6 +455,11 @@ namespace CoreCodeGenerator
                                     }
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
+
+                                List<string> stateElements = generateMethod(s, "generateDefinition");
+                                resultString = resultString.Replace("$$_USER_VALUE_CONSTANT_$$", ListToString(stateElements));
+
+                                resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(s, "generateIncludes").Distinct().ToList()));
 
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
