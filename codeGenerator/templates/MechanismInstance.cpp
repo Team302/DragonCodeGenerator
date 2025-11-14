@@ -6,10 +6,13 @@ $$_GEN_NOTICE_$$
 
 // FRC Includes
 #include <networktables/NetworkTableInstance.h>
+#include <frc/Timer.h>
 
 #include "$$_MECHANISM_INSTANCE_NAME_$$.h"
-#include "utils/logging/Logger.h"
-#include "PeriodicLooper.h"
+#include "utils/logging/debug/Logger.h"
+#include "utils/PeriodicLooper.h"
+#include "state/RobotState.h"
+#include "utils/DragonPower.h"
 
 $$_INCLUDE_FILES_$$
 
@@ -23,26 +26,32 @@ void $$_MECHANISM_INSTANCE_NAME_$$::CreateAndRegisterStates(){
 
         $$_STATE_TRANSITION_REGISTRATION_$$}
 
-$$_MECHANISM_INSTANCE_NAME_$$::$$_MECHANISM_INSTANCE_NAME_$$(RobotConfigMgr::RobotIdentifier activeRobotId) : BaseMech(MechanismTypes::MECHANISM_TYPE::$$_MECHANISM_TYPE_NAME_$$, std::string("$$_MECHANISM_INSTANCE_NAME_$$")),
-                                                                                                              m_activeRobotId(activeRobotId),
-                                                                                                              m_stateMap()
+$$_MECHANISM_INSTANCE_NAME_$$::$$_MECHANISM_INSTANCE_NAME_$$(RobotIdentifier activeRobotId) : BaseMech(MechanismTypes::MECHANISM_TYPE::$$_MECHANISM_TYPE_NAME_$$, std::string("$$_MECHANISM_INSTANCE_NAME_$$")),
+                                                                                              m_activeRobotId(activeRobotId),
+                                                                                              m_stateMap()
 {
     PeriodicLooper::GetInstance()->RegisterAll(this);
+    // InitializeLogging();
 }
 
-std::map<std::string, $$_MECHANISM_INSTANCE_NAME_$$::STATE_NAMES> $$_MECHANISM_INSTANCE_NAME_$$::stringToSTATE_NAMESEnumMap{
-    $$_STATE_MAP_$$};
+/* void $$_MECHANISM_INSTANCE_NAME_$$::InitializeLogging()
+ {
+    wpi::log::DataLog &log = frc::DataLogManager::GetLog();
+
+     $$_DATA_LOGGING_INITIALIZATION_$$
+ }*/
+
+std::map<std::string, $$_MECHANISM_INSTANCE_NAME_$$::STATE_NAMES>
+    $$_MECHANISM_INSTANCE_NAME_$$::stringToSTATE_NAMESEnumMap{
+        $$_STATE_MAP_$$};
 
 $$_CREATE_FUNCTIONS_$$
 
 $$_INITIALZATION_FUNCTIONS_$$
 
-$$_PID_UPDATE_FUNCTION_$$
-
 void $$_MECHANISM_INSTANCE_NAME_$$::SetCurrentState(int state, bool run)
 {
     StateMgr::SetCurrentState(state, run);
-    PeriodicLooper::GetInstance()->RegisterAll(this);
 }
 
 void $$_MECHANISM_INSTANCE_NAME_$$::RunCommonTasks()
@@ -130,13 +139,16 @@ void $$_MECHANISM_INSTANCE_NAME_$$::Cyclic()
 {
     Update();
 
+    _NT_TUNING_FUNCTION_CALLS_START_
     CheckForTuningEnabled();
     if (m_tuning)
     {
         ReadTuningParamsFromNT();
     }
+    _NT_TUNING_FUNCTION_CALLS_END_
 }
 
+_NT_TUNING_FUNCTIONS_START_
 void $$_MECHANISM_INSTANCE_NAME_$$::CheckForTuningEnabled()
 {
     bool pastTuning = m_tuning;
@@ -155,9 +167,16 @@ void $$_MECHANISM_INSTANCE_NAME_$$::ReadTuningParamsFromNT()
 void $$_MECHANISM_INSTANCE_NAME_$$::PushTuningParamsToNT(){
     $$_PUSH_TUNABLE_PARAMETERS_$$}
 
-ControlData *$$_MECHANISM_INSTANCE_NAME_$$::GetControlData(string name)
+_NT_TUNING_FUNCTIONS_END_
+
+    ControlData *$$_MECHANISM_INSTANCE_NAME_$$::GetControlData(string name)
 {
     $$_CONTROLDATA_NAME_TO_VARIABLE_$$
 
     return nullptr;
 }
+
+/* void $$_MECHANISM_INSTANCE_NAME_$$::DataLog(uint64_t timestamp)
+{
+   $$_DATALOG_METHOD_$$
+ }*/
