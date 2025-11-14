@@ -161,11 +161,11 @@ namespace ApplicationData
         [Serializable]
         public class VoltageRamping : baseDataClass
         {
-            [DefaultValue(0)]
+            [DefaultValue(0.25)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
             public doubleParameter openLoopRampTime { get; set; }
 
-            [DefaultValue(0)]
+            [DefaultValue(0.25)]
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
             public doubleParameter closedLoopRampTime { get; set; }
 
@@ -1609,66 +1609,37 @@ namespace ApplicationData
         {
             List<applicationData> robotsToCreateFor = new List<applicationData>();
             List<MotorController> mcs = generatorContext.theMechanism.MotorControllers.FindAll(m => m.name == name);
+            applicationData robot = generatorContext.theRobot;
+
             if (mcs.Count > 1)
             {
-                foreach (applicationData robot in generatorContext.theRobotVariants.Robots)
+                mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
+                if (mi != null) // are we using the same mechanism instance in this robot
                 {
-                    mechanismInstance mi = robot.mechanismInstances.Find(m => m.name == generatorContext.theMechanismInstance.name);
-                    if (mi != null) // are we using the same mechanism instance in this robot
-                    {
-                        mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
-                        if (mcs.Count > 1)
-                            throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
-                        if (mcs.Count > 0)
-                            robotsToCreateFor.Add(robot);
-                    }
+                    mcs = mi.mechanism.MotorControllers.FindAll(m => (m.ControllerEnabled == MotorController.Enabled.Yes) && (m.name == name) && (m.GetType() == this.GetType()));
+                    if (mcs.Count > 1)
+                        throw new Exception(string.Format("In robot id {0}, found more than one enabled motor controller named {1}.", robot.robotID, name));
+                    if (mcs.Count > 0)
+                        robotsToCreateFor.Add(robot);
                 }
             }
+            else
+                robotsToCreateFor.Add(robot);
 
-            StringBuilder conditionalsSb = new StringBuilder();
-            if (robotsToCreateFor.Count > 0)
-            {
-                conditionalsSb.Append("if(");
-                foreach (applicationData r in robotsToCreateFor)
-                {
-                    conditionalsSb.Append("(RobotIdentifier::");
-                    conditionalsSb.Append(string.Format("{0}_{1}", ToUnderscoreCase(r.name).ToUpper(), r.robotID));
-                    conditionalsSb.Append(" == m_activeRobotId)");
-                    if (r != robotsToCreateFor.Last())
-                        conditionalsSb.Append(" || ");
-                }
-                conditionalsSb.Append(")");
-            }
+            if (robotsToCreateFor.Count == 0)
+                return new List<string>() { };
 
-            //string creation = string.Format("{0}{1} = new {1}({2},RobotElementNames::{3},rev::CANSparkMax::MotorType::{4},rev::SparkRelativeEncoder::Type::{5},rev::SparkLimitSwitch::Type::k{7},rev::SparkLimitSwitch::Type::k{8},{6});",
-            //    name,
-            //    getImplementationName(),
-            //    canID.value.ToString(),
-            //    utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-            //    motorBrushType,
-            //    sensorType,
-            //    theDistanceAngleCalcInfo.getName(name),
-            //    limitSwitches.ForwardLimitSwitch,
-            //    limitSwitches.ReverseLimitSwitch);
-
-            string creation = string.Format("{0} = new {1}({2},{3});",
+            string creation = string.Format("{0} = new {1}({2},rev::spark::SparkLowLevel::MotorType::{3});",
                   AsMemberVariableName(),
                   getImplementationName(),
                   canID.value.ToString(),
                   motorBrushType    
                   );
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine(conditionalsSb.ToString());
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("{");
-            sb.AppendLine(theDistanceAngleCalcInfo.getDefinition(name));
             sb.AppendLine(creation);
             sb.AppendLine();
-            sb.AppendLine(ListToString(generateObjectAddToMaps(), ";", true));
-            if (robotsToCreateFor.Count > 0)
-                sb.AppendLine("}");
+
 
             return new List<string>() { sb.ToString() };
         }
@@ -1679,80 +1650,78 @@ namespace ApplicationData
 
             if (ControllerEnabled == Enabled.Yes)
             {
-                initCode.Add(string.Format(@"{0}->SetRemoteSensor({1},
-                                                              ctre::phoenix::motorcontrol::{2}::{2}_{3} );",
-                                                                        name + getImplementationName(),
-                                                                        remoteSensor.CanID.value,
-                                                                        remoteSensor.Source.GetType().Name,
-                                                                        remoteSensor.Source
-                                                                        ));
+                string signatureWithoutReturn = string.Format("Initialize{0}{1}$$_ROBOT_FULL_NAME_$$()", this.GetType().Name, name, generatorContext.theMechanismInstance.name);
 
-                initCode.Add(string.Format("{0}->Invert( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (theConfigMotorSettings.inverted == InvertedValue.CounterClockwise_Positive).ToString().ToLower()));
+                //Need to Generate this
+                //rev::spark::SparkBaseConfig rollerConfig;
+                //rollerConfig.Inverted(true);
+                //rollerConfig.SetIdleMode(rev::spark::SparkBaseConfig::IdleMode::kBrake);
+                //rollerConfig.SmartCurrentLimit(50);
+                //rollerConfig.VoltageCompensation(10.0);
+                //rollerConfig.OpenLoopRampRate(0.25);
+                //rollerConfig.ClosedLoopRampRate(0.25);
+                //rollerConfig.limitSwitch.ForwardLimitSwitchEnabled(false);
+                //rollerConfig.limitSwitch.ReverseLimitSwitchEnabled(false);
+                //m_Roller->Configure(rollerConfig, rev::spark::SparkBase::ResetMode::kResetSafeParameters, rev::spark::SparkBase::PersistMode::kPersistParameters);
 
-                initCode.Add(string.Format("{0}->EnableBrakeMode( {1});",
-                                                                        name + getImplementationName(),
-                                                                        (theConfigMotorSettings.mode == NeutralModeValue.Brake).ToString().ToLower()));
+                initCode.Add(string.Format("CALL:{0}", signatureWithoutReturn));
+                initCode.Add(string.Format("DECLARATION:void {0}", signatureWithoutReturn));
+                initCode.Add("");
+                initCode.Add(string.Format("void {0}::{1}", generatorContext.theMechanismInstance.name, signatureWithoutReturn));
+                initCode.Add("{");
 
-                initCode.Add(string.Format("{0}->SetSmartCurrentLimiting({1});",
-                                                                        name + getImplementationName(),
-                                                                        currentLimits.PrimaryLimit.value));
-
-                initCode.Add(string.Format("{0}->SetSecondaryCurrentLimiting({1}, {2});",
-                                                                        name + getImplementationName(),
-                                                                        currentLimits.SecondaryLimit.value,
-                                                                        currentLimits.SecondaryLimitCycles.value));
-
-                //initCode.Add(string.Format(@"{0}->ConfigPeakCurrentLimit(units::current::ampere_t ( {1}({2})).to<int>(), 
-                //                                                         units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                //                                                        name,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentLimit.physicalUnits),
-                //                                                        currentLimits.PeakCurrentLimit.value,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentLimitTimeout.physicalUnits),
-                //                                                        currentLimits.PeakCurrentLimitTimeout.value));
-
-                //initCode.Add(string.Format(@"{0}->ConfigPeakCurrentDuration(units::time::millisecond_t ( {1}({2})).to<int>(), 
-                //                                                            units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                //                                                        name,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentDuration.physicalUnits),
-                //                                                        currentLimits.PeakCurrentDuration.value,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.PeakCurrentDurationTimeout.physicalUnits),
-                //                                                        currentLimits.PeakCurrentDurationTimeout.value));
-
-                //initCode.Add(string.Format(@"{0}->ConfigContinuousCurrentLimit(units::current::ampere_t ( {1}({2})).to<int>(), 
-                //                                                               units::time::millisecond_t({3}({4})).to<int>() );",      //todo check return code
-                //                                                        name,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.ContinuousCurrentLimit.physicalUnits),
-                //                                                        currentLimits.ContinuousCurrentLimit.value,
-                //                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(currentLimits.ContinuousCurrentLimitTimeout.physicalUnits),
-                //                                                        currentLimits.ContinuousCurrentLimitTimeout.value));
-
-                initCode.Add(string.Format("{0}->SetDiameter(units::length::inch_t ( {1}({2})).to<double>());",      //todo Should SetDiameter(double) be called within the constructor, since the diameter is inside the calcStruct that is passed to the constructor?
-                                                                        name + getImplementationName(),
-                                                                        generatorContext.theGeneratorConfig.getWPIphysicalUnitType(theDistanceAngleCalcInfo.diameter.physicalUnits),
-                                                                        theDistanceAngleCalcInfo.diameter.value));
-
-                initCode.Add(string.Format("{0}->EnableDisableLimitSwitches( {1});",
-                                                                        name + getImplementationName(),
-                                                                        limitSwitches.LimitSwitchesEnabled.value.ToString().ToLower()));
-
-
-                if (enableFollowID.value)
-                {
-                    initCode.Add(string.Format("{0}->SetAsFollowerMotor( {1} );",
+                initCode.Add(string.Format("rev::spark::SparkBaseConfig {0}Config;", name));
+                initCode.Add(string.Format("{0}Config.Inverted({1});",
+                                                                         name,
+                                                                         (theConfigMotorSettings.inverted == InvertedValue.CounterClockwise_Positive).ToString().ToLower()));
+                initCode.Add(string.Format("{0}Config.SetIdleMode(rev::spark::SparkBaseConfig::IdleMode::{1});",
                                                                             name,
-                                                                            followID.value));
-                }
-                else
-                    initCode.Add(string.Format("// {0} : Follower motor mode is not enabled", name));
+                                                                            theConfigMotorSettings.mode.ToString()));
+                initCode.Add(string.Format("{0}Config.SmartCurrentLimit({1});",
+                                                                            name,
+                                                                            currentLimits.PrimaryLimit.value));
+                initCode.Add(string.Format("{0}Config.VoltageCompensation({1});",
+                                                                            name,
+                                                                            10.0));
+                initCode.Add(string.Format("{0}Config.OpenLoopRampRate({1});",
+                                                                            name,
+                                                                            voltageRamping.openLoopRampTime.value));
+                initCode.Add(string.Format("{0}Config.ClosedLoopRampRate({1});",
+                                                                            name,
+                                                                            voltageRamping.openLoopRampTime.value));
+                initCode.Add(string.Format("{0}Config.limitSwitch.ForwardLimitSwitchEnabled({1});",
+                                                                            name,
+                                                                            limitSwitches.LimitSwitchesEnabled.value.ToString().ToLower()));
+                initCode.Add(string.Format("{0}Config.limitSwitch.ReverseLimitSwitchEnabled({1});",
+                                                                            name,
+                                                                            limitSwitches.LimitSwitchesEnabled.value.ToString().ToLower()));
+                initCode.Add(string.Format("{0}->Configure({0}Config, rev::spark::SparkBase::ResetMode::kResetSafeParameters, rev::spark::SparkBase::PersistMode::kPersistParameters);",
+                                                                            AsMemberVariableName()));
 
-                initCode.AddRange(base.generateInitialization());
-
+                initCode.Add("}");
                 initCode.Add(Environment.NewLine);
             }
-
             return initCode;
+        }
+        override public string GenerateTargetUpdateFunctionCall(motorControlData mcd, double value)
+        {
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            {
+                //	m_mechanism->GetRoller()->Set(0.0);
+
+                 return string.Format("Get{0}()->Set({1});", name, mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name)));
+            }
+
+            /*TO DO if we need more than Percent Out implement below
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
+             {
+             }
+             else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+             {
+             }
+            ect.*/
+
+            return "";
         }
     }
 
