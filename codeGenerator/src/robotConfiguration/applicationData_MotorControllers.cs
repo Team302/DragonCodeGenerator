@@ -1674,7 +1674,7 @@ namespace ApplicationData
                 initCode.Add(string.Format("{0}Config.Inverted({1});",
                                                                          name,
                                                                          (theConfigMotorSettings.inverted == InvertedValue.CounterClockwise_Positive).ToString().ToLower()));
-                initCode.Add(string.Format("{0}Config.SetIdleMode(rev::spark::SparkBaseConfig::IdleMode::{1});",
+                initCode.Add(string.Format("{0}Config.SetIdleMode(rev::spark::SparkBaseConfig::IdleMode::k{1});",
                                                                             name,
                                                                             theConfigMotorSettings.mode.ToString()));
                 initCode.Add(string.Format("{0}Config.SmartCurrentLimit({1});",
@@ -1695,8 +1695,8 @@ namespace ApplicationData
                 initCode.Add(string.Format("{0}Config.limitSwitch.ReverseLimitSwitchEnabled({1});",
                                                                             name,
                                                                             limitSwitches.LimitSwitchesEnabled.value.ToString().ToLower()));
-                initCode.Add(string.Format("{0}->Configure({0}Config, rev::spark::SparkBase::ResetMode::kResetSafeParameters, rev::spark::SparkBase::PersistMode::kPersistParameters);",
-                                                                            AsMemberVariableName()));
+                initCode.Add(string.Format("{0}->Configure({1}Config, rev::spark::SparkBase::ResetMode::kResetSafeParameters, rev::spark::SparkBase::PersistMode::kPersistParameters);",
+                                                                            AsMemberVariableName(),name));
 
                 initCode.Add("}");
                 initCode.Add(Environment.NewLine);
@@ -1707,9 +1707,9 @@ namespace ApplicationData
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                //	m_mechanism->GetRoller()->Set(0.0);
+                //	m_mechanism->GetRoller()->Set(m_RollerTarget);
 
-                 return string.Format("Get{0}()->Set({1});", name, mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name))); //Is there a better way to do this? Get the Getter function directlu?
+                return string.Format("Get{0}()->Set(m_{1}Target);", name,name); //Is there a better way to do this? Get the Getter/target function directly?
             }
 
             /*TO DO if we need more than Percent Out implement below
