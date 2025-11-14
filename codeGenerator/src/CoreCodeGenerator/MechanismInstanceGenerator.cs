@@ -111,12 +111,14 @@ namespace CoreCodeGenerator
                             resultString = Remove(resultString, "_STATE_MANAGER_START_", "_STATE_MANAGER_END_");
                         #endregion
 
+                        string createFunctionDeclarations;
+                        resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
+
                         resultString = CleanMotorMechanismCode(mi, resultString);
                         resultString = CleanSolenoidMechanismCode(mi, resultString);
                         resultString = CleanServoMechanismCode(mi, resultString);
+                        resultString = CleanNtTuningMechanismCode(mi, resultString);
 
-                        string createFunctionDeclarations;
-                        resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", GenerateCreateFunctions(mi, out createFunctionDeclarations));
                         string publicInitializationFunctionDeclarations;
                         string privateInitializationFunctionDeclarations;
                         resultString = resultString.Replace("$$_INITIALZATION_FUNCTIONS_$$", GenerateInitializationFunctions(mi, out publicInitializationFunctionDeclarations, out privateInitializationFunctionDeclarations));
@@ -138,28 +140,6 @@ namespace CoreCodeGenerator
                             enumMapList.Add(String.Format("{{\"STATE_{0}\", {1}::STATE_NAMES::STATE_{0}}}", ToUnderscoreCase(s.name).ToUpper(), mi.name));
                         }
                         resultString = resultString.Replace("$$_STATE_MAP_$$", ListToString(enumMapList, ",").Trim());
-
-                        #region Create the functions which update the PIDs in the motor controllers 
-                        List<string> pidUpdateFunctions = new List<string>();
-                        List<string> pidUpdateFunctionDeclarations = new List<string>();
-                        foreach (state s in generatorContext.theMechanismInstance.mechanism.states)
-                        {
-                            foreach (motorTarget mt in s.motorTargets)
-                            {
-                                motorControlData mcd = mi.mechanism.stateMotorControlData.Find(c => c.name == mt.controlDataName);
-                                List<MotorController> mcs = mi.mechanism.MotorControllers.FindAll(m => m.name == mt.motorName);
-                                if (mcd != null)
-                                {
-                                    foreach (MotorController mc in mcs)
-                                    {
-                                        pidUpdateFunctions.Add(mc.GeneratePIDSetFunction(mcd, mi));
-                                        pidUpdateFunctionDeclarations.Add(mc.GeneratePIDSetFunctionDeclaration(mcd, mi));
-                                    }
-                                }
-                            }
-                        }
-                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTION_$$", ListToString(pidUpdateFunctions.Distinct().ToList()));
-                        #endregion
 
                         #region Tunable Parameters
                         string allParameterReading = "";
@@ -204,13 +184,102 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_READ_TUNABLE_PARAMETERS_$$", allParameterReading);
                         resultString = resultString.Replace("$$_PUSH_TUNABLE_PARAMETERS_$$", allParameterWriting);
 
+
+                        #endregion
+
+                        #region Data Logging
+                        List<string> loggingInitialization = new List<string>();
+                        List<string> DataLogDefinition = new List<string>();
+
+
+                        DataLogDefinition.Add("auto currTime = m_powerTimer.Get();");
+                        loggingInitialization.Add(string.Format("m_{0}TotalEnergyLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{0}/TotalEnergy\");", mi.name));
+                        loggingInitialization.Add(string.Format("m_{0}TotalEnergyLogEntry.Append(0.0);", mi.name));
+
+                        loggingInitialization.Add(string.Format("m_{0}TotalWattHoursLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{0}/TotalWattHours\");", mi.name));
+                        loggingInitialization.Add(string.Format("m_{0}TotalWattHoursLogEntry.Append(0.0);", mi.name));
+
+                        foreach (MotorController mc in mi.mechanism.MotorControllers)
+                        {
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Position\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(0.0);", mc.name));
+
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Target\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}TargetLogEntry.Append(0.0);", mc.name));
+
+                            loggingInitialization.Add(string.Format("m_{0}PowerLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Power\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}PowerLogEntry.Append(0.0);", mc.name));                                                                      //Move these all to a function outside of this later
+                                                                                                                                        
+                            loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry = wpi::log::DoubleLogEntry(log, \"mechanisms/{1}/{0}Energy\");", mc.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}EnergyLogEntry.Append(0.0);", mc.name));
+
+                            DataLogDefinition.Add(string.Format("Log{0}(timestamp, m_{0}->GetPosition().GetValueAsDouble());", mc.name));
+                            DataLogDefinition.Add(string.Format("auto {0}Power = DragonPower::CalcPowerEnergy(currTime, m_{0}->GetSupplyVoltage().GetValueAsDouble(), m_{0}->GetSupplyCurrent().GetValueAsDouble());", mc.name));
+                            DataLogDefinition.Add(string.Format("m_power = get<0>({0}Power);", mc.name));
+                            DataLogDefinition.Add(string.Format("m_energy = get<1>({0}Power);", mc.name));
+                            DataLogDefinition.Add("m_totalEnergy += m_energy;");
+                            DataLogDefinition.Add(string.Format("Log{0}Power(timestamp, m_power);", mc.name));
+                            DataLogDefinition.Add(string.Format("Log{0}Energy(timestamp, m_energy);", mc.name));
+
+                        }
+                        foreach (digitalInput di in mi.mechanism.digitalInput)
+                        {
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry = wpi::log::BooleanLogEntry(log, \"mechanisms/{1}/{0}\");", di.name, mi.name));
+                            loggingInitialization.Add(string.Format("m_{0}LogEntry.Append(false);", di.name));
+                            loggingInitialization.Add("");
+                                                                                                                                             //move all of these too 
+                            DataLogDefinition.Add(string.Format("Log{0}(timestamp, Get{0}());", di.name));              
+                        }
+                        loggingInitialization.Add(string.Format("m_{0}StateLogEntry = wpi::log::IntegerLogEntry(log, \"mechanisms/{0}/{1}\");", mi.name, "State"));
+                        loggingInitialization.Add(string.Format("m_{0}StateLogEntry.Append(0);", mi.name));
+
+                        DataLogDefinition.Add(string.Format("Log{0}State(timestamp, GetCurrentState());", mi.name));
+                        DataLogDefinition.Add("m_totalWattHours += DragonPower::ConvertEnergyToWattHours(m_totalEnergy);");
+                        DataLogDefinition.Add(string.Format("Log{0}TotalEnergy(timestamp, m_totalEnergy);", mi.name));
+                        DataLogDefinition.Add(string.Format("Log{0}TotalWattHours(timestamp, m_totalWattHours);", mi.name));
+                        DataLogDefinition.Add("m_powerTimer.Reset();");
+                        DataLogDefinition.Add("m_powerTimer.Start();");
+
+                        resultString = resultString.Replace("$$_DATA_LOGGING_INITIALIZATION_$$", ListToString(loggingInitialization.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_DATALOG_METHOD_$$", ListToString(DataLogDefinition.ToList()));
+
                         #endregion
 
                         List<string> targetRefreshCalls = new List<string>();
                         foreach (MotorController mc in mi.mechanism.MotorControllers)
                         {
-                            if (mc.ControllerEnabled == MotorController.Enabled.Yes)
-                                targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                            //if (mc.ControllerEnabled == MotorController.Enabled.Yes)
+                            {
+                                List<string> robotsWithMotorControllerEnabled = new List<string>();
+                                List<string> robotsWithMotorControllerDisabled = new List<string>();
+
+                                #region check if the motor is disabled in another robot
+                                foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
+                                {
+                                    mechanismInstance mechanismInstance = r.mechanismInstances.Find(i => i.mechanism.GUID == mi.mechanism.GUID);
+                                    if (mechanismInstance != null)
+                                    {
+                                        MotorController motorCtrl = mechanismInstance.mechanism.MotorControllers.Find((m => (m.name == mc.name) && (m.motorControllerType == mc.motorControllerType) ));
+                                        if (motorCtrl != null)
+                                        {
+                                            if (motorCtrl.ControllerEnabled == MotorController.Enabled.Yes)
+                                                robotsWithMotorControllerEnabled.Add(ToUnderscoreDigit(ToUnderscoreCase(r.getFullRobotName())).ToUpper());
+                                            else
+                                                robotsWithMotorControllerDisabled.Add(ToUnderscoreDigit(ToUnderscoreCase(r.getFullRobotName())).ToUpper());
+                                        }
+                                    }
+                                }
+                                #endregion
+
+                                
+                                if (robotsWithMotorControllerDisabled.Count() > 0)
+                                {
+                                    foreach(string s in robotsWithMotorControllerEnabled)
+                                        targetRefreshCalls.Add($"if (m_activeRobotId == RobotIdentifier::{s}) {Environment.NewLine}{mc.GenerateCyclicGenericTargetRefresh()}");
+                                }
+                                else if (robotsWithMotorControllerEnabled.Count() > 0)
+                                    targetRefreshCalls.Add(mc.GenerateCyclicGenericTargetRefresh());
+                            }
                         }
                         resultString = resultString.Replace("$$_CYCLIC_GENERIC_TARGET_REFRESH_$$", ListToString(targetRefreshCalls, ";"));
 
@@ -271,6 +340,7 @@ namespace CoreCodeGenerator
                         resultString = CleanMotorMechanismCode(mi, resultString);
                         resultString = CleanSolenoidMechanismCode(mi, resultString);
                         resultString = CleanServoMechanismCode(mi, resultString);
+                        resultString = CleanNtTuningMechanismCode(mi, resultString);
 
                         resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(mi.mechanism, "generateIncludes").Distinct().ToList()));
 
@@ -281,8 +351,6 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
-
-                        resultString = resultString.Replace("$$_PID_UPDATE_FUNCTIONS_$$", ListToString(pidUpdateFunctionDeclarations.Distinct().ToList(), ";"));
 
                         //=============== generate the mechanism member variables
                         List<string> mechElements = generateMethod(mi.mechanism, "generateDefinition").FindAll(me => !me.StartsWith("state* "));
@@ -315,9 +383,28 @@ namespace CoreCodeGenerator
 
                         if (targetVariables.Count > 0)
                             targetVariables.AddRange(genericTargetVariables.Distinct());
+                        
+                        List<string> loggingVariables = generateMethod(mi.mechanism, "generateLoggingObjects");
+                        loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalEnergyLogEntry;", mi.name));
+                        loggingVariables.Add(string.Format("wpi::log::DoubleEntry m_{0}TotalWattHoursLogEntry;", mi.name));
+                        loggingVariables.Add(string.Format("wpi::log::IntegerLogEntry m_{0}StateLogEntry;", mi.name));
+                        loggingVariables.Add("frc::Timer m_powerTimer;");
+                        loggingVariables.Add("double m_power = 0.0;");
+                        loggingVariables.Add("double m_energy = 0.0;");
+                        loggingVariables.Add("double m_totalEnergy = 0.0;");
+                        loggingVariables.Add("double m_totalWattHours = 0.0;");
+
+
+                        List<string> loggingMethods = generateMethod(mi.mechanism, "generateLoggingMethods");
+                        loggingMethods.Add(string.Format("void Log{0}TotalEnergy(uint64_t timestamp, int value) {{return m_{0}TotalEnergyLogEntry.Update(value, timestamp);}}", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}TotalWattHours(uint64_t timestamp, int value) {{return m_{0}TotalWattHoursLogEntry.Update(value, timestamp);}}", mi.name));
+                        loggingMethods.Add(string.Format("void Log{0}State(uint64_t timestamp, int value) {{return m_{0}StateLogEntry.Update(value, timestamp);}}", mi.name));
+                        
 
                         resultString = resultString.Replace("$$_TARGET_UPDATE_FUNCTIONS_$$", ListToString(targetUpdateFunctions.Distinct().ToList()));
                         resultString = resultString.Replace("$$_TARGET_MEMBER_VARIABLES_$$", ListToString(targetVariables.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_LOGGING_OBJECTS_$$", ListToString(loggingVariables.Distinct().ToList()));
+                        resultString = resultString.Replace("$$_LOGGING_FUNCTIONS_$$", ListToString(loggingMethods.Distinct().ToList()));
 
                         //closed loop parameters
                         string allParameters = "";
@@ -368,6 +455,11 @@ namespace CoreCodeGenerator
                                     }
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
+
+                                List<string> stateElements = generateMethod(s, "generateDefinition");
+                                resultString = resultString.Replace("$$_USER_VALUE_CONSTANT_$$", ListToString(stateElements));
+
+                                resultString = resultString.Replace("$$_INCLUDE_FILES_$$", ListToString(generateMethod(s, "generateIncludes").Distinct().ToList()));
 
                                 setTargetFunctionDeclerations = new StringBuilder();
                                 foreach (applicationData r in theRobotConfiguration.theRobotVariants.Robots)
@@ -471,7 +563,7 @@ namespace CoreCodeGenerator
 
                                         stateTargets.AppendLine(ListToString(motorTargets, ";"));
 
-                                        setTargetFunctionCalls.AppendLine(string.Format("else if(m_RobotId == RobotIdentifier::{0})", ToUnderscoreDigit(ToUnderscoreCase(robot.getFullRobotName())).ToUpper()));
+                                        setTargetFunctionCalls.AppendLine(string.Format("else if(m_RobotId == RobotIdentifier::{0})", ToUnderscoreDigit(ToUnderscoreCase(r.getFullRobotName())).ToUpper()));
                                         setTargetFunctionCalls.AppendLine(String.Format(" Init{0}();", r.getFullRobotName()));
 
                                         setTargetFunctionDeclerations.AppendLine(String.Format("void Init{0}();", r.getFullRobotName()));
@@ -555,6 +647,28 @@ namespace CoreCodeGenerator
 
             return resultString;
         }
+        private string CleanNtTuningMechanismCode(mechanismInstance mi, string resultString)
+        {
+            string startCallsStr = "_NT_TUNING_FUNCTION_CALLS_START_";
+            string endCallsStr = "_NT_TUNING_FUNCTION_CALLS_END_";
+            string startStr = "_NT_TUNING_FUNCTIONS_START_";
+            string endStr = "_NT_TUNING_FUNCTIONS_END_";
+
+            if (true)
+            {
+                resultString = Remove(resultString, startCallsStr, endCallsStr);
+                resultString = Remove(resultString, startStr, endStr);
+            }
+            else
+            {
+                resultString = resultString.Replace(startCallsStr, "");
+                resultString = resultString.Replace(endCallsStr, "");
+                resultString = resultString.Replace(startStr, "");
+                resultString = resultString.Replace(endStr, "");
+            }
+
+            return resultString;
+        }
 
         private string CleanServoMechanismCode(mechanismInstance mi, string resultString)
         {
@@ -613,9 +727,11 @@ namespace CoreCodeGenerator
                                     
                                     ReadConstants(""$$_MECHANISM_INSTANCE_NAME_$$.xml"", $$_ROBOT_ID_$$);
 
+                                    _NT_TUNING_FUNCTION_CALLS_START_
                                     m_table = nt::NetworkTableInstance::GetDefault().GetTable(m_ntName);
                                     m_tuningIsEnabledStr = ""Enable Tuning for "" + m_ntName; // since this string is used every loop, we do not want to create the string every time
                                     m_table.get()->PutBoolean(m_tuningIsEnabledStr, m_tuning);
+                                    _NT_TUNING_FUNCTION_CALLS_END_
                                 }";
 
             string createFunctionDeclarationTemplate = "void Create$$_ROBOT_FULL_NAME_$$()";
@@ -665,6 +781,8 @@ namespace CoreCodeGenerator
                 if (mis != null)
                 {
                     string temp = createFunctionTemplate;
+
+                    generatorContext.theMechanismInstance = mis;
 
                     List<string> initFunctions = generateMethod(mis, "generateInitialization");
                     List<string> initFunctionCalls = initFunctions.FindAll(s => s.StartsWith("CALL:"));

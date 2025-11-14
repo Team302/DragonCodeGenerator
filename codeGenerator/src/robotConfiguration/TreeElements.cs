@@ -128,6 +128,9 @@ namespace ApplicationData
 
         virtual public string AsMemberVariableName(string n)
         {
+            if (n.StartsWith("m_"))
+                return n;
+
             string formattedName = "NameCannotBeAnEmptyString";
             if (!string.IsNullOrEmpty(n))
                 formattedName = char.ToUpper(n[0]) + n.Substring(1);
@@ -203,6 +206,10 @@ namespace ApplicationData
     [Serializable()]
     public partial class doubleParameterUserDefinedBase : parameter
     {
+        [DefaultValue(false)]
+        [ConstantInMechInstance]
+        public bool AddGetter { get; set; }
+
         protected string getDisplayName(string propertyName, double value, out helperFunctions.RefreshLevel refresh)
         {
             refresh = helperFunctions.RefreshLevel.none;
@@ -219,24 +226,13 @@ namespace ApplicationData
                 refresh = helperFunctions.RefreshLevel.fullParent;
                 return string.Format("{0} ({1})", propertyName, unitsFamily);
             }
+            else if (propertyName == "AddGetter")
+            {
+                refresh = helperFunctions.RefreshLevel.none;
+                return string.Format("{0} ({1})", propertyName, AddGetter);
+            }
 
             return base.getDisplayName(propertyName, out refresh);
-        }
-    }
-
-    [Serializable()]
-    public partial class doubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
-    {
-        [DefaultValue(0u)]
-        public double value { get; set; }
-        public doubleParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
         }
     }
 
@@ -258,28 +254,12 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    public partial class constDoubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
+    public partial class DoubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
     {
         [DefaultValue(0u)]
-        public double value { get; set; }
-        public constDoubleParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-        public override List<string> generateDefinition()
-        {
-            return new List<string>() { string.Format(@"const {0} {1};", "double", name) };
-        }
+        [ConstantInMechInstance]
+        new public double value { get; set; }
 
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
-        }
-    }
-
-    [Serializable()]
-    public partial class constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst : constDoubleParameterUserDefinedNonTunable
-    {
         [ConstantInMechInstance]
         new public physicalUnit.Family unitsFamily
         {
@@ -292,7 +272,7 @@ namespace ApplicationData
             get => base.name;
             set => base.name = value;
         }
-        public constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst()
+        public DoubleParameterUserDefinedNonTunable()
         {
             type = value.GetType().Name;
         }
@@ -308,13 +288,18 @@ namespace ApplicationData
 
         override public List<string> generateDefinitionGetter()
         {
-            string units = "double";
-            if (unitsFamily != physicalUnit.Family.none)
-                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+            if (AddGetter)
+            {
+                string units = "double";
+                if (unitsFamily != physicalUnit.Family.none)
+                    units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
 
-            return new List<string>() {
+                return new List<string>() {
                 string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
             };
+            }
+
+            return new List<string>() { };
         }
 
         override public List<string> generateIncludes()
@@ -323,6 +308,74 @@ namespace ApplicationData
                 return new List<string>() { };
             else
                 return new List<string>() { $"#include \"units/{unitsFamily}.h\"" };
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
+    [Serializable()]
+    public partial class constDoubleParameterUserDefinedNonTunable : doubleParameterUserDefinedBase
+    {
+        [DefaultValue(0u)]
+        [ConstantInMechInstance]
+        new public double value { get; set; }
+
+        [ConstantInMechInstance]
+        new public physicalUnit.Family unitsFamily
+        {
+            get => base.unitsFamily;
+            set => base.unitsFamily = value;
+        }
+        [ConstantInMechInstance]
+        new public string name
+        {
+            get => base.name;
+            set => base.name = value;
+        }
+        public constDoubleParameterUserDefinedNonTunable()
+        {
+            type = value.GetType().Name;
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "double";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"const {0} {1} = {0}({2});", units, AsMemberVariableName(name), value.ToString()) };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            if (AddGetter)
+            {
+                string units = "double";
+                if (unitsFamily != physicalUnit.Family.none)
+                    units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+                return new List<string>() {
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+            };
+            }
+
+            return new List<string>() { };
+        }
+
+        override public List<string> generateIncludes()
+        {
+            if (unitsFamily == physicalUnit.Family.none)
+                return new List<string>() { };
+            else
+                return new List<string>() { $"#include \"units/{unitsFamily}.h\"" };
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
         }
     }
 
@@ -602,23 +655,6 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    public partial class boolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
-    {
-        [DefaultValue(false)]
-        public bool value { get; set; } = false;
-
-        public boolParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
-        }
-    }
-
-    [Serializable()]
     public partial class boolParameterUserDefinedTunable : boolParameterUserDefinedBase
     {
         [DefaultValue(0u)]
@@ -637,28 +673,12 @@ namespace ApplicationData
     }
 
     [Serializable()]
-    public partial class constBoolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
+    public partial class BoolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
     {
+        [ConstantInMechInstance]
         [DefaultValue(false)]
         public bool value { get; set; } = false;
 
-        public constBoolParameterUserDefinedNonTunable()
-        {
-            type = value.GetType().Name;
-        }
-        public override List<string> generateDefinition()
-        {
-            return new List<string>() { string.Format(@"const {0} {1};", "double", name) };
-        }
-        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
-        {
-            return getDisplayName(propertyName, value, out refresh);
-        }
-    }
-
-    [Serializable()]
-    public partial class constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst : constBoolParameterUserDefinedNonTunable
-    {
         [ConstantInMechInstance]
         new public string name
         {
@@ -666,7 +686,50 @@ namespace ApplicationData
             set => base.name = value;
         }
 
-        public constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst()
+        public BoolParameterUserDefinedNonTunable()
+        {
+        }
+
+        public override List<string> generateDefinition()
+        {
+            string units = "bool";
+            if (unitsFamily != physicalUnit.Family.none)
+                units = generatorContext.theGeneratorConfig.getWPIphysicalUnitType(physicalUnits);
+
+            return new List<string>() { string.Format(@"{0} {1} = {2};", units, AsMemberVariableName(name), value.ToString().ToLower()) };
+        }
+
+        override public List<string> generateDefinitionGetter()
+        {
+            string units = "bool";
+
+            return new List<string>() {
+                string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
+            };
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
+        }
+    }
+
+
+    [Serializable()]
+    public partial class constBoolParameterUserDefinedNonTunable : boolParameterUserDefinedBase
+    {
+        [ConstantInMechInstance]
+        [DefaultValue(false)]
+        public bool value { get; set; } = false;
+
+        [ConstantInMechInstance]
+        new public string name
+        {
+            get => base.name;
+            set => base.name = value;
+        }
+
+        public constBoolParameterUserDefinedNonTunable()
         {
         }
 
@@ -686,6 +749,11 @@ namespace ApplicationData
             return new List<string>() {
                 string.Format(@"{0} Get{1}() {{return {2};}}", units, ToUpperCamelCase(), AsMemberVariableName()),
             };
+        }
+
+        override public string getDisplayName(string propertyName, out helperFunctions.RefreshLevel refresh)
+        {
+            return getDisplayName(propertyName, value, out refresh);
         }
     }
 

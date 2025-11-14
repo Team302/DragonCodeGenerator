@@ -520,13 +520,13 @@ namespace ApplicationData
 
         public List<motorControlData> stateMotorControlData { get; set; }
         public List<state> states { get; set; }
-        public List<doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> doubleParameters { get; set; }
+        public List<DoubleParameterUserDefinedNonTunable> doubleParameters { get; set; }
 
-        public List<boolParameterUserDefinedTunableOnlyValueChangeableInMechInst> boolParameters { get; set; }
+        public List<BoolParameterUserDefinedNonTunable> boolParameters { get; set; }
                     
-        public List<constDoubleParameterUserDefinedTunableOnlyValueChangeableInMechInst> constDoubleParameters { get; set; }
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
 
-        public List<constBoolParameterUserDefinedNonTunableOnlyValueChangeableInMechInst> constBoolParameters { get; set; }
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public mechanism()
         {
@@ -848,7 +848,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Analog inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -978,6 +977,7 @@ namespace ApplicationData
     [ImplementationName("frc::DigitalInput")]
     [SystemIncludeFile("frc/DigitalInput.h")]
     [SystemIncludeFile("frc/filter/Debouncer.h")]
+    [UserIncludeFile("utils/logging/DragonDataLogger.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -986,29 +986,34 @@ namespace ApplicationData
         public uintParameter digitalId { get; set; }
 
         [DefaultValue(false)]
-        [ConstantInMechInstance]
         public boolParameter reversed { get; set; }
 
         [DefaultValue(0D)]
         [PhysicalUnitsFamily(physicalUnit.Family.time)]
-        [ConstantInMechInstance]
         public doubleParameter debouncetime { get; set; }
 
         public digitalInput()
         {
         }
 
+        private string GetIsInvertedVariableName()
+        {
+            return AsMemberVariableName(name + "IsInverted");
+        }
+
         public override List<string> generateIndexedObjectCreation(int index)
         {
+            string inverted = $"{GetIsInvertedVariableName()} = {this.reversed.value.ToString().ToLower()};";
+
             string digitalInput = string.Format("{0} = new frc::DigitalInput({1});", AsMemberVariableName(), digitalId.value);
             string debouncer;
             if (debouncetime.value != 0)
             {
                 debouncer = string.Format("{0}Debouncer = new frc::Debouncer({2}({1}), frc::Debouncer::DebounceType::kBoth);", AsMemberVariableName(), debouncetime.value, generatorContext.theGeneratorConfig.getWPIphysicalUnitType(debouncetime.__units__));
-                return new List<string> { digitalInput, debouncer };
+                return new List<string> { digitalInput, debouncer, inverted };
             }
  
-            return new List<string> {digitalInput};
+            return new List<string> {digitalInput, inverted};
         }
         override public List<string> generateDefinition()
         {
@@ -1017,6 +1022,9 @@ namespace ApplicationData
             {
                 create.Add(string.Format("frc::Debouncer *{0}Debouncer;", AsMemberVariableName()));
             }
+
+            create.Add($"bool {GetIsInvertedVariableName()};");
+
             return create;
         }
 
@@ -1029,20 +1037,33 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Digital inputs do not have initialization needs", name)
+                string.Format("", name)
             };
 
             return initCode;
         }
+        override public List<string> generateLoggingObjects()
+        {
+            List<string> output = new List<string>();
+            output.Add(string.Format("wpi::log::BooleanLogEntry {0}LogEntry;", AsMemberVariableName()));
+            return output;
+        }
+
+        override public List<string> generateLoggingMethods()
+        {
+            List<string> output = new List<string>();
+            output.Add(string.Format("void Log{0}(uint64_t timestamp, bool value) {{return m_{0}LogEntry.Update(value, timestamp);}}", name));
+            return output;
+        }
+
         override public List<string> generateDefinitionGetter()
         {
             if(debouncetime.value != 0)
             {
-                return new List<string> { string.Format("bool Get{1}State() const {{return {3}Debouncer->Calculate({2}{3}->Get());}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
-
+                return new List<string> { string.Format("bool Get{1}State() const {{return {3}?!{2}Debouncer->Calculate({2}->Get()):{2}Debouncer->Calculate({2}->Get());}}", getImplementationName(), name, AsMemberVariableName(), GetIsInvertedVariableName()) };
             }
- 
-            return new List<string> { string.Format("bool Get{1}State() const {{return {2}{3}->Get();}}", getImplementationName(), name, reversed.value ? "!" : "", AsMemberVariableName()) };
+
+            return new List<string> { string.Format("bool Get{1}State() const {{return {3}?!{2}->Get():{2}->Get();}}", getImplementationName(), name, AsMemberVariableName(), GetIsInvertedVariableName()) };
         }
     }
 
@@ -1140,7 +1161,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : CANcoder inputs do not have initialization needs", name)
             };
 
             return initCode;
@@ -1226,7 +1246,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Solenoids do not have initialization needs", name)
             };
 
             return initCode;
@@ -1284,7 +1303,6 @@ namespace ApplicationData
         {
             List<string> initCode = new List<string>()
             {
-                string.Format("// {0} : Servos do not have initialization needs", name)
             };
 
             return initCode;
@@ -1493,6 +1511,22 @@ namespace ApplicationData
         {
             return new List<string> { "baseRobotElementClass.generateInitialization needs to be overridden" };
         }
+        virtual public List<string> generateLoggingObjects()
+        {
+            return new List<string>();
+        }
+
+        virtual public List<string> generateLoggingMethods()
+        {
+             return new List<string>();
+        }
+
+        virtual public List<string> generateLoggingInitialization()
+        { 
+            return new List<string>(); 
+        }
+
+
         virtual public List<string> generateObjectCreation()
         {
             return new List<string> { "baseRobotElementClass.generateObjectCreation needs to be overridden" };
@@ -1669,8 +1703,23 @@ namespace ApplicationData
             DUTY_CYCLE
         };
 
+        public enum GravityTypeValue
+        {
+            Elevator_Static = 0, 
+            Arm_Cosine = 1
+        };
+
+        public enum StaticFeedforwardSignValue
+        {
+            UseVelocitySign = 0,
+            UseClosedLoopSign = 1
+        };
+        
         public PIDFZ PID { get; set; }
 
+        [DefaultValue(0)]
+        [Range(0,3)]
+        public intParameter SlotIndex { get; set; }
         [DefaultValue(0)]
         public doubleParameter peakValue { get; set; }
         [DefaultValue(0)]
@@ -1693,6 +1742,14 @@ namespace ApplicationData
 
         [DefaultValue(CONTROL_RUN_LOCS.MOTOR_CONTROLLER)]
         public CONTROL_RUN_LOCS controlLoopLocation { get; set; }
+
+        [DefaultValue(GravityTypeValue.Elevator_Static)]
+        public GravityTypeValue GravityType { get; set; }
+
+        [DefaultValue(StaticFeedforwardSignValue.UseVelocitySign)]
+        public StaticFeedforwardSignValue StaticFeedforwardSign {  get; set; }
+
+
         public motorControlData()
         {
             name = GetType().Name;
@@ -1738,7 +1795,9 @@ namespace ApplicationData
                                                             {14}, // double cruiseVelocity
                                                             {15}, // double peakValue
                                                             {16}, // double nominalValue
-                                                            {17}  // bool enableFOC
+                                                            {17}, // bool enableFOC
+                                                            ControlData::GravityTypeValue::{18}, // Gravity type
+                                                            ControlData::StaticFeedforwardSignValue::{19}  // Static feedforward sign
                 );",
             AsMemberVariableName(),
                 getImplementationName(),
@@ -1757,7 +1816,9 @@ namespace ApplicationData
                 cruiseVelocity.value,
                 peakValue.value,
                 nominalValue.value,
-                enableFOC.value.ToString().ToLower()
+                enableFOC.value.ToString().ToLower(),
+                GravityType.ToString(),
+                StaticFeedforwardSign.ToString()
                 /*
                 utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
                 Id.value,
@@ -1766,6 +1827,7 @@ namespace ApplicationData
                 generatorContext.theGeneratorConfig.getWPIphysicalUnitType(maxAngle.__units__),
                 maxAngle.value*/
                 );
+            ;
 
             return new List<string> { creation };
         }
@@ -1832,6 +1894,11 @@ namespace ApplicationData
             controlDataName = "theControlData";
         }
 
+        public override List<string> generateDefinition()
+        {
+            return new List<string>() {};
+        }
+
         public string GenerateControlDataVariable(string stateName)
         {
             return string.Format("ControlData* {0}{1}{2};", AsMemberVariableName(motorName), controlDataName, stateName);
@@ -1848,6 +1915,14 @@ namespace ApplicationData
     {
         [ConstantInMechInstance()]
         public List<stringParameterConstInMechInstance> transitionsTo { get; set; }
+
+        public List<DoubleParameterUserDefinedNonTunable> doubleParameters { get; set; }
+
+        public List<BoolParameterUserDefinedNonTunable> boolParameters { get; set; }
+
+        public List<constDoubleParameterUserDefinedNonTunable> constDoubleParameters { get; set; }
+
+        public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public List<motorTarget> motorTargets { get; set; }
 
@@ -1870,6 +1945,54 @@ namespace ApplicationData
 
             return sb;
         }
+        public List<string> generate(string generateFunctionName)
+        {
+            List<string> sb = new List<string>();
+
+            PropertyInfo[] propertyInfos = this.GetType().GetProperties();
+            foreach (PropertyInfo pi in propertyInfos) // add its children
+            {
+                if (baseDataConfiguration.isACollection(pi.PropertyType))
+                {
+                    object theObject = pi.GetValue(this);
+                    if (theObject != null)
+                    {
+                        Type elementType = theObject.GetType().GetGenericArguments().Single();
+                        ICollection ic = theObject as ICollection;
+                        int index = 0;
+                        foreach (var v in ic)
+                        {
+                            if (v != null)
+                            {
+                                sb.AddRange(generate(v, generateFunctionName));
+                            }
+                            index++;
+                        }
+                    }
+                }
+                else
+                {
+                    object theObject = pi.GetValue(this);
+                    if (theObject != null)
+                        sb.AddRange(generate(theObject, generateFunctionName));
+                }
+            }
+
+            return sb;
+        }
+
+        private List<string> generate(object obj, string generateFunctionName)
+        {
+            MethodInfo mi = obj.GetType().GetMethod(generateFunctionName);
+            if (mi != null)
+            {
+                object[] parameters = new object[] { };
+                return (List<string>)mi.Invoke(obj, parameters);
+            }
+
+            return new List<string>();
+        }
+
         public override List<string> generateIndexedObjectCreation(int index)
         {
             if (generatorContext.theMechanismInstance != null)
@@ -1969,18 +2092,6 @@ namespace ApplicationData
             name = GetType().Name;
         }
     }
-    [Serializable()]
-    public class state_
-    {
-        public string name { get; set; }
 
-        public List<controlData> controlData { get; set; }
-
-        public state_()
-        {
-            name = GetType().Name;
-            controlData = new List<controlData>();
-        }
-    }
 
 }
