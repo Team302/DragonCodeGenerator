@@ -1436,8 +1436,8 @@ namespace ApplicationData
 
 
     [Serializable]
-    [ImplementationName("DragonSparkMax")]
-    [UserIncludeFile("hw/DragonSparkMax.h")]
+    [ImplementationName("rev::spark::SparkMax")]
+    [UserIncludeFile("rev/SparkMax.h")]
     public class SparkMax : SparkController
     {
         override public List<string> generateIndexedObjectCreation(int currentIndex)
@@ -1475,16 +1475,23 @@ namespace ApplicationData
                 conditionalsSb.Append(")");
             }
 
-            string creation = string.Format("{0}{1} = new {1}({2},RobotElementNames::{3},rev::CANSparkMax::MotorType::{4},rev::SparkRelativeEncoder::Type::{5},rev::SparkLimitSwitch::Type::k{7},rev::SparkLimitSwitch::Type::k{8},{6});",
-                name,
-                getImplementationName(),
-                canID.value.ToString(),
-                utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
-                motorBrushType,
-                sensorType,
-                theDistanceAngleCalcInfo.getName(name),
-                limitSwitches.ForwardLimitSwitch,
-                limitSwitches.ReverseLimitSwitch);
+            //string creation = string.Format("{0}{1} = new {1}({2},RobotElementNames::{3},rev::CANSparkMax::MotorType::{4},rev::SparkRelativeEncoder::Type::{5},rev::SparkLimitSwitch::Type::k{7},rev::SparkLimitSwitch::Type::k{8},{6});",
+            //    name,
+            //    getImplementationName(),
+            //    canID.value.ToString(),
+            //    utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
+            //    motorBrushType,
+            //    sensorType,
+            //    theDistanceAngleCalcInfo.getName(name),
+            //    limitSwitches.ForwardLimitSwitch,
+            //    limitSwitches.ReverseLimitSwitch);
+
+            string creation = string.Format("{0} = new {1}({2},{3});",
+                  AsMemberVariableName(),
+                  getImplementationName(),
+                  canID.value.ToString(),
+                  motorBrushType    
+                  );
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
