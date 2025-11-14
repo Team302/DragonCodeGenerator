@@ -1709,7 +1709,7 @@ namespace ApplicationData
             {
                 //	m_mechanism->GetRoller()->Set(0.0);
 
-                 return string.Format("Get{0}()->Set({1});", name, mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name)));
+                 return string.Format("Get{0}()->Set({1});", name, mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name))); //Is there a better way to do this? Get the Getter function directlu?
             }
 
             /*TO DO if we need more than Percent Out implement below
