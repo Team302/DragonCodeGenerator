@@ -16,14 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      #- name: Setup .NET
-      #  uses: actions/setup-dotnet@v1
-      #  with:
-      #    dotnet-version: '6.0.x'
-
-      #- name: Restore NuGet packages
-      #  run: dotnet restore codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln
-
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -36,28 +28,11 @@ jobs:
       - name: Build solution
         run: msbuild codeGenerator/src/FRCrobotCodeGen302.sln /p:Configuration=Release /p:Platform="Any CPU"
 
-      - name: Build ApplicationData
-        run: dotnet build codeGenerator/src/robotConfiguration/ApplicationData.csproj --configuration Release
-
-      - name: Build CodeBeautifier
-        run: dotnet build codeGenerator/src/CodeBeautifier/CodeBeautifier.csproj --configuration Release
-
-      - name: Build Configuration
-        run: dotnet build codeGenerator/src/Configuration/Configuration.csproj --configuration Release
-
-      - name: Build CoreCodeGenerator
-        run: dotnet build codeGenerator/src/CoreCodeGenerator/CoreCodeGenerator.csproj --configuration Release
-      
-      - name: Build DataConfiguration
-        run: dotnet build codeGenerator/src/DataConfiguration/DataConfiguration.csproj --configuration Release
-
-      - name: Build NetworkTables
-        run: dotnet build codeGenerator/src/NetworkTables/NetworkTablesUtils.csproj --configuration Release
-
-      - name: Build NetworkTablesUtils
-        run: dotnet build codeGenerator/src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
-
-      - name: Build FRCrobotCodeGen302
-        run: dotnet build codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.csproj --configuration Release
-
-
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FRCrobotCodeGen302-${{ github.sha }}
+          path: |
+            codeGenerator/src/FRCrobotCodeGen302/bin/Release/
+            !**/*.pdb
+          retention-days: 30
