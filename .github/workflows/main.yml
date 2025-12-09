@@ -39,6 +39,9 @@ jobs:
       - name: Build DataConfiguration
         run: dotnet build codeGenerator/src/DataConfiguration/DataConfiguration.csproj --configuration Release
 
+      - name: Build NetworkTables
+        run: dotnet build codeGenerator/src/NetworkTables/NetworkTablesUtils.csproj --configuration Release
+
       - name: Build NetworkTablesUtils
         run: dotnet build codeGenerator/src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
 
