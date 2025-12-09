@@ -24,6 +24,9 @@ jobs:
       #- name: Restore NuGet packages
       #  run: dotnet restore codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln
 
+      - name: Build ApplicationData
+        run: dotnet build codeGenerator/src/robotConfiguration/ApplicationData.csproj --configuration Release
+
       - name: Build CodeBeautifier
         run: dotnet build codeGenerator/src/CodeBeautifier/CodeBeautifier.csproj --configuration Release
 
@@ -35,9 +38,9 @@ jobs:
       
       - name: Build DataConfiguration
         run: dotnet build codeGenerator/src/DataConfiguration/DataConfiguration.csproj --configuration Release
-      
-      - name: Build NetworkTablesUtils
-        run: dotnet build codeGenerator/src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
 
       - name: Build FRCrobotCodeGen302
-        run: dotnet build codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln --configuration Release
+        run: dotnet build codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.csproj --configuration Release
+
+      - name: Build NetworkTablesUtils
+        run: dotnet build codeGenerator/src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
