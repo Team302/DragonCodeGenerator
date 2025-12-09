@@ -21,23 +21,23 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Restore NuGet packages
-        run: dotnet restore src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln
+      #- name: Restore NuGet packages
+      #  run: dotnet restore codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln
 
       - name: Build CodeBeautifier
-        run: dotnet build src/CodeBeautifier/CodeBeautifier.csproj --configuration Release
+        run: dotnet build codeGenerator/src/CodeBeautifier/CodeBeautifier.csproj --configuration Release
 
       - name: Build Configuration
-        run: dotnet build src/Configuration/Configuration.csproj --configuration Release
+        run: dotnet build codeGenerator/src/Configuration/Configuration.csproj --configuration Release
 
       - name: Build CoreCodeGenerator
-        run: dotnet build src/CoreCodeGenerator/CoreCodeGenerator.csproj --configuration Release
+        run: dotnet build codeGenerator/src/CoreCodeGenerator/CoreCodeGenerator.csproj --configuration Release
       
       - name: Build DataConfiguration
-        run: dotnet build src/DataConfiguration/DataConfiguration.csproj --configuration Release
-
+        run: dotnet build codeGenerator/src/DataConfiguration/DataConfiguration.csproj --configuration Release
+      
       - name: Build NetworkTablesUtils
-        run: dotnet build src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
+        run: dotnet build codeGenerator/src/NetworkTablesUtils/NetworkTablesUtils.csproj --configuration Release
 
       - name: Build FRCrobotCodeGen302
-        run: dotnet build src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln --configuration Release
+        run: dotnet build codeGenerator/src/FRCrobotCodeGen302/FRCrobotCodeGen302.sln --configuration Release
