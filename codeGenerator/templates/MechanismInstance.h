@@ -3,8 +3,8 @@ $$_GEN_NOTICE_$$
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 // FRC Includes
 #include <networktables/NetworkTable.h>
@@ -12,13 +12,17 @@ $$_GEN_NOTICE_$$
 $$_INCLUDE_FILES_$$
 
 #include "mechanisms/base/BaseMech.h"
-#include "mechanisms/base/StateMgr.h"
+#include "state/StateMgr.h"
+#include "state/IRobotStateChangeSubscriber.h"
 #include "mechanisms/controllers/ControlData.h"
+#include "state/RobotStateChanges.h"
 
 #include "configs/RobotElementNames.h"
-#include "configs/RobotConfigMgr.h"
+#include "configs/MechanismConfigMgr.h"
 
-class $$_MECHANISM_INSTANCE_NAME_$$ : public BaseMech _STATE_MANAGER_START_, public StateMgr _STATE_MANAGER_END_
+#include "RobotIdentifier.h"
+
+class $$_MECHANISM_INSTANCE_NAME_$$ : public BaseMech _STATE_MANAGER_START_, public StateMgr _STATE_MANAGER_END_, public IRobotStateChangeSubscriber
 {
 public:
     enum STATE_NAMES
@@ -26,7 +30,7 @@ public:
         $$_STATE_NAMES_$$
     };
 
-    $$_MECHANISM_INSTANCE_NAME_$$(RobotConfigMgr::RobotIdentifier activeRobotId);
+    $$_MECHANISM_INSTANCE_NAME_$$(RobotIdentifier activeRobotId);
     $$_MECHANISM_INSTANCE_NAME_$$() = delete;
     ~$$_MECHANISM_INSTANCE_NAME_$$() = default;
 
@@ -44,8 +48,6 @@ public:
     virtual void Update();
 
     $$_TARGET_UPDATE_FUNCTIONS_$$
-
-    $$_PID_UPDATE_FUNCTIONS_$$
 
     _MECHANISM_HAS_SOLENOIDS_START_
     /// @brief Set the target value for the actuator
@@ -65,21 +67,26 @@ public:
     void CreateAndRegisterStates();
     void Cyclic();
     void RunCommonTasks() override;
+    // void DataLog() override;
 
-    RobotConfigMgr::RobotIdentifier getActiveRobotId() { return m_activeRobotId; }
+    RobotIdentifier getActiveRobotId() { return m_activeRobotId; }
 
     $$_MECHANISM_ELEMENTS_GETTERS_$$
 
     static std::map<std::string, STATE_NAMES> stringToSTATE_NAMESEnumMap;
 
+    void SetCurrentState(int state, bool run) override;
+
 protected:
-    RobotConfigMgr::RobotIdentifier m_activeRobotId;
+    RobotIdentifier m_activeRobotId;
     std::string m_ntName;
+
+    _NT_TUNING_FUNCTIONS_START_
     std::string m_tuningIsEnabledStr;
     bool m_tuning = false;
     std::shared_ptr<nt::NetworkTable> m_table;
+    _NT_TUNING_FUNCTIONS_END_
 
-    void SetCurrentState(int state, bool run) override;
     ControlData *GetControlData(std::string name) override;
 
 private:
@@ -89,11 +96,15 @@ private:
 
     $$_TUNABLE_PARAMETERS_$$
 
+    _NT_TUNING_FUNCTIONS_START_
     void CheckForTuningEnabled();
     void ReadTuningParamsFromNT();
     void PushTuningParamsToNT();
+    _NT_TUNING_FUNCTIONS_END_
 
     $$_PRIVATE_INITIALZATION_FUNCTIONS_$$
 
     $$_TARGET_MEMBER_VARIABLES_$$
+
+    // void InitializeLogging();
 };
