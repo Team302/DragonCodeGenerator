@@ -558,6 +558,15 @@ bool BaseMechTesting::IsAtMaxPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE 
 void BaseMechTesting::Cyclic()
 {
 	Update();
+
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "TalonSRXTest Position", m_TalonSRXTest->GetSelectedSensorPosition());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "SparkMaxBrushedTest Position", m_SparkMaxBrushedTest->GetEncoder().GetPosition());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "TalonFXTest Position", m_TalonFXTest->GetPosition().GetValueAsDouble());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "TalonFXTest Velocity", m_TalonFXTest->GetVelocity().GetValueAsDouble());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "TalonFXSTest Position", m_TalonFXSTest->GetPosition().GetValueAsDouble());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "TalonFXSTest Velocity", m_TalonFXSTest->GetVelocity().GetValueAsDouble());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "CANcoderTest Position", m_CANcoderTest->GetPosition().GetValueAsDouble());
+	Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, "BaseMechTesting", "DigitalInputTest Value", GetdigitalInputTestState());
 }
 
 ControlData *BaseMechTesting::GetControlData(string name)

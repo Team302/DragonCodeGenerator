@@ -207,13 +207,4 @@ const TeleopControlAxis extra4RJoystickY = {TeleopControlMappingEnums::EXTRA4, T
 const TeleopControlAxis extra4LTrigger = {TeleopControlMappingEnums::EXTRA4, TeleopControlMappingEnums::LEFT_TRIGGER, TeleopControlMappingEnums::APPLY_STANDARD_DEADBAND, TeleopControlMappingEnums::CUBED, TeleopControlMappingEnums::SYNCED, 1.0};
 const TeleopControlAxis extra4RTrigger = {TeleopControlMappingEnums::EXTRA4, TeleopControlMappingEnums::RIGHT_TRIGGER, TeleopControlMappingEnums::APPLY_STANDARD_DEADBAND, TeleopControlMappingEnums::CUBED, TeleopControlMappingEnums::SYNCED, 1.0};
 
-robin_hood::unordered_map<TeleopControlFunctions::FUNCTION, const TeleopControlAxis> teleopControlMapAxisMap{
-    {TeleopControlFunctions::HOLONOMIC_DRIVE_FORWARD, driverLJoystickY},
-    {TeleopControlFunctions::HOLONOMIC_DRIVE_STRAFE, driverLJoystickX},
-    {TeleopControlFunctions::HOLONOMIC_DRIVE_ROTATE, driverRJoystickX},
-    {TeleopControlFunctions::MANUAL_CLIMB_UP, driverRTrigger},
-    {TeleopControlFunctions::MANUAL_CLIMB_DOWN, driverLTrigger},
-    {TeleopControlFunctions::ELAVATOR, copilotLJoystickY},
-    {TeleopControlFunctions::ARM, copilotRJoystickY},
-    {TeleopControlFunctions::MANUAL_IN, copilotLTrigger},
-    {TeleopControlFunctions::MANUAL_OUT, copilotRTrigger}};
+robin_hood::unordered_map<TeleopControlFunctions::FUNCTION, const TeleopControlAxis> teleopControlMapAxisMap{};
