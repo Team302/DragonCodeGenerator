@@ -46,9 +46,9 @@ void MechanismConfigMgr::InitRobot(RobotIdentifier id)
 		Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, string("Initializing robot "), string("THING_3"), string(""));
 		m_config = new MechanismConfigThing_3();
 		break;
-
-	default:
-		Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, string("Skipping robot initialization because of unknown robot id "), string(""), static_cast<int>(id));
+	case RobotIdentifier::SIM_BOT_0:
+		Logger::GetLogger()->LogData(LOGGER_LEVEL::PRINT, string("Initializing robot "), string("SIM_BOT_0"), string(""));
+		m_config = new MechanismConfigThing_3();
 		break;
 	}
 
