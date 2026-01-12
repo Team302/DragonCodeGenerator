@@ -815,7 +815,7 @@ namespace ApplicationData
             if (robotsToCreateFor.Count == 0)
                 return new List<string>() { };
 
-            string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
+            string creation = string.Format("{0} = new {1}({2}, ctre::phoenix6::CANBus(\"{3}\"));",
                 AsMemberVariableName(),
                 getImplementationName(),
                 canID.value.ToString(),
@@ -848,24 +848,40 @@ namespace ApplicationData
                     {
                         if (!mcd.enableFOC.value)
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
                             }
-                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
                             {
-                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
                             }
                         }
                         else
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
                             }
-                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
                             {
-                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
                             }
                         }
                     }
@@ -940,6 +956,18 @@ namespace ApplicationData
                 {
                     output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
                 }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angular_velocity::degrees_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::velocity::feet_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angular_velocity::turns_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                }   
             }
             return output;
 
@@ -1018,20 +1046,14 @@ namespace ApplicationData
 
         override public string GeneratePIDSetFunctionDeclaration(motorControlData mcd, mechanismInstance mi)
         {
-            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT || mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
                 return ""; // not closed loop
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return ""; // not closed loop
-            }
-            else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
+            else
             {
                 return string.Format("void SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name);
             }
-
-            return "";
         }
 
         override public string GeneratePIDSetFunctionCall(motorControlData mcd, mechanismInstance mi)
@@ -1056,7 +1078,7 @@ namespace ApplicationData
     [ImplementationName("ctre::phoenix6::hardware::TalonFX")]
     [UserIncludeFile("ctre/phoenix6/TalonFX.hpp")]
     [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
-    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configuration.hpp")]
     [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
@@ -1080,7 +1102,7 @@ namespace ApplicationData
     [ImplementationName("ctre::phoenix6::hardware::TalonFXS")]
     [UserIncludeFile("ctre/phoenix6/TalonFXS.hpp")]
     [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
-    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configuration.hpp")]
     [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]

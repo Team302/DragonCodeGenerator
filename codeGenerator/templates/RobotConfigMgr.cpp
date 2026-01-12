@@ -3,7 +3,7 @@ $$_GEN_NOTICE_$$
 
 #include <string>
 
-#include "utils/logging/Logger.h"
+#include "utils/logging/debug/Logger.h"
 #include "configs/RobotConfigMgr.h"
 #include "configs/RobotConfig.h"
 $$_ROBOT_CONFIG_INCLUDES_$$

@@ -157,35 +157,12 @@ const TeleopControlButton extra4DPad315 = {TeleopControlMappingEnums::EXTRA4, Te
 robin_hood::unordered_map<TeleopControlFunctions::FUNCTION, const TeleopControlButton> teleopControlMapButtonMap{
     // {TeleopControlFunctions::ALIGN_FLOOR_GAME_PIECE, driverYButton},
 
-    {TeleopControlFunctions::RESET_POSITION, driverDPad90},
-    {TeleopControlFunctions::SWITCH_DESIRED_CORAL_SIDE, driverDPad180},
+    {TeleopControlFunctions::OFF, driverStartButton},
+    {TeleopControlFunctions::PERCENT_OUT, driverAButton},
+    {TeleopControlFunctions::POSITION_DEG, driverBButton},
+    {TeleopControlFunctions::VELOCITY_RPM, driverXButton},
+    {TeleopControlFunctions::POSITION_IN, driverYButton},
 
-    {TeleopControlFunctions::ROBOT_ORIENTED_DRIVE, driverDPad0},
-    {TeleopControlFunctions::AUTO_ALIGN_LEFT, driverXButton},
-    {TeleopControlFunctions::AUTO_ALIGN_RIGHT, driverBButton},
-    {TeleopControlFunctions::AUTO_CLIMB, driverYButton},
-    {TeleopControlFunctions::AUTO_ALIGN_BARGE, driverYButton},
-    {TeleopControlFunctions::AUTO_ALIGN_HUMAN_PLAYER_STATION, driverAButton},
-    {TeleopControlFunctions::AUTO_ALIGN_ALGAE, driverRTriggerPressed},
-    {TeleopControlFunctions::FACE_REEF, driverRBumper},
-    {TeleopControlFunctions::CLIMB_MODE, driverStartButton},
-    {TeleopControlFunctions::SYSID_MODIFER, driverSelectButton},
-
-    {TeleopControlFunctions::READY, copilotStartButton},
-    {TeleopControlFunctions::L1_SCORING_POSITION, copilotRTriggerPressed},
-    {TeleopControlFunctions::L2_SCORING_POSITION, copilotAButton},
-    {TeleopControlFunctions::L3_SCORING_POSITION, copilotXButton},
-    {TeleopControlFunctions::L4_SCORING_POSITION, copilotYButton},
-    {TeleopControlFunctions::ALGAE_INTAKE, copilotLTriggerPressed},
-    {TeleopControlFunctions::SCORE, copilotRBumper},
-    {TeleopControlFunctions::SCORING_MODE, copilotSelectButton},
-    {TeleopControlFunctions::HUMAN_PLAYER_STATION, copilotBButton},
-    {TeleopControlFunctions::MANUAL_ON, copilotLStickPressed},
-    {TeleopControlFunctions::MANUAL_OFF, copilotRStickPressed},
-    {TeleopControlFunctions::ALGAE_HIGH, copilotDPad0},
-    {TeleopControlFunctions::GRAB_ALGAE_REEF, copilotDPad90},
-    {TeleopControlFunctions::ALGAE_LOW, copilotDPad180},
-    {TeleopControlFunctions::FORCE_ELEVATOR, copilotDPad270},
 };
 
 const TeleopControlAxis driverLJoystickX = {TeleopControlMappingEnums::DRIVER, TeleopControlMappingEnums::LEFT_JOYSTICK_X, TeleopControlMappingEnums::APPLY_STANDARD_DEADBAND, TeleopControlMappingEnums::AXIS_PROFILE::LINEAR, TeleopControlMappingEnums::REVERSED, 1.0};

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topLevelAppDataElement xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <robotFiles>
+    <string>Thing3.xml</string>
+  </robotFiles>
+  <Robots />
+  <Mechanisms>
+    <mechanism>
+      <GUID>dc2fc90b-f357-4581-9838-f6dc6376fe09</GUID>
+      <name>BaseMech</name>
+      <MotorControllers />
+      <closedLoopControlParameters />
+      <solenoid />
+      <servo />
+      <analogInput />
+      <digitalInput />
+      <cancoder />
+      <stateMotorControlData />
+      <states />
+      <doubleParameters />
+      <boolParameters />
+      <constDoubleParameters />
+      <constBoolParameters />
+    </mechanism>
+  </Mechanisms>
+</topLevelAppDataElement>

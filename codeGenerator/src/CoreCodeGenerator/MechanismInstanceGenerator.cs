@@ -25,6 +25,9 @@ namespace CoreCodeGenerator
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT, "units::voltage::volt_t");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_DEGREES, "units::angle::degree_t");
             ControlDataMapping.Add(motorControlData.CONTROL_TYPE.POSITION_INCH, "units::length::inch_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC, "units::velocity::feet_per_second_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC, "units::angular_velocity::turns_per_second_t");
+            ControlDataMapping.Add(motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC, "units::velocity::degrees_per_second_t");
         }
 
         public void WriteMechanismParameterFiles()
@@ -347,7 +350,7 @@ namespace CoreCodeGenerator
                         resultString = resultString.Replace("$$_CREATE_FUNCTIONS_$$", createFunctionDeclarations);
                         resultString = resultString.Replace("$$_PUBLIC_INITIALZATION_FUNCTIONS_$$", publicInitializationFunctionDeclarations);
                         resultString = resultString.Replace("$$_PRIVATE_INITIALZATION_FUNCTIONS_$$", privateInitializationFunctionDeclarations);
-
+                            
                         resultString = resultString.Replace("$$_MECHANISM_NAME_$$", mi.mechanism.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_$$", mi.name);
                         resultString = resultString.Replace("$$_MECHANISM_INSTANCE_NAME_UPPER_CASE_$$", ToUnderscoreCase(mi.name).ToUpper());
@@ -582,9 +585,9 @@ namespace CoreCodeGenerator
                                                     addProgress(string.Format("In mechanism {0}, cannot find a Motor control data called {1}, referenced in state {2}", theMi.name, mT.controlDataName, s.name));
                                                 else
                                                 {
-                                                    string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
-                                                    if (!string.IsNullOrEmpty(PidSetCall))
-                                                        setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
+                                                    //string PidSetCall = mc.GeneratePIDSetFunctionCall(mcd, theMi);
+                                                    //if (!string.IsNullOrEmpty(PidSetCall))
+                                                    //    setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", PidSetCall));
                                                     if (!mc.enableFollowID.value)
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
                                                 }

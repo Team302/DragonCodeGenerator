@@ -252,7 +252,14 @@ namespace applicationConfiguration
                                     if ((unitsObj == null) || (unitsObj.ToString() == ""))
                                     {
                                         physicalUnit pu = physicalUnits.Find(u => u.family == beObj.unitsFamily);
-                                        unitsInfo.SetValue(obj, pu.shortName);
+                                        if (pu != null)
+                                        {
+                                            unitsInfo.SetValue(obj, pu.shortName);
+                                        }
+                                        else
+                                        {
+                                            addProgress(string.Format("Warning: Could not find physical unit for family '{0}' in object '{1}'", beObj.unitsFamily, objectName));
+                                        }
                                     }
                                 }
                             }
