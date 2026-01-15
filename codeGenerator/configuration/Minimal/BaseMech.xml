@@ -392,7 +392,7 @@
           <name>boolParameter</name>
           <__units__ />
           <type>Boolean</type>
-          <value>false</value>
+          <value>true</value>
         </enableClosedLoop>
       </voltageRamping>
       <canID>
@@ -604,6 +604,7 @@
         </peakReverseDutyCycle>
       </theConfigMotorSettings>
       <MotionMagicSettings>
+        <Mode>Normal</Mode>
         <CruiseVelocity>
           <unitsFamily>angularVelocity</unitsFamily>
           <name>doubleParameter</name>

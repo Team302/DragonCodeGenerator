@@ -848,9 +848,13 @@ namespace ApplicationData
                     {
                         if (!mcd.enableFOC.value)
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            if ( mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
                             }
                             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
                             {
@@ -867,9 +871,13 @@ namespace ApplicationData
                         }
                         else
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            {
+                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
                             }
                             else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
                             {
@@ -889,7 +897,52 @@ namespace ApplicationData
                     {
                         if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Normal)
                         {
-                            return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            if (mcd.enableFOC.value)
+                            {
+                                if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicExpoTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicExpoTorqueCurrentFOC {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                            }
+                            else
+                            {
+                                if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                            }
                         }
                         else if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Dynamic)
                         {
@@ -977,7 +1030,8 @@ namespace ApplicationData
             List<string> output = new List<string>();
 
              if( mcd.controlType != CONTROL_TYPE.PERCENT_OUTPUT || mcd.controlType != CONTROL_TYPE.VOLTAGE_OUTPUT)
-                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();");
+                if(!mcd.enableFOC.value && (mcd.controlType == CONTROL_TYPE.POSITION_INCH || mcd.controlType == CONTROL_TYPE.POSITION_DEGREES))
+                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();"); //Need to understand if we want FOC/Motion Magic for Velocity
 
             //string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
             //string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());

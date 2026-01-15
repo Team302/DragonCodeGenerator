@@ -617,19 +617,20 @@
               </peakReverseDutyCycle>
             </theConfigMotorSettings>
             <MotionMagicSettings>
+              <Mode>Normal</Mode>
               <CruiseVelocity>
                 <unitsFamily>angularVelocity</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>turns/s</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>5</value>
               </CruiseVelocity>
               <Acceleration>
                 <unitsFamily>angularAcceleration</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>rad/s^2</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>1</value>
               </Acceleration>
               <Jerk>
                 <unitsFamily>angularJerk</unitsFamily>
@@ -1396,7 +1397,7 @@
               <name>boolParameter</name>
               <__units__ />
               <type>Boolean</type>
-              <value>false</value>
+              <value>true</value>
             </enableFOC>
             <controlType>POSITION_INCH</controlType>
           </motorControlData>
@@ -1712,7 +1713,7 @@
               <name>boolParameter</name>
               <__units__ />
               <type>Boolean</type>
-              <value>false</value>
+              <value>true</value>
             </enableFOC>
             <controlType>POSITION_DEGREES</controlType>
           </motorControlData>
