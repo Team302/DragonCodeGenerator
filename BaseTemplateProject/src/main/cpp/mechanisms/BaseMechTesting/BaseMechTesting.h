@@ -90,32 +90,32 @@ public:
 	void UpdateTargetTalonFXTestFXVelocityRPM(units::angular_velocity::turns_per_second_t velocity)
 	{
 		m_TalonFXTestFXVelocityRPM.Velocity = velocity;
-		m_TalonFXTestActiveTarget = &m_TalonFXTestFXVelocityRPM;
+		m_TalonFXTestActiveTarget = &m_TalonFXTestFXVelocityRPM.WithSlot(0);
 	}
 	void UpdateTargetTalonFXSTestFXSVelocityRPM(units::angular_velocity::turns_per_second_t velocity)
 	{
 		m_TalonFXSTestFXSVelocityRPM.Velocity = velocity;
-		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSVelocityRPM;
+		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSVelocityRPM.WithSlot(0);
 	}
 	void UpdateTargetTalonFXTestFXPositionIn(units::length::inch_t position)
 	{
 		m_TalonFXTestFXPositionIn.Position = units::angle::turn_t(position.value());
-		m_TalonFXTestActiveTarget = &m_TalonFXTestFXPositionIn;
+		m_TalonFXTestActiveTarget = &m_TalonFXTestFXPositionIn.WithSlot(1);
 	}
 	void UpdateTargetTalonFXSTestFXSPositionIn(units::length::inch_t position)
 	{
 		m_TalonFXSTestFXSPositionIn.Position = units::angle::turn_t(position.value());
-		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSPositionIn;
+		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSPositionIn.WithSlot(1);
 	}
 	void UpdateTargetTalonFXTestFXPositionDeg(units::angle::turn_t position)
 	{
 		m_TalonFXTestFXPositionDeg.Position = position;
-		m_TalonFXTestActiveTarget = &m_TalonFXTestFXPositionDeg;
+		m_TalonFXTestActiveTarget = &m_TalonFXTestFXPositionDeg.WithSlot(2);
 	}
 	void UpdateTargetTalonFXSTestFXSPositionDeg(units::angle::turn_t position)
 	{
 		m_TalonFXSTestFXSPositionDeg.Position = position;
-		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSPositionDeg;
+		m_TalonFXSTestActiveTarget = &m_TalonFXSTestFXSPositionDeg.WithSlot(2);
 	}
 
 	virtual bool IsAtMinPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const;

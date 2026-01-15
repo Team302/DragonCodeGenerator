@@ -1721,6 +1721,7 @@ namespace ApplicationData
         [Range(0,3)]
         public intParameter SlotIndex { get; set; }
         [DefaultValue(0)]
+        [Range(0, 2)]
         public doubleParameter peakValue { get; set; }
         [DefaultValue(0)]
         public doubleParameter nominalValue { get; set; }

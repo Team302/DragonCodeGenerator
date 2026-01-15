@@ -72,7 +72,7 @@
               <name>uintParameter</name>
               <__units__ />
               <type>UInt32</type>
-              <value>0</value>
+              <value>8</value>
             </canID>
             <pdpID>
               <unitsFamily>none</unitsFamily>
@@ -242,7 +242,7 @@
               <name>uintParameter</name>
               <__units__ />
               <type>UInt32</type>
-              <value>0</value>
+              <value>13</value>
             </canID>
             <pdpID>
               <unitsFamily>none</unitsFamily>
@@ -355,8 +355,8 @@
               <type>Double</type>
               <value>1</value>
             </RotationOffset>
-            <motorBrushType>kBrushed</motorBrushType>
-            <sensorType>kNoSensor</sensorType>
+            <motorBrushType>kBrushless</motorBrushType>
+            <sensorType>kHallSensor</sensorType>
           </MotorController>
           <MotorController xsi:type="TalonFX">
             <name>TalonFXTest</name>
@@ -412,8 +412,9 @@
               <name>uintParameter</name>
               <__units__ />
               <type>UInt32</type>
-              <value>0</value>
+              <value>2</value>
             </canID>
+            <canBusName>canivore</canBusName>
             <pdpID>
               <unitsFamily>none</unitsFamily>
               <name>uintParameter</name>
@@ -491,35 +492,35 @@
                 <name>boolParameter</name>
                 <__units__ />
                 <type>Boolean</type>
-                <value>false</value>
+                <value>true</value>
               </enableStatorCurrentLimit>
               <statorCurrentLimit>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>100</value>
               </statorCurrentLimit>
               <enableSupplyCurrentLimit>
                 <unitsFamily>none</unitsFamily>
                 <name>boolParameter</name>
                 <__units__ />
                 <type>Boolean</type>
-                <value>false</value>
+                <value>true</value>
               </enableSupplyCurrentLimit>
               <supplyCurrentLimit>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>60</value>
               </supplyCurrentLimit>
               <supplyCurrentThreshold>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>40</value>
               </supplyCurrentThreshold>
               <supplyTimeThreshold>
                 <unitsFamily>time</unitsFamily>
@@ -685,7 +686,7 @@
                 <name>boolParameter</name>
                 <__units__ />
                 <type>Boolean</type>
-                <value>false</value>
+                <value>true</value>
               </enableClosedLoop>
             </voltageRamping>
             <canID>
@@ -695,6 +696,7 @@
               <type>UInt32</type>
               <value>0</value>
             </canID>
+            <canBusName>canivore</canBusName>
             <pdpID>
               <unitsFamily>none</unitsFamily>
               <name>uintParameter</name>
@@ -772,35 +774,35 @@
                 <name>boolParameter</name>
                 <__units__ />
                 <type>Boolean</type>
-                <value>false</value>
+                <value>true</value>
               </enableStatorCurrentLimit>
               <statorCurrentLimit>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>60</value>
               </statorCurrentLimit>
               <enableSupplyCurrentLimit>
                 <unitsFamily>none</unitsFamily>
                 <name>boolParameter</name>
                 <__units__ />
                 <type>Boolean</type>
-                <value>false</value>
+                <value>true</value>
               </enableSupplyCurrentLimit>
               <supplyCurrentLimit>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>40</value>
               </supplyCurrentLimit>
               <supplyCurrentThreshold>
                 <unitsFamily>current</unitsFamily>
                 <name>doubleParameter</name>
                 <__units__>A</__units__>
                 <type>Double</type>
-                <value>0</value>
+                <value>35</value>
               </supplyCurrentThreshold>
               <supplyTimeThreshold>
                 <unitsFamily>time</unitsFamily>
@@ -959,8 +961,9 @@
               <name>uintParameter</name>
               <__units__ />
               <type>UInt32</type>
-              <value>0</value>
+              <value>14</value>
             </canID>
+            <canBusName>canivore</canBusName>
             <offset>
               <unitsFamily>none</unitsFamily>
               <name>doubleParameter</name>
@@ -1091,7 +1094,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.25</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1112,7 +1115,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>0</value>
+                <value>0.2</value>
               </fGain>
               <iZone>
                 <unitsFamily>none</unitsFamily>
@@ -1196,7 +1199,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.25</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1217,7 +1220,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>0</value>
+                <value>0.2</value>
               </fGain>
               <iZone>
                 <unitsFamily>none</unitsFamily>
@@ -1301,7 +1304,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.1</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1322,7 +1325,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>0</value>
+                <value>0.2</value>
               </fGain>
               <iZone>
                 <unitsFamily>none</unitsFamily>
@@ -1358,7 +1361,7 @@
               <name>intParameter</name>
               <__units__ />
               <type>Int32</type>
-              <value>0</value>
+              <value>1</value>
             </SlotIndex>
             <peakValue>
               <unitsFamily>none</unitsFamily>
@@ -1406,7 +1409,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>0</value>
+                <value>0.1</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1427,7 +1430,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.2</value>
               </fGain>
               <iZone>
                 <unitsFamily>none</unitsFamily>
@@ -1463,7 +1466,7 @@
               <name>intParameter</name>
               <__units__ />
               <type>Int32</type>
-              <value>0</value>
+              <value>1</value>
             </SlotIndex>
             <peakValue>
               <unitsFamily>none</unitsFamily>
@@ -1511,7 +1514,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.15</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1568,7 +1571,7 @@
               <name>intParameter</name>
               <__units__ />
               <type>Int32</type>
-              <value>0</value>
+              <value>2</value>
             </SlotIndex>
             <peakValue>
               <unitsFamily>none</unitsFamily>
@@ -1617,7 +1620,7 @@
                 <name>doubleParameter</name>
                 <__units__ />
                 <type>Double</type>
-                <value>1</value>
+                <value>0.15</value>
               </pGain>
               <iGain>
                 <unitsFamily>none</unitsFamily>
@@ -1674,7 +1677,7 @@
               <name>intParameter</name>
               <__units__ />
               <type>Int32</type>
-              <value>0</value>
+              <value>2</value>
             </SlotIndex>
             <peakValue>
               <unitsFamily>none</unitsFamily>
