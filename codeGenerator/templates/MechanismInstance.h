@@ -91,7 +91,7 @@ protected:
 
 private:
     std::unordered_map<std::string, STATE_NAMES> m_stateMap;
-
+        
     $$_MECHANISM_ELEMENTS_$$
 
     $$_TUNABLE_PARAMETERS_$$

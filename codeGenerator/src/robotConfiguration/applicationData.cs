@@ -977,7 +977,7 @@ namespace ApplicationData
     [ImplementationName("frc::DigitalInput")]
     [SystemIncludeFile("frc/DigitalInput.h")]
     [SystemIncludeFile("frc/filter/Debouncer.h")]
-    [UserIncludeFile("utils/logging/DragonDataLogger.h")]
+    [UserIncludeFile("utils/logging/signals/DragonDataLogger.h")]
     public class digitalInput : baseRobotElementClass
     {
         [DefaultValue(0u)]
@@ -1150,7 +1150,7 @@ namespace ApplicationData
                 string.Format("ctre::phoenix6::configs::CANcoderConfiguration {0}Configs{{}};", name),
                 string.Format("{0}Configs.MagnetSensor.MagnetOffset = units::angle::turn_t({1});", name, offset.value),
                 string.Format("{0}Configs.MagnetSensor.SensorDirection = ctre::phoenix6::signals::SensorDirectionValue::{1};", name, reverse.value ?  "Clockwise_Positive" : "CounterClockwise_Positive"),
-                string.Format("{0} = new ctre::phoenix6::hardware::CANcoder({1},\"{2}\");", AsMemberVariableName(),canID.value,canBusName),
+                string.Format("{0} = new ctre::phoenix6::hardware::CANcoder({1},ctre::phoenix6::CANBus(\"{2}\"));", AsMemberVariableName(),canID.value,canBusName),
                 string.Format("{0}->GetConfigurator().Apply({1}Configs);", AsMemberVariableName(),name)
             };
 
@@ -1721,6 +1721,7 @@ namespace ApplicationData
         [Range(0,3)]
         public intParameter SlotIndex { get; set; }
         [DefaultValue(0)]
+        [Range(0, 2)]
         public doubleParameter peakValue { get; set; }
         [DefaultValue(0)]
         public doubleParameter nominalValue { get; set; }

@@ -169,7 +169,7 @@ namespace ApplicationData
             [PhysicalUnitsFamily(physicalUnit.Family.time)]
             public doubleParameter closedLoopRampTime { get; set; }
 
-            [DefaultValue(false)]
+            [DefaultValue(true)]
             public boolParameter enableClosedLoop { get; set; }
 
             public VoltageRamping()
@@ -392,29 +392,29 @@ namespace ApplicationData
     [Serializable]
     public class CurrentLimits : baseDataClass
     {
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         public boolParameter enableStatorCurrentLimit { get; set; }
 
-        [DefaultValue(0)]
+        [DefaultValue(100.0)]
         [Range(typeof(double), "0", "120.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
         public doubleParameter statorCurrentLimit { get; set; }
 
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         public boolParameter enableSupplyCurrentLimit { get; set; }
 
-        [DefaultValue(0)]
+        [DefaultValue(70.0)]
         [Range(typeof(double), "0", "70.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
         public doubleParameter supplyCurrentLimit { get; set; }
 
-        [DefaultValue(0)]
+        [DefaultValue(35)]
         [Range(typeof(double), "0", "70.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.current)]
         public doubleParameter supplyCurrentThreshold { get; set; }
 
         [DefaultValue(0)]
-        [Range(typeof(double), "0", "40.0")] //todo choose a valid range
+        [Range(typeof(double), "0", "5.0")] //todo choose a valid range
         [PhysicalUnitsFamily(physicalUnit.Family.time)]
         public doubleParameter supplyTimeThreshold { get; set; }
 
@@ -815,7 +815,7 @@ namespace ApplicationData
             if (robotsToCreateFor.Count == 0)
                 return new List<string>() { };
 
-            string creation = string.Format("{0} = new {1}({2}, \"{3}\");",
+            string creation = string.Format("{0} = new {1}({2}, ctre::phoenix6::CANBus(\"{3}\"));",
                 AsMemberVariableName(),
                 getImplementationName(),
                 canID.value.ToString(),
@@ -848,24 +848,48 @@ namespace ApplicationData
                     {
                         if (!mcd.enableFOC.value)
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            if ( mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
                             }
-                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                             {
-                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                return string.Format("ctre::phoenix6::controls::PositionVoltage {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityVoltage {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
                             }
                         }
                         else
                         {
-                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                            if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                             {
                                 return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
                             }
-                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                             {
-                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                return string.Format("ctre::phoenix6::controls::PositionTorqueCurrentFOC {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                            }
+                            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                            {
+                                return string.Format("ctre::phoenix6::controls::VelocityTorqueCurrentFOC {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
                             }
                         }
                     }
@@ -873,7 +897,52 @@ namespace ApplicationData
                     {
                         if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Normal)
                         {
-                            return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                            if (mcd.enableFOC.value)
+                            {
+                                if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicExpoTorqueCurrentFOC {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicExpoTorqueCurrentFOC {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityTorqueCurrentFOC {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                            }
+                            else
+                            {
+                                if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::turn_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVoltage {0}{{units::angle::degree_t(0.0)}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::angular_velocity::degrees_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::linear_velocity::feet_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                                {
+                                    return string.Format("ctre::phoenix6::controls::MotionMagicVelocityVoltage {0}{{units::angular_velocity::turns_per_second_t( 0.0 )}};", targetNameAsMemVar);
+                                }
+                            }
                         }
                         else if (MotionMagicSettings.Mode == ConfigMotionMagic.MotionMagicMode.Dynamic)
                         {
@@ -934,12 +1003,24 @@ namespace ApplicationData
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angle::turn_t position) {{ {2}.Position = position; {3} = &{2}.WithSlot({4});}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, mcd.SlotIndex));
                 }
                 else if (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH)
                 {
-                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2};}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar));
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::length::inch_t position) {{ {2}.Position = units::angle::turn_t(position.value()); {3} = &{2}.WithSlot({4});}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, mcd.SlotIndex));
                 }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_DEGREES_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angular_velocity::degrees_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2}.WithSlot({4});}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, mcd.SlotIndex));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_FEET_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::velocity::feet_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2}.WithSlot({4});}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar, mcd.SlotIndex));
+                }
+                else if (mcd.controlType == motorControlData.CONTROL_TYPE.VELOCITY_REV_PER_SEC)
+                {
+                    output.Add(string.Format("void UpdateTarget{0}{1}(units::angular_velocity::turns_per_second_t velocity) {{ {2}.Velocity = velocity; {3} = &{2}.WithSlot({4});}}", ToUpperCamelCase(), mcd.name, targetNameAsMemVar, activeTargetNameAsMemVar,mcd.SlotIndex));
+                }   
             }
             return output;
 
@@ -948,8 +1029,9 @@ namespace ApplicationData
         {
             List<string> output = new List<string>();
 
-             if( (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES) || (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
-                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();");
+             if( mcd.controlType != CONTROL_TYPE.PERCENT_OUTPUT || mcd.controlType != CONTROL_TYPE.VOLTAGE_OUTPUT)
+                if(!mcd.enableFOC.value && (mcd.controlType == CONTROL_TYPE.POSITION_INCH || mcd.controlType == CONTROL_TYPE.POSITION_DEGREES))
+                output.Add($"m_{this.name}{mcd.name}.EnableFOC = m_{mcd.name}->IsFOCEnabled();"); //Need to understand if we want FOC/Motion Magic for Velocity
 
             //string targetNameAsMemVar = mcd.AsMemberVariableName(string.Format("{0}{1}", this.name, mcd.name));
             //string activeTargetNameAsMemVar = string.Format("{0}ActiveTarget", AsMemberVariableName());
@@ -997,20 +1079,21 @@ namespace ApplicationData
             {
                 return ""; // not closed loop
             }
-            else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
+            else if (!enableFollowID.value)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine(string.Format("configs.Slot{1}.kP = {0}->GetP();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kI = {0}->GetI();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kD = {0}->GetD();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kG = {0}->GetF();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kS = {0}->GetS();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kV = {0}->GetV();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.kA = {0}->GetA();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
-                sb.AppendLine(string.Format("configs.Slot{1}.GravityType = {0}->GetGravityType();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kI = {0}->GetI();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kD = {0}->GetD();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kG = {0}->GetF();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kS = {0}->GetS();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kV = {0}->GetV();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kP = {0}->GetP();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.kA = {0}->GetA();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
+                sb.AppendLine(string.Format("configs.Slot{1}.GravityType = {0}->GetGravityType();", mcd.AsMemberVariableName(), mcd.SlotIndex.value, mcd.SlotIndex.value));
                 sb.AppendLine(string.Format("configs.Slot{1}.StaticFeedforwardSign = {0}->GetStaticFeedforwardSign();", mcd.AsMemberVariableName(), mcd.SlotIndex.value));
 
                 return sb.ToString();
+
             }
 
             return "";
@@ -1018,20 +1101,14 @@ namespace ApplicationData
 
         override public string GeneratePIDSetFunctionDeclaration(motorControlData mcd, mechanismInstance mi)
         {
-            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
+            if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT || mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
             {
                 return ""; // not closed loop
             }
-            else if (mcd.controlType == motorControlData.CONTROL_TYPE.VOLTAGE_OUTPUT)
-            {
-                return ""; // not closed loop
-            }
-            else if (!enableFollowID.value && (mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_DEGREES || mcd.controlType == motorControlData.CONTROL_TYPE.POSITION_INCH))
+            else
             {
                 return string.Format("void SetPID{0}{1}()", ToUpperCamelCase(), mcd.name, mi.name);
             }
-
-            return "";
         }
 
         override public string GeneratePIDSetFunctionCall(motorControlData mcd, mechanismInstance mi)
@@ -1056,7 +1133,7 @@ namespace ApplicationData
     [ImplementationName("ctre::phoenix6::hardware::TalonFX")]
     [UserIncludeFile("ctre/phoenix6/TalonFX.hpp")]
     [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
-    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configuration.hpp")]
     [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]
@@ -1080,7 +1157,7 @@ namespace ApplicationData
     [ImplementationName("ctre::phoenix6::hardware::TalonFXS")]
     [UserIncludeFile("ctre/phoenix6/TalonFXS.hpp")]
     [UserIncludeFile("ctre/phoenix6/controls/Follower.hpp")]
-    [UserIncludeFile("ctre/phoenix6/configs/Configs.hpp")]
+    [UserIncludeFile("ctre/phoenix6/configs/Configuration.hpp")]
     [Using("ctre::phoenix6::signals::ForwardLimitSourceValue")]
     [Using("ctre::phoenix6::signals::ForwardLimitTypeValue")]
     [Using("ctre::phoenix6::signals::ReverseLimitSourceValue")]

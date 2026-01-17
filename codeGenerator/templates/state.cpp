@@ -10,7 +10,7 @@ $$_GEN_NOTICE_$$
 #include "mechanisms/$$_MECHANISM_INSTANCE_NAME_$$/$$_STATE_NAME_$$State.h"
 #include "teleopcontrol/TeleopControl.h"
 #include "teleopcontrol/TeleopControlFunctions.h"
-#include "utils/logging/Logger.h"
+#include "utils/logging/debug/Logger.h"
 
 // Third Party Includes
 
@@ -22,7 +22,7 @@ using namespace $$_MECHANISM_INSTANCE_NAME_$$States;
 $$_STATE_NAME_$$State::$$_STATE_NAME_$$State(std::string stateName,
                                              int stateId,
                                              $$_MECHANISM_INSTANCE_NAME_$$ *mech,
-                                             RobotConfigMgr::RobotIdentifier activeRobotId) : State(stateName, stateId), m_mechanism(mech), m_RobotId(activeRobotId)
+										    RobotIdentifier activeRobotId) : State(stateName, stateId), m_mechanism(mech), m_RobotId(activeRobotId)
 {
 }
 
