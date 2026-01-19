@@ -2032,17 +2032,20 @@ namespace FRCrobotCodeGen302
                                 addedItems = true;
                             }
                         }
-                        //foreach (solenoid sol in m.solenoid)
-                        //{
-                        //    boolParameterUserDefinedTunableOnlyValueChangeableInMechInst target = s.booleanTargets.Find(t => t.name == sol.name);
-                        //    if (target == null)
-                        //    {
-                        //        boolParameterUserDefinedTunableOnlyValueChangeableInMechInst newTarget = new boolParameterUserDefinedTunableOnlyValueChangeableInMechInst();
-                        //        newTarget.name = sol.name;
-                        //        s.booleanTargets.Add(newTarget);
-                        //        addedItems = true;
-                        //    }
-                        //}
+                        foreach (solenoid sol in m.solenoid)
+                        {
+                            solenoidTarget target = s.solenoidTarget.Find(t => t.name == sol.name);
+                            if (target == null)
+                            {
+                                solenoidTarget sTarget = new solenoidTarget();
+                                sTarget.name = sol.name;
+                                sTarget.solenoidName = sol.name;
+                                sTarget.Enabled = new boolParameter();
+
+                                s.solenoidTarget.Add(sTarget);
+                                addedItems = true;
+                            }
+                        }
                         //foreach (servo ser in m.servo)
                         //{
                         //    doubleParameterUserDefinedTunableOnlyValueChangeableInMechInst target = s.doubleTargets.Find(t => t.name == ser.name);

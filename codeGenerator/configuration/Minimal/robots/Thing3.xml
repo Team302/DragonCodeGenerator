@@ -10,9 +10,9 @@
       <value>0</value>
     </canID>
   </PowerDistributionPanel>
-  <PneumaticControlModules>
-    <pcm>
-      <name>Compressor</name>
+  <Compressor>
+    <compressor>
+      <name>CompressorTest</name>
       <canID>
         <unitsFamily>none</unitsFamily>
         <name>uintParameter</name>
@@ -34,8 +34,8 @@
         <type>Double</type>
         <value>119.5</value>
       </maxPressure>
-    </pcm>
-  </PneumaticControlModules>
+    </compressor>
+  </Compressor>
   <mechanismInstances>
     <mechanismInstance>
       <name>BaseMechTesting</name>
@@ -1900,6 +1900,26 @@
                 <controlDataName>PercentOut</controlDataName>
               </motorTarget>
             </motorTargets>
+            <solenoidTarget>
+              <solenoidTarget>
+                <name>SolenoidTest</name>
+                <target>
+                  <unitsFamily>none</unitsFamily>
+                  <name>Target</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>true</value>
+                </target>
+                <solenoidName>SolenoidTest</solenoidName>
+                <Enabled>
+                  <unitsFamily>none</unitsFamily>
+                  <name>boolParameter</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>false</value>
+                </Enabled>
+              </solenoidTarget>
+            </solenoidTarget>
           </state>
           <state>
             <name>PercentOut</name>
@@ -2015,6 +2035,25 @@
                 <controlDataName>PercentOut</controlDataName>
               </motorTarget>
             </motorTargets>
+            <solenoidTarget>
+              <solenoidTarget>
+                <name>SolenoidTest</name>
+                <target>
+                  <unitsFamily>none</unitsFamily>
+                  <name>Target</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                </target>
+                <solenoidName>SolenoidTest</solenoidName>
+                <Enabled>
+                  <unitsFamily>none</unitsFamily>
+                  <name>boolParameter</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>false</value>
+                </Enabled>
+              </solenoidTarget>
+            </solenoidTarget>
           </state>
           <state>
             <name>VelocityRPM</name>
@@ -2128,6 +2167,25 @@
                 <controlDataName>FXSVelocityRPM</controlDataName>
               </motorTarget>
             </motorTargets>
+            <solenoidTarget>
+              <solenoidTarget>
+                <name>SolenoidTest</name>
+                <target>
+                  <unitsFamily>none</unitsFamily>
+                  <name>Target</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                </target>
+                <solenoidName>SolenoidTest</solenoidName>
+                <Enabled>
+                  <unitsFamily>none</unitsFamily>
+                  <name>boolParameter</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>false</value>
+                </Enabled>
+              </solenoidTarget>
+            </solenoidTarget>
           </state>
           <state>
             <name>PositionIn</name>
@@ -2241,6 +2299,25 @@
                 <controlDataName>FXSPositionIn</controlDataName>
               </motorTarget>
             </motorTargets>
+            <solenoidTarget>
+              <solenoidTarget>
+                <name>SolenoidTest</name>
+                <target>
+                  <unitsFamily>none</unitsFamily>
+                  <name>Target</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                </target>
+                <solenoidName>SolenoidTest</solenoidName>
+                <Enabled>
+                  <unitsFamily>none</unitsFamily>
+                  <name>boolParameter</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>false</value>
+                </Enabled>
+              </solenoidTarget>
+            </solenoidTarget>
           </state>
           <state>
             <name>PositionDeg</name>
@@ -2354,6 +2431,25 @@
                 <controlDataName>FXSPositionDeg</controlDataName>
               </motorTarget>
             </motorTargets>
+            <solenoidTarget>
+              <solenoidTarget>
+                <name>SolenoidTest</name>
+                <target>
+                  <unitsFamily>none</unitsFamily>
+                  <name>Target</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                </target>
+                <solenoidName>SolenoidTest</solenoidName>
+                <Enabled>
+                  <unitsFamily>none</unitsFamily>
+                  <name>boolParameter</name>
+                  <__units__ />
+                  <type>Boolean</type>
+                  <value>false</value>
+                </Enabled>
+              </solenoidTarget>
+            </solenoidTarget>
           </state>
         </states>
         <doubleParameters />

@@ -50,17 +50,9 @@ public:
     $$_TARGET_UPDATE_FUNCTIONS_$$
 
     _MECHANISM_HAS_SOLENOIDS_START_
-    /// @brief Set the target value for the actuator
-    /// @param identifier solenoid Usage to indicate what motor to update
-    /// @param extend target value
-    virtual void UpdateTarget(RobotElementNames::SOLENOID_USAGE identifier, bool extend);
-    virtual bool IsAtMinPosition(RobotElementNames::SOLENOID_USAGE identifier) const;
-    virtual bool IsAtMaxPosition(RobotElementNames::SOLENOID_USAGE identifier) const;
     _MECHANISM_HAS_SOLENOIDS_END_
 
     _MECHANISM_HAS_MOTORS_START_
-    virtual bool IsAtMinPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const;
-    virtual bool IsAtMaxPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const;
     _MECHANISM_HAS_MOTORS_END_
     _STATE_MANAGER_END_
 

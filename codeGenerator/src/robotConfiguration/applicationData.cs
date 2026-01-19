@@ -168,7 +168,7 @@ namespace ApplicationData
         public pdp PowerDistributionPanel { get; set; }
 
         [DataDescription("A robot can contain multiple pneumatic control modules")]
-        public List<pcm> PneumaticControlModules { get; set; }
+        public List<compressor> Compressor { get; set; }
 
         [DataDescription("A robot can contain multiple mechanism instances")]
         public List<mechanismInstance> mechanismInstances { get; set; }
@@ -768,8 +768,9 @@ namespace ApplicationData
     }
 
     [Serializable()]
+    [SystemIncludeFile("frc/Compressor.h")]
     [DataDescription("Multiple pneumatic control modules can be added to a robot")]
-    public class pcm : baseRobotElementClass
+    public class compressor : baseRobotElementClass
     {
         [DefaultValue(0u)]
         [Range(typeof(uint), "0", "62")]
@@ -788,9 +789,25 @@ namespace ApplicationData
         [DefaultValue(PCM_TYPE.REVPH)]
         public PCM_TYPE type { get; set; }
 
-        public pcm()
+        public compressor()
         {
         }
+
+        override public List<string> generateIndexedObjectCreation(int index)
+        {
+
+            List<string> creation = new List<string>(){string.Format("auto {0} = new frc::Compressor({1}, frc::PneumaticsModuleType::{2});{3} {4}->EnableAnalog({5}_psi, {6}_psi);",
+                name,
+                canID.value,
+                type.ToString().ToUpper(),
+                Environment.NewLine,
+                name,
+                minPressure.value,
+                maxPressure.value)            };
+
+            return creation;
+        }
+
     }
 
     [Serializable()]
@@ -1924,7 +1941,30 @@ namespace ApplicationData
         }
     }
 
-    [Serializable()]
+    [Serializable]
+
+    public class solenoidTarget : baseRobotElementClass
+    {
+        public boolParameterUserDefinedTunableOnlyValueChangeableInMechInst target { get; set; }
+
+        [ConstantInMechInstance]
+        [DataDescription("The name of the solenoid that this target applies to")]
+        public string solenoidName { get; set; }
+
+        [ConstantInMechInstance]
+        [DataDescription("If Enabled is true, this motor target will be set on entry into the state.")]
+        public boolParameter Enabled { get; set; }
+
+        public solenoidTarget()
+        {
+            Enabled.value = true;
+            target.name = "Target";
+            solenoidName = "theSolenoidName";
+           
+        }
+    }
+
+        [Serializable()]
     public class state : baseRobotElementClass
     {
         [ConstantInMechInstance()]
@@ -1939,6 +1979,7 @@ namespace ApplicationData
         public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public List<motorTarget> motorTargets { get; set; }
+        public List<solenoidTarget> solenoidTarget { get; set; }
 
         public state()
         {
