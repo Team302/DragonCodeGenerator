@@ -912,7 +912,53 @@
     </MotorController>
   </MotorControllers>
   <closedLoopControlParameters />
-  <solenoid />
+  <solenoid>
+    <solenoid>
+      <name>SolenoidTest</name>
+      <CAN_ID>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </CAN_ID>
+      <channel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </channel>
+      <enableDualChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>boolParameter</name>
+        <__units__ />
+        <type>Boolean</type>
+        <value>false</value>
+      </enableDualChannel>
+      <forwardChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </forwardChannel>
+      <reverseChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </reverseChannel>
+      <reversed>
+        <unitsFamily>none</unitsFamily>
+        <name>boolParameter</name>
+        <__units__ />
+        <type>Boolean</type>
+        <value>false</value>
+      </reversed>
+    </solenoid>
+  </solenoid>
   <servo />
   <analogInput />
   <digitalInput>
