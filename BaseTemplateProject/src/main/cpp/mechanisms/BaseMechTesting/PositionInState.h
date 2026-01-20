@@ -48,5 +48,6 @@ namespace BaseMechTestingStates
 		const double m_SparkMaxBrushedTestTarget = double(0);
 		const units::length::inch_t m_TalonFXTestTarget = units::length::inch_t(5);
 		const units::length::inch_t m_TalonFXSTestTarget = units::length::inch_t(5);
+		const bool m_SolenoidTestTarget = false;
 	};
 }

@@ -1264,6 +1264,25 @@ namespace FRCrobotCodeGen302
                         first = false;
                     }
                 }
+
+                // Only add solenoid targets in mechanism instances, NOT in mechanism templates
+                if (isInMechanismInstance)
+                {
+                    foreach (solenoidTarget st in s.solenoidTarget)
+                    {
+                        stateVisualization sv = new stateVisualization();
+                        stateGridVisualization.Add(sv);
+
+                        sv.ThisState = s;
+                        sv.TargetObject = st;
+                        sv.transitionTo = first ? transitions : "";
+                        sv.TargetUnits = "";
+                        sv.StateName = first ? s.name : "";
+                        sv.ActuatorName = st.solenoidName;
+
+                        first = false;
+                    }
+                }
             }
 
             if (theStates.Count > 0)
@@ -1290,6 +1309,18 @@ namespace FRCrobotCodeGen302
                         dgvCmb.Items.Add(mcd.name);
                     }
                     dgvCmb.Items.Add("");
+                }
+
+                // Add solenoid target combobox column
+                DataGridViewComboBoxColumn dgvSolenoidCmb = stateDataGridView.Columns["cmbSolenoidTarget"] as DataGridViewComboBoxColumn;
+                if (dgvSolenoidCmb == null)
+                {
+                    dgvSolenoidCmb = new DataGridViewComboBoxColumn();
+                    dgvSolenoidCmb.HeaderText = "Solenoid\r\nTarget";
+                    dgvSolenoidCmb.Name = "cmbSolenoidTarget";
+                    dgvSolenoidCmb.Items.Add("False");
+                    dgvSolenoidCmb.Items.Add("True");
+                    stateDataGridView.Columns.Add(dgvSolenoidCmb);
                 }
 
                 stateDataGridView.DataSource = new BindingList<stateVisualization>(stateGridVisualization);
@@ -1321,7 +1352,7 @@ namespace FRCrobotCodeGen302
                 {
                     stateDataGridView.Columns["Target"].ReadOnly = true;
                 }
-
+                
                 stateDataGridView.AllowUserToResizeColumns = true;
                 stateDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
 
@@ -1331,6 +1362,33 @@ namespace FRCrobotCodeGen302
                     int index = dgvCmb.Items.IndexOf(stateGridVisualization[row.Index].ControlData);
                     row.Cells[dgvCmb.Name].Value = index == -1 ? "" : stateGridVisualization[row.Index].ControlData;
                     row.Cells[dgvCmb.Name].ReadOnly = isInMechanismInstance;
+
+                    // Set solenoid target combobox value (only visible in mechanism instances)
+                    string solenoidTargetValue = stateGridVisualization[row.Index].SolenoidTargetValue;
+                    row.Cells[dgvSolenoidCmb.Name].Value = solenoidTargetValue;
+                    row.Cells[dgvSolenoidCmb.Name].ReadOnly = !isInMechanismInstance; // ReadOnly in template, editable in instance
+
+                    // Hide/disable columns based on target type
+                    if (stateGridVisualization[row.Index].TargetObject is solenoidTarget)
+                    {
+                        // For solenoid targets: disable control data and target columns
+                        row.Cells[dgvCmb.Name].ReadOnly = true;
+                        row.Cells[dgvCmb.Name].Style.BackColor = SystemColors.ControlLight;
+                        row.Cells["Target"].ReadOnly = true;
+                        row.Cells["Target"].Style.BackColor = SystemColors.ControlLight;
+
+                        // Allow TargetEnabled to be editable for solenoids in instances
+                        row.Cells["TargetEnabled"].ReadOnly = !isInMechanismInstance;
+                        if (!isInMechanismInstance)
+                            row.Cells["TargetEnabled"].Style.BackColor = SystemColors.ControlLight;
+                    }
+                    else if (stateGridVisualization[row.Index].TargetObject is motorTarget)
+                    {
+                        // For motor targets: disable solenoid target column
+                        row.Cells[dgvSolenoidCmb.Name].ReadOnly = true;
+                        row.Cells[dgvSolenoidCmb.Name].Style.BackColor = SystemColors.ControlLight;
+                        row.Cells["Target"].Style.BackColor = SystemColors.Window;
+                    }
                 }
 
                 // set the column order
@@ -1342,6 +1400,23 @@ namespace FRCrobotCodeGen302
                 stateVisualization.UpdateMechanismInstances = UpdateMechanismInstances;
                 this.stateDataGridView.CellEndEdit += stateDataGridView_CellEndEdit;
             }
+        }
+        private void stateDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (stateDataGridView.Columns["cmbControlData"].Index == e.ColumnIndex) // the control data combobox column
+            {
+                string controlDataName = stateDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
+                ((stateVisualization)stateDataGridView.Rows[e.RowIndex].DataBoundItem).ControlData = controlDataName;
+            }
+
+            if (stateDataGridView.Columns["cmbSolenoidTarget"].Index == e.ColumnIndex) // the solenoid target combobox column
+            {
+                string solenoidTargetValue = stateDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString() ?? "False";
+                ((stateVisualization)stateDataGridView.Rows[e.RowIndex].DataBoundItem).SolenoidTargetValue = solenoidTargetValue;
+            }
+
+            if (stateVisualization.HasChanged == true)
+                setNeedsSaving();
         }
 
         void UpdateMechanismInstances()
@@ -1379,7 +1454,9 @@ namespace FRCrobotCodeGen302
 
         private readonly HashSet<string> editableColumnsInMechanismInstance = new HashSet<string>()
         {
-            "Target"
+            "Target",
+            "cmbSolenoidTarget"
+
         };
 
         private readonly List<string> columnOrderStateDataGridView = new List<string>()
@@ -1415,20 +1492,6 @@ namespace FRCrobotCodeGen302
                 }
             }
         }
-
-        private void stateDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            if (stateDataGridView.Columns["cmbControlData"].Index == e.ColumnIndex) // the control data combobox column
-            {
-                string controlDataName = stateDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value.ToString();
-
-                ((stateVisualization)stateDataGridView.Rows[e.RowIndex].DataBoundItem).ControlData = controlDataName;
-            }
-
-            if (stateVisualization.HasChanged == true)
-                setNeedsSaving();
-        }
-
 
         private void StateDataGridView_CellClick(object sender, System.Windows.Forms.DataGridViewCellEventArgs e)
         {
@@ -2776,7 +2839,6 @@ namespace FRCrobotCodeGen302
             return name;
         }
     }
-
     public class stateVisualization
     {
         public delegate void UpdateMechanismInstancesDelegate();
@@ -2785,7 +2847,7 @@ namespace FRCrobotCodeGen302
         public static bool HasChanged { get; set; } = false;
         public static List<state> States { get; set; }
         public state ThisState { get; set; }
-        public motorTarget TargetObject { get; set; }
+        public object TargetObject { get; set; }
         public string StateName { get; set; }
         private string transitionTo_ = "";
         public string transitionTo
@@ -2804,59 +2866,127 @@ namespace FRCrobotCodeGen302
         public string ActuatorName { get; set; }
         public bool TargetEnabled
         {
-            get { return TargetObject.Enabled.value; }
+            get
+            {
+                if (TargetObject is motorTarget)
+                    return ((motorTarget)TargetObject).Enabled.value;
+                else if (TargetObject is solenoidTarget)
+                    return ((solenoidTarget)TargetObject).Enabled.value;
+                return false;
+            }
             set
             {
-                if (TargetObject.Enabled.value != value)
+                if (TargetObject is motorTarget)
                 {
-                    TargetObject.Enabled.value = value;
-                    HasChanged = true;
-                    CallUpdateMechanismInstances();
+                    motorTarget mt = (motorTarget)TargetObject;
+                    if (mt.Enabled.value != value)
+                    {
+                        mt.Enabled.value = value;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
+                }
+                else if (TargetObject is solenoidTarget)
+                {
+                    solenoidTarget st = (solenoidTarget)TargetObject;
+                    if (st.Enabled.value != value)
+                    {
+                        st.Enabled.value = value;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
                 }
             }
         }
         public double Target
         {
-            get { return TargetObject.target.value; }
+            get
+            {
+                if (TargetObject is motorTarget)
+                    return ((motorTarget)TargetObject).target.value;
+                return 0.0;
+            }
             set
             {
-                if (TargetObject.target.value != value)
+                if (TargetObject is motorTarget)
                 {
-                    TargetObject.target.value = value;
-                    HasChanged = true;
-                    CallUpdateMechanismInstances();
+                    motorTarget mt = (motorTarget)TargetObject;
+                    if (mt.target.value != value)
+                    {
+                        mt.target.value = value;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
                 }
             }
         }
-
         public string TargetUnits
         {
-            get { return TargetObject.target.physicalUnits; }
+            get
+            {
+                if (TargetObject is motorTarget)
+                    return ((motorTarget)TargetObject).target.physicalUnits;
+                return "";
+            }
             set
             {
-                if (TargetObject.target.physicalUnits != value)
+                if (TargetObject is motorTarget)
                 {
-                    TargetObject.target.physicalUnits = value;
-                    HasChanged = true;
-                    CallUpdateMechanismInstances();
+                    motorTarget mt = (motorTarget)TargetObject;
+                    if (mt.target.physicalUnits != value)
+                    {
+                        mt.target.physicalUnits = value;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
                 }
             }
         }
-
+        public string SolenoidTargetValue
+        {
+            get
+            {
+                if (TargetObject is solenoidTarget)
+                    return ((solenoidTarget)TargetObject).target.value ? "True" : "False";
+                return "False";
+            }
+            set
+            {
+                if (TargetObject is solenoidTarget)
+                {
+                    solenoidTarget st = (solenoidTarget)TargetObject;
+                    bool newValue = value == "True";
+                    if (st.target.value != newValue)
+                    {
+                        st.target.value = newValue;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
+                }
+            }
+        }
         public string ControlData
         {
-            get { return TargetObject.controlDataName; }
+            get
+            {
+                if (TargetObject is motorTarget)
+                    return ((motorTarget)TargetObject).controlDataName;
+                return "";
+            }
             set
             {
-                if (TargetObject.controlDataName != value)
+                if (TargetObject is motorTarget)
                 {
-                    TargetObject.controlDataName = value;
-                    HasChanged = true;
-                    CallUpdateMechanismInstances();
+                    motorTarget mt = (motorTarget)TargetObject;
+                    if (mt.controlDataName != value)
+                    {
+                        mt.controlDataName = value;
+                        HasChanged = true;
+                        CallUpdateMechanismInstances();
+                    }
                 }
             }
         }
-
         private void CallUpdateMechanismInstances()
         {
             if (UpdateMechanismInstances != null)

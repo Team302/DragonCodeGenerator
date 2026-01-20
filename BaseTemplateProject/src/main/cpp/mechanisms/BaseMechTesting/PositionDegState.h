@@ -48,5 +48,6 @@ namespace BaseMechTestingStates
 		const double m_SparkMaxBrushedTestTarget = double(0);
 		const units::angle::degree_t m_TalonFXTestTarget = units::angle::degree_t(270);
 		const units::angle::degree_t m_TalonFXSTestTarget = units::angle::degree_t(270);
+		const bool m_SolenoidTestTarget = false;
 	};
 }
