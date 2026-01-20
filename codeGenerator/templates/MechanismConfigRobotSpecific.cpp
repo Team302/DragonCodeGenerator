@@ -30,3 +30,8 @@ void MechanismConfig$$_ROBOT_NAME_$$::DefineLEDs()
 {
     $$_LED_INITIALIZATION_$$
 }
+
+void MechanismConfig$$_ROBOT_NAME_$$::DefineCompressor()
+{
+    $$_COMPRESSOR_INITIALIZATION_$$
+}

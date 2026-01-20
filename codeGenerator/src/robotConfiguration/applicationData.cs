@@ -13,6 +13,8 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using static ApplicationData.motorControlData;
+using static ApplicationData.solenoid;
+using static ApplicationData.talontach;
 
 //todo handle optional elements such as followID in a motorcontroller
 //todo the range of pdpID for ctre is 0-15, for REV it is 0-19. How to adjust the range allowed in the GUI. If initially REV is used and an id > 15 is used, then user chooses CTRE, what to do?
@@ -166,7 +168,7 @@ namespace ApplicationData
         public pdp PowerDistributionPanel { get; set; }
 
         [DataDescription("A robot can contain multiple pneumatic control modules")]
-        public List<pcm> PneumaticControlModules { get; set; }
+        public List<compressor> Compressor { get; set; }
 
         [DataDescription("A robot can contain multiple mechanism instances")]
         public List<mechanismInstance> mechanismInstances { get; set; }
@@ -766,8 +768,9 @@ namespace ApplicationData
     }
 
     [Serializable()]
+    [SystemIncludeFile("frc/Compressor.h")]
     [DataDescription("Multiple pneumatic control modules can be added to a robot")]
-    public class pcm : baseRobotElementClass
+    public class compressor : baseRobotElementClass
     {
         [DefaultValue(0u)]
         [Range(typeof(uint), "0", "62")]
@@ -779,13 +782,32 @@ namespace ApplicationData
         [PhysicalUnitsFamily(physicalUnit.Family.pressure)]
         public doubleParameter minPressure { get; set; }
 
-        [DefaultValue(115.0)]
+        [DefaultValue(119.5)]
         [PhysicalUnitsFamily(physicalUnit.Family.pressure)]
         public doubleParameter maxPressure { get; set; }
 
-        public pcm()
+        [DefaultValue(PCM_TYPE.REVPH)]
+        public PCM_TYPE type { get; set; }
+
+        public compressor()
         {
         }
+
+        override public List<string> generateIndexedObjectCreation(int index)
+        {
+
+            List<string> creation = new List<string>(){string.Format("auto {0} = new frc::Compressor({1}, frc::PneumaticsModuleType::{2});{3} {4}->EnableAnalog({5}_psi, {6}_psi);",
+                name,
+                canID.value,
+                type.ToString().ToUpper(),
+                Environment.NewLine,
+                name,
+                minPressure.value,
+                maxPressure.value)            };
+
+            return creation;
+        }
+
     }
 
     [Serializable()]
@@ -1169,16 +1191,11 @@ namespace ApplicationData
 
 
     [Serializable()]
-    [ImplementationName("DragonSolenoid")]
-    [UserIncludeFile("hw/DragonSolenoid.h")]
+    [ImplementationName("frc::Solenoid")]
+    [UserIncludeFile("frc/Solenoid.h")]
     public class solenoid : baseRobotElementClass
     {
-        public enum solenoidtype
-        {
-            CTREPCM,
-            REVPH,
-        }
-
+  
         [DefaultValue(0u)]
         [Range(typeof(uint), "0", "62")]
         public uintParameter CAN_ID { get; set; }
@@ -1202,8 +1219,8 @@ namespace ApplicationData
         [DefaultValue(false)]
         public boolParameter reversed { get; set; }
 
-        [DefaultValue(solenoidtype.REVPH)]
-        public solenoidtype type { get; set; }
+        [DefaultValue(PCM_TYPE.REVPH)]
+        public PCM_TYPE pcm { get; set; }
 
         public solenoid()
         {
@@ -1220,7 +1237,7 @@ namespace ApplicationData
                     getImplementationName(),
                     utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
                     CAN_ID.value,
-                    type,
+                    pcm,
                     forwardChannel.value,
                     reverseChannel.value,
                     reversed.value.ToString().ToLower()
@@ -1233,7 +1250,7 @@ namespace ApplicationData
                     getImplementationName(),
                     utilities.ListToString(generateElementNames()).ToUpper().Replace("::", "_USAGE::"),
                     CAN_ID.value,
-                    type,
+                    pcm,
                     channel.value,
                     reversed.value.ToString().ToLower()
                     );
@@ -1255,6 +1272,13 @@ namespace ApplicationData
         {
             string creation = string.Format("m_solenoidMap[{0}->GetType()] = new BaseMechSolenoid(m_ntName, *{0})",
                 name);
+
+            return new List<string> { creation };
+        }
+
+        override public List<string> generateIndexedObjectCreation(int currentIndex)
+        {
+            string creation = string.Format("m_{0} = new {1}({2}, frc::PneumaticsModuleType::{3}, {4});",name, getImplementationName(),CAN_ID, pcm,channel); //m_SolenoidTest = new frc::Solenoid(0, frc::PneumaticsModuleType::REVPH, 0); // PCM CAN ID 0, channel 0
 
             return new List<string> { creation };
         }
@@ -1386,6 +1410,12 @@ namespace ApplicationData
         [DefaultValue(0u)]
         [Range(typeof(uint), "0", "11")]
         public uintParameter generalpin { get; set; }
+
+        public enum PCM_TYPE
+        {
+            CTREPCM,
+            REVPH,
+        }
 
         public talontach()
         {
@@ -1911,7 +1941,30 @@ namespace ApplicationData
         }
     }
 
-    [Serializable()]
+    [Serializable]
+
+    public class solenoidTarget : baseRobotElementClass
+    {
+        public boolParameterUserDefinedTunableOnlyValueChangeableInMechInst target { get; set; }
+
+        [ConstantInMechInstance]
+        [DataDescription("The name of the solenoid that this target applies to")]
+        public string solenoidName { get; set; }
+
+        [ConstantInMechInstance]
+        [DataDescription("If Enabled is true, this motor target will be set on entry into the state.")]
+        public boolParameter Enabled { get; set; }
+
+        public solenoidTarget()
+        {
+            Enabled.value = true;
+            target.name = "Target";
+            solenoidName = "theSolenoidName";
+           
+        }
+    }
+
+        [Serializable()]
     public class state : baseRobotElementClass
     {
         [ConstantInMechInstance()]
@@ -1926,6 +1979,7 @@ namespace ApplicationData
         public List<constBoolParameterUserDefinedNonTunable> constBoolParameters { get; set; }
 
         public List<motorTarget> motorTargets { get; set; }
+        public List<solenoidTarget> solenoidTarget { get; set; }
 
         public state()
         {

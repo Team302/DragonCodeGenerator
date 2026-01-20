@@ -78,59 +78,14 @@ _STATE_MANAGER_END_
 
 _MECHANISM_HAS_MOTORS_START_
 _STATE_MANAGER_START_
-bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMinPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const
-{
-    // auto motor = GetMotorMech(identifier);
-    // if (motor != nullptr)
-    // {
-    //     return motor->IsAtMinTravel();
-    // }
-    return false;
-}
 
-bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMaxPosition(RobotElementNames::MOTOR_CONTROLLER_USAGE identifier) const
-{
-    // auto motor = GetMotorMech(identifier);
-    // if (motor != nullptr)
-    // {
-    //     return motor->IsAtMaxTravel();
-    // }
-    return false;
-}
 _STATE_MANAGER_END_
 
 _MECHANISM_HAS_MOTORS_END_
 
 _MECHANISM_HAS_SOLENOIDS_START_
 _STATE_MANAGER_START_
-void $$_MECHANISM_INSTANCE_NAME_$$::UpdateTarget(RobotElementNames::SOLENOID_USAGE identifier, bool extend)
-{
-    auto sol = GetSolenoidMech(identifier);
-    if (sol != nullptr)
-    {
-        sol->ActivateSolenoid(extend);
-    }
-}
 
-bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMinPosition(RobotElementNames::SOLENOID_USAGE identifier) const
-{
-    // auto sol = GetSolenoidMech(identifier);
-    // if (sol != nullptr)
-    // {
-    //     return !sol->IsSolenoidActivated();
-    // }
-    return false;
-}
-
-bool $$_MECHANISM_INSTANCE_NAME_$$::IsAtMaxPosition(RobotElementNames::SOLENOID_USAGE identifier) const
-{
-    // auto sol = GetSolenoidMech(identifier);
-    // if (sol != nullptr)
-    // {
-    //     return sol->IsSolenoidActivated();
-    // }
-    return false;
-}
 _STATE_MANAGER_END_
 
 _MECHANISM_HAS_SOLENOIDS_END_

@@ -48,5 +48,6 @@ namespace BaseMechTestingStates
 		const double m_SparkMaxBrushedTestTarget = double(0);
 		const double m_TalonFXTestTarget = double(0);
 		const double m_TalonFXSTestTarget = double(0);
+		const bool m_SolenoidTestTarget = false;
 	};
 }

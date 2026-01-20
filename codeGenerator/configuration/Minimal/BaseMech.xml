@@ -912,7 +912,53 @@
     </MotorController>
   </MotorControllers>
   <closedLoopControlParameters />
-  <solenoid />
+  <solenoid>
+    <solenoid>
+      <name>SolenoidTest</name>
+      <CAN_ID>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </CAN_ID>
+      <channel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </channel>
+      <enableDualChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>boolParameter</name>
+        <__units__ />
+        <type>Boolean</type>
+        <value>false</value>
+      </enableDualChannel>
+      <forwardChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </forwardChannel>
+      <reverseChannel>
+        <unitsFamily>none</unitsFamily>
+        <name>uintParameter</name>
+        <__units__ />
+        <type>UInt32</type>
+        <value>0</value>
+      </reverseChannel>
+      <reversed>
+        <unitsFamily>none</unitsFamily>
+        <name>boolParameter</name>
+        <__units__ />
+        <type>Boolean</type>
+        <value>false</value>
+      </reversed>
+    </solenoid>
+  </solenoid>
   <servo />
   <analogInput />
   <digitalInput>
@@ -1818,6 +1864,25 @@
           <controlDataName>PercentOut</controlDataName>
         </motorTarget>
       </motorTargets>
+      <solenoidTarget>
+        <solenoidTarget>
+          <name>SolenoidTest</name>
+          <target>
+            <unitsFamily>none</unitsFamily>
+            <name>Target</name>
+            <__units__ />
+            <type>Boolean</type>
+          </target>
+          <solenoidName>SolenoidTest</solenoidName>
+          <Enabled>
+            <unitsFamily>none</unitsFamily>
+            <name>boolParameter</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>true</value>
+          </Enabled>
+        </solenoidTarget>
+      </solenoidTarget>
     </state>
     <state>
       <name>PercentOut</name>
@@ -1929,6 +1994,26 @@
           <controlDataName>PercentOut</controlDataName>
         </motorTarget>
       </motorTargets>
+      <solenoidTarget>
+        <solenoidTarget>
+          <name>SolenoidTest</name>
+          <target>
+            <unitsFamily>none</unitsFamily>
+            <name>Target</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>true</value>
+          </target>
+          <solenoidName>SolenoidTest</solenoidName>
+          <Enabled>
+            <unitsFamily>none</unitsFamily>
+            <name>boolParameter</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>true</value>
+          </Enabled>
+        </solenoidTarget>
+      </solenoidTarget>
     </state>
     <state>
       <name>VelocityRPM</name>
@@ -2040,6 +2125,25 @@
           <controlDataName>FXSVelocityRPM</controlDataName>
         </motorTarget>
       </motorTargets>
+      <solenoidTarget>
+        <solenoidTarget>
+          <name>SolenoidTest</name>
+          <target>
+            <unitsFamily>none</unitsFamily>
+            <name>Target</name>
+            <__units__ />
+            <type>Boolean</type>
+          </target>
+          <solenoidName>SolenoidTest</solenoidName>
+          <Enabled>
+            <unitsFamily>none</unitsFamily>
+            <name>boolParameter</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>true</value>
+          </Enabled>
+        </solenoidTarget>
+      </solenoidTarget>
     </state>
     <state>
       <name>PositionIn</name>
@@ -2151,6 +2255,25 @@
           <controlDataName>FXSPositionIn</controlDataName>
         </motorTarget>
       </motorTargets>
+      <solenoidTarget>
+        <solenoidTarget>
+          <name>SolenoidTest</name>
+          <target>
+            <unitsFamily>none</unitsFamily>
+            <name>Target</name>
+            <__units__ />
+            <type>Boolean</type>
+          </target>
+          <solenoidName>SolenoidTest</solenoidName>
+          <Enabled>
+            <unitsFamily>none</unitsFamily>
+            <name>boolParameter</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>false</value>
+          </Enabled>
+        </solenoidTarget>
+      </solenoidTarget>
     </state>
     <state>
       <name>PositionDeg</name>
@@ -2262,6 +2385,25 @@
           <controlDataName>FXSPositionDeg</controlDataName>
         </motorTarget>
       </motorTargets>
+      <solenoidTarget>
+        <solenoidTarget>
+          <name>SolenoidTest</name>
+          <target>
+            <unitsFamily>none</unitsFamily>
+            <name>Target</name>
+            <__units__ />
+            <type>Boolean</type>
+          </target>
+          <solenoidName>SolenoidTest</solenoidName>
+          <Enabled>
+            <unitsFamily>none</unitsFamily>
+            <name>boolParameter</name>
+            <__units__ />
+            <type>Boolean</type>
+            <value>false</value>
+          </Enabled>
+        </solenoidTarget>
+      </solenoidTarget>
     </state>
   </states>
   <doubleParameters />

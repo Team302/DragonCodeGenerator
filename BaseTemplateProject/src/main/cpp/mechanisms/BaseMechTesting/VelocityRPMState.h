@@ -49,5 +49,6 @@ namespace BaseMechTestingStates
 		const double m_SparkMaxBrushedTestTarget = double(0);
 		const units::angular_velocity::turns_per_second_t m_TalonFXTestTarget = units::angular_velocity::turns_per_second_t(10);
 		const units::angular_velocity::turns_per_second_t m_TalonFXSTestTarget = units::angular_velocity::turns_per_second_t(10);
+		const bool m_SolenoidTestTarget = false;
 	};
 }

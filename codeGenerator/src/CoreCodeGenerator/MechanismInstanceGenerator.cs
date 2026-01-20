@@ -457,6 +457,10 @@ namespace CoreCodeGenerator
                                         targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
                                     }
                                 }
+                                foreach (solenoidTarget sT in s.solenoidTarget)
+                                {
+                                    targetConstants.AppendLine($"const bool m_{sT.solenoidName}Target = {sT.target.value.ToString().ToLower()};");
+                                }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
 
                                 List<string> stateElements = generateMethod(s, "generateDefinition");
@@ -592,6 +596,11 @@ namespace CoreCodeGenerator
                                                         setTargetFunctionDefinitions.AppendLine(string.Format("m_mechanism->{0};", mc.GenerateTargetUpdateFunctionCall(mcd, mT.target.value)));
                                                 }
                                             }
+                                        }
+                                        foreach (solenoidTarget sT in s.solenoidTarget)
+                                        {
+                                            if (sT.Enabled.value)
+                                                setTargetFunctionDefinitions.AppendLine($"m_mechanism->Get{sT.solenoidName}()->Set(m_{sT.solenoidName}Target);");
                                         }
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();

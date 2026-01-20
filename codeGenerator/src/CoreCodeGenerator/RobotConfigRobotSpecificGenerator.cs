@@ -132,6 +132,15 @@ namespace CoreCodeGenerator
 
                 resultString = resultString.Replace("$$_LED_INITIALIZATION_$$", LEDinitialization);
 
+                string compressorInitialization = "";
+                if (robot.Compressor != null && robot.Compressor.Count > 0)
+                {
+                    compressorInitialization = robot.Compressor[0].generateIndexedObjectCreation(0).FirstOrDefault();
+                    includeList.AddRange(robot.Compressor[0].generateIncludes());
+                }
+
+                resultString = resultString.Replace("$$_COMPRESSOR_INITIALIZATION_$$", compressorInitialization);
+
                 includeList = includeList.Distinct().ToList();
                 resultString = resultString.Replace("$$_INCLUDE_$$", ListToString(includeList));
 

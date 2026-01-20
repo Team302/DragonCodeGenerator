@@ -53,6 +53,7 @@ void OffState::InitThing3()
 	m_mechanism->GetSparkMaxBrushedTest()->Set(m_SparkMaxBrushedTestTarget);
 	m_mechanism->UpdateTargetTalonFXTestPercentOut(m_TalonFXTestTarget);
 	m_mechanism->UpdateTargetTalonFXSTestPercentOut(m_TalonFXSTestTarget);
+	m_mechanism->GetSolenoidTest()->Set(m_SolenoidTestTarget);
 }
 
 void OffState::Run()
