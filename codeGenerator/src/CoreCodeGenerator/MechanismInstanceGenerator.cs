@@ -600,7 +600,7 @@ namespace CoreCodeGenerator
                                         foreach (solenoidTarget sT in s.solenoidTarget)
                                         {
                                             if (sT.Enabled.value)
-                                                setTargetFunctionDefinitions.AppendLine($"m_mechanism->Get{sT.solenoidName}->Set (s_{sT.solenoidName}Target);");
+                                                setTargetFunctionDefinitions.AppendLine($"m_mechanism->Get{sT.solenoidName}()->Set(m_{sT.solenoidName}Target);");
                                         }
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();
