@@ -54,6 +54,6 @@ void MechanismConfigThing_3::DefineLEDs()
 
 void MechanismConfigThing_3::DefineCompressor()
 {
-	auto CompressorTest = new frc::Compressor(0, frc::PneumaticsModuleType::REVPH);
+	auto CompressorTest = new frc::Compressor(1, frc::PneumaticsModuleType::REVPH);
 	CompressorTest->EnableAnalog(95_psi, 119.5_psi);
 }

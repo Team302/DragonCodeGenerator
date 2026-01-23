@@ -174,9 +174,9 @@ void BaseMechTesting::CreateThing3()
 	m_TalonSRXTest = new ctre::phoenix::motorcontrol::can::TalonSRX(8);
 	m_SparkMaxBrushedTest = new rev::spark::SparkMax(13, rev::spark::SparkLowLevel::MotorType::kBrushless);
 	m_TalonFXTest = new ctre::phoenix6::hardware::TalonFX(2, ctre::phoenix6::CANBus("canivore"));
-	m_TalonFXSTest = new ctre::phoenix6::hardware::TalonFXS(0, ctre::phoenix6::CANBus("canivore"));
+	// m_TalonFXSTest = new ctre::phoenix6::hardware::TalonFXS(0, ctre::phoenix6::CANBus("canivore"));
 
-	m_SolenoidTest = new frc::Solenoid(0, frc::PneumaticsModuleType::REVPH, 0);
+	m_SolenoidTest = new frc::Solenoid(1, frc::PneumaticsModuleType::REVPH, 1);
 
 	m_DigitalInputTest = new frc::DigitalInput(0);
 	m_DigitalInputTestIsInverted = false;
@@ -350,7 +350,7 @@ void BaseMechTesting::InitializeThing3()
 	InitializeTalonSRXTalonSRXTestThing3();
 	InitializeSparkMaxSparkMaxBrushedTestThing3();
 	InitializeTalonFXTalonFXTestThing3();
-	InitializeTalonFXSTalonFXSTestThing3();
+	// InitializeTalonFXSTalonFXSTestThing3();
 }
 void BaseMechTesting::InitializeTalonSRXTalonSRXTestThing3()
 {
@@ -561,7 +561,7 @@ void BaseMechTesting::Update()
 	m_TalonSRXTest->Set(ctre::phoenix::motorcontrol::TalonSRXControlMode::PercentOutput, m_TalonSRXTestActiveTarget);
 
 	m_TalonFXTest->SetControl(*m_TalonFXTestActiveTarget);
-	m_TalonFXSTest->SetControl(*m_TalonFXSTestActiveTarget);
+	// m_TalonFXSTest->SetControl(*m_TalonFXSTestActiveTarget);
 }
 
 void BaseMechTesting::Cyclic()
@@ -614,7 +614,7 @@ m_totalEnergy += m_energy;
 LogTalonFXTestPower(timestamp, m_power);
 LogTalonFXTestEnergy(timestamp, m_energy);
 LogTalonFXSTest(timestamp, m_TalonFXSTest->GetPosition().GetValueAsDouble());
-auto TalonFXSTestPower = DragonPower::CalcPowerEnergy(currTime, m_TalonFXSTest->GetSupplyVoltage().GetValueAsDouble(), m_TalonFXSTest->GetSupplyCurrent().GetValueAsDouble());
+auto TalonFXSTestPower = DragonPower::CalcPowerEnergy(currTime, m_TalonFXSTest->GetSupplyVoltage().GetValueAsDouble(), m_M_SelonigTest->GetSupplyCurrent().GetValueAsDouble());
 m_power = get<0>(TalonFXSTestPower);
 m_energy = get<1>(TalonFXSTestPower);
 m_totalEnergy += m_energy;
