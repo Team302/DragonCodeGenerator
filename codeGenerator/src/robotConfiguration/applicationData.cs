@@ -772,8 +772,8 @@ namespace ApplicationData
     [DataDescription("Multiple pneumatic control modules can be added to a robot")]
     public class compressor : baseRobotElementClass
     {
-        [DefaultValue(0u)]
-        [Range(typeof(uint), "0", "62")]
+        [DefaultValue(1u)]
+        [Range(typeof(uint), "1", "62")]
         [DataDescription("The ID that is used to form the device CAD ID")]
         [DataDescription("ID 0 is normally reserved for the roborio")]
         public uintParameter canID { get; set; }
@@ -1196,8 +1196,8 @@ namespace ApplicationData
     public class solenoid : baseRobotElementClass
     {
   
-        [DefaultValue(0u)]
-        [Range(typeof(uint), "0", "62")]
+        [DefaultValue(1u)]
+        [Range(typeof(uint), "1", "62")]
         public uintParameter CAN_ID { get; set; }
 
         [DefaultValue(0u)]
