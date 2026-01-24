@@ -1278,7 +1278,7 @@ namespace ApplicationData
 
         override public List<string> generateIndexedObjectCreation(int currentIndex)
         {
-            string creation = string.Format("m_{0} = new {1}({2}, frc::PneumaticsModuleType::{3}, {4});",name, getImplementationName(),CAN_ID, pcm,channel); //m_SolenoidTest = new frc::Solenoid(0, frc::PneumaticsModuleType::REVPH, 0); // PCM CAN ID 0, channel 0
+            string creation = string.Format("{0} = new {1}({2}, frc::PneumaticsModuleType::{3}, {4});",AsMemberVariableName(), getImplementationName(),CAN_ID, pcm,channel); //m_SolenoidTest = new frc::Solenoid(0, frc::PneumaticsModuleType::REVPH, 0); // PCM CAN ID 0, channel 0
 
             return new List<string> { creation };
         }
@@ -1453,7 +1453,7 @@ namespace ApplicationData
         {
             string formattedName = "NameCannotBeAnEmptyString";
             if (!string.IsNullOrEmpty(n))
-                formattedName = char.ToUpper(n[0]) + n.Substring(1);
+                formattedName = char.ToLower(n[0]) + n.Substring(1);
 
             return string.Format("m_{0}", formattedName);
         }

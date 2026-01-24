@@ -454,12 +454,12 @@ namespace CoreCodeGenerator
                                     if (mc != null && mcd != null && !mc.enableFollowID.value)
                                     {
                                         string targetType = ControlDataMapping.TryGetValue(mcd.controlType, out var value) ? value : "double";
-                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName}Target = {targetType}({mT.target.value});");
+                                        targetConstants.AppendLine($"const {targetType} m_{mT.motorName.ToLower()}Target = {targetType}({mT.target.value});");
                                     }
                                 }
                                 foreach (solenoidTarget sT in s.solenoidTarget)
                                 {
-                                    targetConstants.AppendLine($"const bool m_{sT.solenoidName}Target = {sT.target.value.ToString().ToLower()};");
+                                    targetConstants.AppendLine($"const bool m_{sT.solenoidName.ToLower()}Target = {sT.target.value.ToString().ToLower()};");
                                 }
                                 resultString = resultString.Replace("$$_TARGET_VALUE_CONSTANT_$$", targetConstants.ToString().Trim());
 
@@ -600,7 +600,7 @@ namespace CoreCodeGenerator
                                         foreach (solenoidTarget sT in s.solenoidTarget)
                                         {
                                             if (sT.Enabled.value)
-                                                setTargetFunctionDefinitions.AppendLine($"m_mechanism->Get{sT.solenoidName}()->Set(m_{sT.solenoidName}Target);");
+                                                setTargetFunctionDefinitions.AppendLine($"m_mechanism->Get{sT.solenoidName}()->Set(m_{sT.solenoidName.ToLower()}Target);");
                                         }
                                         setTargetFunctionDefinitions.AppendLine("}");
                                         setTargetFunctionDefinitions.AppendLine();

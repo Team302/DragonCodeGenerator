@@ -275,7 +275,7 @@ namespace ApplicationData
         public override string AsMemberVariableName()
         {
             string motorTypeAdder = generatorContext.theMechanism.MotorControllers.Count(m => m.name == name) > 1 ? GetType().Name : "";
-            return string.Format("{0}", AsMemberVariableName(name + motorTypeAdder));
+            return string.Format("{0}", AsMemberVariableName(name.ToLower() + motorTypeAdder));
         }
 
         public override string ToUpperCamelCase()
@@ -1064,7 +1064,7 @@ namespace ApplicationData
         {
             if (!this.enableFollowID.value)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
+                return string.Format("UpdateTarget{0}{1}({2}Target)", ToUpperCamelCase(), mcd.name,AsMemberVariableName());
             }
             return "";
         }
@@ -1551,7 +1551,7 @@ namespace ApplicationData
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
+                return string.Format("UpdateTarget{0}{1}({2}Target)", ToUpperCamelCase(), mcd.name, AsMemberVariableName());
             }
 
             /*TO DO if we need more than Percent Out implement below
@@ -1786,7 +1786,7 @@ namespace ApplicationData
             {
                 //	m_mechanism->GetRoller()->Set(m_RollerTarget);
 
-                return string.Format("Get{0}()->Set(m_{1}Target);", name,name); //Is there a better way to do this? Get the Getter/target function directly?
+                return string.Format("Get{0}()->Set({1}Target);", name,AsMemberVariableName()); //Is there a better way to do this? Get the Getter/target function directly?
             }
 
             /*TO DO if we need more than Percent Out implement below
