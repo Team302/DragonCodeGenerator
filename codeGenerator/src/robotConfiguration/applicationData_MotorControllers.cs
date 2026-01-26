@@ -275,7 +275,7 @@ namespace ApplicationData
         public override string AsMemberVariableName()
         {
             string motorTypeAdder = generatorContext.theMechanism.MotorControllers.Count(m => m.name == name) > 1 ? GetType().Name : "";
-            return string.Format("{0}", AsMemberVariableName(name.ToLower() + motorTypeAdder));
+            return string.Format("{0}", AsMemberVariableName(name + motorTypeAdder));
         }
 
         public override string ToUpperCamelCase()
@@ -1176,7 +1176,7 @@ namespace ApplicationData
         public enum MotorArrangement
         {
             Disabled = 0, //Motor is not selected.
-            Minion_JST = 1, //CTR Electronics Minion® brushless three phase motor.
+            Minion_JST = 1, //CTR Electronics Minionï¿½ brushless three phase motor.
             Brushed_DC = 2, //Third party brushed DC motor with two leads.
             NEO_JST = 5, //Third party NEO brushless three phase motor(~6000 RPM at 12V).
             NEO550_JST = 6, //Third party NEO550 brushless three phase motor(~11000 RPM at 12V).
