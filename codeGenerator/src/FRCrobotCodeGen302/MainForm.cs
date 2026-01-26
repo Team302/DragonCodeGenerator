@@ -1322,7 +1322,6 @@ namespace FRCrobotCodeGen302
                     dgvSolenoidCmb.Items.Add("True");
                     stateDataGridView.Columns.Add(dgvSolenoidCmb);
                 }
-                
 
                 stateDataGridView.DataSource = new BindingList<stateVisualization>(stateGridVisualization);
 

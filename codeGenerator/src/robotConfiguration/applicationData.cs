@@ -165,19 +165,19 @@ namespace ApplicationData
     {
 
         [DataDescription("One power distribution panel can be configured for a robot")]
-        public pdp PowerDistributionPanel { get; set; } // 
+        public pdp PowerDistributionPanel { get; set; }
 
         [DataDescription("A robot can contain multiple pneumatic control modules")]
-        public List<compressor> Compressor { get; set; } // 
+        public List<compressor> Compressor { get; set; }
 
         [DataDescription("A robot can contain multiple mechanism instances")]
-        public List<mechanismInstance> mechanismInstances { get; set; } // 
+        public List<mechanismInstance> mechanismInstances { get; set; }
 
         [DataDescription("A robot can contain multiple cameras")]
-        public List<Camera> Cameras { get; set; } // 
+        public List<Camera> Cameras { get; set; }
 
         [DataDescription("A robot can contain multiple roborios")]
-        public List<roborio> Roborios { get; set; } // 
+        public List<roborio> Roborios { get; set; }
 
         [DataDescription("A robot can contain multiple LED setups")]
 
