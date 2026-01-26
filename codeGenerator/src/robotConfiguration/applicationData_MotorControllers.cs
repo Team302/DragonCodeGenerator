@@ -1176,7 +1176,7 @@ namespace ApplicationData
         public enum MotorArrangement
         {
             Disabled = 0, //Motor is not selected.
-            Minion_JST = 1, //CTR Electronics Minion� brushless three phase motor.
+            Minion_JST = 1, //CTR Electronics Minion® brushless three phase motor.
             Brushed_DC = 2, //Third party brushed DC motor with two leads.
             NEO_JST = 5, //Third party NEO brushless three phase motor(~6000 RPM at 12V).
             NEO550_JST = 6, //Third party NEO550 brushless three phase motor(~11000 RPM at 12V).
