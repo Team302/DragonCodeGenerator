@@ -5,8 +5,8 @@ $$_GEN_NOTICE_$$
 #include <string>
 
 // FRC Includes
-#include <networktables/NetworkTableInstance.h>
-#include <frc/Timer.h>
+#include "networktables/NetworkTableInstance.h"
+#include "frc/Timer.h"
 
 #include "$$_MECHANISM_INSTANCE_NAME_$$.h"
 #include "utils/logging/debug/Logger.h"
