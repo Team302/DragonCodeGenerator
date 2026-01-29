@@ -1064,7 +1064,7 @@ namespace ApplicationData
         {
             if (!this.enableFollowID.value)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
+                return string.Format("UpdateTarget{0}{1}({2}Target)", ToUpperCamelCase(), mcd.name,AsMemberVariableName());
             }
             return "";
         }
@@ -1176,7 +1176,7 @@ namespace ApplicationData
         public enum MotorArrangement
         {
             Disabled = 0, //Motor is not selected.
-            Minion_JST = 1, //CTR Electronics Minion® brushless three phase motor.
+            Minion_JST = 1, //CTR Electronics MinionÂ® brushless three phase motor.
             Brushed_DC = 2, //Third party brushed DC motor with two leads.
             NEO_JST = 5, //Third party NEO brushless three phase motor(~6000 RPM at 12V).
             NEO550_JST = 6, //Third party NEO550 brushless three phase motor(~11000 RPM at 12V).
@@ -1551,7 +1551,7 @@ namespace ApplicationData
         {
             if (mcd.controlType == motorControlData.CONTROL_TYPE.PERCENT_OUTPUT)
             {
-                return string.Format("UpdateTarget{0}{1}(m_{2}Target)", ToUpperCamelCase(), mcd.name, name);
+                return string.Format("UpdateTarget{0}{1}({2}Target)", ToUpperCamelCase(), mcd.name, AsMemberVariableName());
             }
 
             /*TO DO if we need more than Percent Out implement below
@@ -1786,7 +1786,7 @@ namespace ApplicationData
             {
                 //	m_mechanism->GetRoller()->Set(m_RollerTarget);
 
-                return string.Format("Get{0}()->Set(m_{1}Target);", name,name); //Is there a better way to do this? Get the Getter/target function directly?
+                return string.Format("Get{0}()->Set({1}Target);", name,AsMemberVariableName()); //Is there a better way to do this? Get the Getter/target function directly?
             }
 
             /*TO DO if we need more than Percent Out implement below

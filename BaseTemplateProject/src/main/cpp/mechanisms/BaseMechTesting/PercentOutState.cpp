@@ -52,7 +52,7 @@ void PercentOutState::InitThing3()
 	m_mechanism->UpdateTargetTalonSRXTestPercentOut(m_TalonSRXTestTarget);
 	m_mechanism->GetSparkMaxBrushedTest()->Set(m_SparkMaxBrushedTestTarget);
 	m_mechanism->UpdateTargetTalonFXTestPercentOut(m_TalonFXTestTarget);
-	m_mechanism->UpdateTargetTalonFXSTestPercentOut(m_TalonFXSTestTarget);
+	// m_mechanism->UpdateTargetTalonFXSTestPercentOut(m_TalonFXSTestTarget);
 	m_mechanism->GetSolenoidTest()->Set(m_SolenoidTestTarget);
 }
 

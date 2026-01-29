@@ -52,7 +52,7 @@ void VelocityRPMState::InitThing3()
 	m_mechanism->UpdateTargetTalonSRXTestPercentOut(m_TalonSRXTestTarget);
 	m_mechanism->GetSparkMaxBrushedTest()->Set(m_SparkMaxBrushedTestTarget);
 	m_mechanism->UpdateTargetTalonFXTestFXVelocityRPM(m_TalonFXTestTarget);
-	m_mechanism->UpdateTargetTalonFXSTestFXSVelocityRPM(m_TalonFXSTestTarget);
+	// m_mechanism->UpdateTargetTalonFXSTestFXSVelocityRPM(m_TalonFXSTestTarget);
 }
 
 void VelocityRPMState::Run()

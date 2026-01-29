@@ -52,7 +52,7 @@ void PositionDegState::InitThing3()
 	m_mechanism->UpdateTargetTalonSRXTestPercentOut(m_TalonSRXTestTarget);
 	m_mechanism->GetSparkMaxBrushedTest()->Set(m_SparkMaxBrushedTestTarget);
 	m_mechanism->UpdateTargetTalonFXTestFXPositionDeg(m_TalonFXTestTarget);
-	m_mechanism->UpdateTargetTalonFXSTestFXSPositionDeg(m_TalonFXSTestTarget);
+	// m_mechanism->UpdateTargetTalonFXSTestFXSPositionDeg(m_TalonFXSTestTarget);
 }
 
 void PositionDegState::Run()
