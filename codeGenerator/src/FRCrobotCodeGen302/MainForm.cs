@@ -1225,6 +1225,11 @@ namespace FRCrobotCodeGen302
             }
         }
 
+        private bool HasSolenoid(List<state> states)
+        {
+            return states.Any(s => s.solenoidTarget.Count != 0);
+        }
+
         private void ShowStateTable(nodeTag nt, mechanism mi, bool isInMechanismInstance)
         {
             // sets editable columns depending on where mechanism is located
@@ -1313,7 +1318,8 @@ namespace FRCrobotCodeGen302
 
                 // Add solenoid target combobox column
                 DataGridViewComboBoxColumn dgvSolenoidCmb = stateDataGridView.Columns["cmbSolenoidTarget"] as DataGridViewComboBoxColumn;
-                if (dgvSolenoidCmb == null && HasSolenoid(theStates))
+                bool hasSolenoid = HasSolenoid(theStates);
+                if (dgvSolenoidCmb == null && hasSolenoid)
                 {
                     dgvSolenoidCmb = new DataGridViewComboBoxColumn();
                     dgvSolenoidCmb.HeaderText = "Solenoid\r\nTarget";
@@ -1321,6 +1327,9 @@ namespace FRCrobotCodeGen302
                     dgvSolenoidCmb.Items.Add("False");
                     dgvSolenoidCmb.Items.Add("True");
                     stateDataGridView.Columns.Add(dgvSolenoidCmb);
+                } else if (dgvSolenoidCmb != null && !hasSolenoid) {
+                    stateDataGridView.Columns.Remove(dgvSolenoidCmb);
+                    dgvSolenoidCmb = null;
                 }
 
                 stateDataGridView.DataSource = new BindingList<stateVisualization>(stateGridVisualization);
@@ -2997,11 +3006,6 @@ namespace FRCrobotCodeGen302
         {
             if (UpdateMechanismInstances != null)
                 UpdateMechanismInstances();
-        }
-
-        private bool HasSolenoid(List<state> states)
-        {
-            return states.Any(s => s.solenoidTarget.Count != 0);
         }
     }
 }
