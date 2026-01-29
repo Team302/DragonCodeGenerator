@@ -7,7 +7,7 @@ $$_GEN_NOTICE_$$
 #include <string>
 
 // FRC Includes
-#include <networktables/NetworkTable.h>
+#include "networktables/NetworkTable.h"
 
 $$_INCLUDE_FILES_$$
 

@@ -1579,7 +1579,7 @@ namespace ApplicationData
 
             List<SystemIncludeFileAttribute> sysIncludesAttr = this.GetType().GetCustomAttributes<SystemIncludeFileAttribute>().ToList();
             foreach (SystemIncludeFileAttribute include in sysIncludesAttr)
-                sb.Add(string.Format("#include <{0}>{1}", include.pathName, Environment.NewLine));
+                sb.Add(string.Format("#include \"{0}\"{1}", include.pathName, Environment.NewLine));
 
             return sb;
         }
