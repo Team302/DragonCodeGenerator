@@ -1225,6 +1225,11 @@ namespace FRCrobotCodeGen302
             }
         }
 
+        private bool HasSolenoid(List<state> states)
+        {
+            return states.Any(s => s.solenoidTarget.Count != 0);
+        }
+
         private void ShowStateTable(nodeTag nt, mechanism mi, bool isInMechanismInstance)
         {
             // sets editable columns depending on where mechanism is located
@@ -1313,7 +1318,8 @@ namespace FRCrobotCodeGen302
 
                 // Add solenoid target combobox column
                 DataGridViewComboBoxColumn dgvSolenoidCmb = stateDataGridView.Columns["cmbSolenoidTarget"] as DataGridViewComboBoxColumn;
-                if (dgvSolenoidCmb == null)
+                bool hasSolenoid = HasSolenoid(theStates);
+                if (dgvSolenoidCmb == null && hasSolenoid)
                 {
                     dgvSolenoidCmb = new DataGridViewComboBoxColumn();
                     dgvSolenoidCmb.HeaderText = "Solenoid\r\nTarget";
@@ -1321,6 +1327,9 @@ namespace FRCrobotCodeGen302
                     dgvSolenoidCmb.Items.Add("False");
                     dgvSolenoidCmb.Items.Add("True");
                     stateDataGridView.Columns.Add(dgvSolenoidCmb);
+                } else if (dgvSolenoidCmb != null && !hasSolenoid) {
+                    stateDataGridView.Columns.Remove(dgvSolenoidCmb);
+                    dgvSolenoidCmb = null;
                 }
 
                 stateDataGridView.DataSource = new BindingList<stateVisualization>(stateGridVisualization);
@@ -1364,10 +1373,13 @@ namespace FRCrobotCodeGen302
                     row.Cells[dgvCmb.Name].ReadOnly = isInMechanismInstance;
 
                     // Set solenoid target combobox value (only visible in mechanism instances)
-                    string solenoidTargetValue = stateGridVisualization[row.Index].SolenoidTargetValue;
-                    row.Cells[dgvSolenoidCmb.Name].Value = solenoidTargetValue;
-                    row.Cells[dgvSolenoidCmb.Name].ReadOnly = !isInMechanismInstance; // ReadOnly in template, editable in instance
-
+                    if (dgvSolenoidCmb != null)
+                    {
+                        string solenoidTargetValue = stateGridVisualization[row.Index].SolenoidTargetValue;
+                        row.Cells[dgvSolenoidCmb.Name].Value = solenoidTargetValue;
+                        row.Cells[dgvSolenoidCmb.Name].ReadOnly = !isInMechanismInstance; // ReadOnly in template, editable in instance
+                    }
+                    
                     // Hide/disable columns based on target type
                     if (stateGridVisualization[row.Index].TargetObject is solenoidTarget)
                     {
@@ -1385,8 +1397,11 @@ namespace FRCrobotCodeGen302
                     else if (stateGridVisualization[row.Index].TargetObject is motorTarget)
                     {
                         // For motor targets: disable solenoid target column
-                        row.Cells[dgvSolenoidCmb.Name].ReadOnly = true;
-                        row.Cells[dgvSolenoidCmb.Name].Style.BackColor = SystemColors.ControlLight;
+                        if (dgvSolenoidCmb != null)
+                        {
+                            row.Cells[dgvSolenoidCmb.Name].ReadOnly = true;
+                            row.Cells[dgvSolenoidCmb.Name].Style.BackColor = SystemColors.ControlLight;
+                        }
                         row.Cells["Target"].Style.BackColor = SystemColors.Window;
                     }
                 }
